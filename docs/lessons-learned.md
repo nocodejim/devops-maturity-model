@@ -88,10 +88,22 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-06 15:17] - GitHub Push Protection: API Key in Diagnostics File
+- **Issue**: GitHub blocked push with "Repository rule violations - Push cannot contain secrets". Anthropic API key found in mcp_diagnostics.txt
+- **Impact**: Could not push to remote repository - blocking deployment
+- **Root Cause**: MCP diagnostics file (4.1MB) was committed with embedded API keys
+- **Resolution**: Added mcp_diagnostics.txt to .gitignore, removed from git index, amended commit
+- **Lesson**: Always review files before committing. Diagnostic/debug files often contain secrets and should be gitignored. GitHub's push protection is a safety net but we should catch this earlier.
+- **Category**: Process & Workflow
+- **Best Practice**: Add diagnostic files to .gitignore proactively, never commit large debug dumps
+
+---
+
 ## Summary Statistics
-- **Total Issues**: 5
+- **Total Issues**: 6
 - **Critical Issues**: 3 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error)
-- **Resolved Issues**: 5
+- **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
+- **Resolved Issues**: 6
 - **Open Issues**: 0
 - **TODOs**: 1 (Generate package-lock.json for frontend)
 
