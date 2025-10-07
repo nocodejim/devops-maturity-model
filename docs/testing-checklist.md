@@ -55,6 +55,47 @@
 - [ ] API requests complete successfully
 - [ ] No CORS errors
 
+#### 5. Assessment Form (http://localhost:5173/assessment/:id)
+- [ ] Redirects to /login if not authenticated
+- [ ] Loads gates definitions from API
+- [ ] Displays domain navigation sidebar
+- [ ] Shows 5 domains with completion status
+- [ ] Current domain is highlighted
+- [ ] Displays gates and questions for current domain
+- [ ] Score buttons (0-5) work correctly
+- [ ] Selected score is highlighted
+- [ ] Notes textarea accepts input
+- [ ] "Save Progress" button saves responses
+- [ ] Shows "✓ Saved" feedback after save
+- [ ] Progress bar updates as questions are answered
+- [ ] Progress counter shows X / 40 questions
+- [ ] Domain completion checkmarks appear
+- [ ] "Submit Assessment" button requires responses
+- [ ] Submit confirmation dialog appears
+- [ ] Successful submit redirects to results page
+- [ ] Can navigate back to dashboard without losing progress
+
+#### 6. Results Page (http://localhost:5173/results/:id)
+- [ ] Redirects to /login if not authenticated
+- [ ] Displays overall score prominently
+- [ ] Shows maturity level with badge
+- [ ] Domain breakdown displays all 5 domains
+- [ ] Each domain shows score, maturity level, progress bar
+- [ ] Strengths list displays per domain
+- [ ] Gaps/improvements list displays per domain
+- [ ] Gate performance section shows all 20 gates
+- [ ] Each gate shows percentage and score
+- [ ] Top strengths section displays
+- [ ] Top gaps/improvements section displays
+- [ ] Recommendations section displays
+- [ ] "Back to Dashboard" button works
+
+## Integration Testing
+- [ ] Complete flow: Login → Dashboard → Create → Assessment → Submit → Results → Dashboard
+- [ ] Data persistence: Refresh page during assessment, data is preserved
+- [ ] Token expiry: Wait for token to expire, gets redirected to login
+- [ ] API error handling: Disconnect backend, errors are displayed gracefully
+
 ## Manual Test Results
 *To be filled in during testing:*
 
@@ -62,5 +103,7 @@
 - Login Page:
 - Dashboard Page:
 - Create Assessment:
-- Delete Assessment:
+- Assessment Form:
+- Submit Assessment:
+- Results Page:
 - Console Errors:
