@@ -26,7 +26,7 @@ ENV/
 .venv
 
 # Poetry
-poetry.lock
+# NOTE: poetry.lock should be committed for reproducible builds (removed from gitignore)
 
 # Alembic
 alembic/versions/*.pyc

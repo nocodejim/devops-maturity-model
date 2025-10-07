@@ -125,12 +125,37 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-07 16:20] - FastAPI/Pydantic Version Incompatibility and Missing poetry.lock
+- **Issue**: Backend failed to start on work PC with `AttributeError: 'FieldInfo' object has no attribute 'in_'`
+- **Impact**: CRITICAL - Application completely broken on fresh deployments, unable to start backend service
+- **Root Cause**:
+  1. FastAPI 0.104.1 incompatible with Pydantic 2.6+ (Poetry resolved Pydantic 2.12.0 on work PC)
+  2. No poetry.lock file committed, causing different dependency versions across environments
+  3. Empty migration file (only `pass` statements) - generated against existing database
+- **Resolution**:
+  1. Upgraded FastAPI from ^0.104.1 to ^0.115.0 (compatible with Pydantic 2.12+)
+  2. Upgraded uvicorn from ^0.24.0 to ^0.30.0 (compatible with FastAPI 0.115)
+  3. Generated and committed poetry.lock file (211KB) for reproducible builds
+  4. Created proper initial migration file with all table CREATE statements
+- **Lesson**: **ALWAYS commit lock files (poetry.lock, package-lock.json) for reproducible builds**. Version ranges (^) resolve to different versions on different systems. FastAPI/Pydantic compatibility must be tested - FastAPI 0.104.x only works with Pydantic <2.6.
+- **Category**: Dependencies & Packages, Process & Workflow
+- **Priority**: CRITICAL
+- **Detection**: User cloned repo on work PC, followed README, backend failed to start
+- **Best Practice**:
+  - Use lock files for all package managers
+  - Test dependency compatibility in fresh Docker environment
+  - Pin major version combos that have known compatibility issues
+  - Document exact working versions in README
+- **Files Changed**: backend/pyproject.toml (FastAPI/uvicorn versions), backend/poetry.lock (new), backend/alembic/versions/20251007_1600_initial_schema.py (proper migration)
+
+---
+
 ## Summary Statistics
-- **Total Issues**: 8
-- **Critical Issues**: 5 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command)
+- **Total Issues**: 9
+- **Critical Issues**: 6 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility)
 - **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
 - **Safety Issues**: 1 (docker system prune suggestion - caught by user)
-- **Resolved Issues**: 8
+- **Resolved Issues**: 9
 - **Open Issues**: 0
 - **TODOs**: 1 (Generate package-lock.json for frontend)
 
