@@ -9,7 +9,7 @@ from alembic import context
 
 # Import Base and models
 from app.database import Base
-from app.models import User, Assessment, Response
+from app.models import Organization, User, Assessment, DomainScore, GateResponse
 from app.config import settings
 
 # this is the Alembic Config object, which provides

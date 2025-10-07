@@ -1,11 +1,45 @@
-"""Pydantic schemas for request/response validation"""
+"""Pydantic schemas for request/response validation - Complete Spec"""
 
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models import AssessmentStatus, DomainType
+from app.models import AssessmentStatus, DomainType, UserRole, OrganizationSize
+
+
+# Organization schemas
+class OrganizationBase(BaseModel):
+    """Base organization schema"""
+
+    name: str
+    industry: Optional[str] = None
+    size: Optional[OrganizationSize] = None
+
+
+class OrganizationCreate(OrganizationBase):
+    """Schema for creating an organization"""
+
+    pass
+
+
+class OrganizationUpdate(BaseModel):
+    """Schema for updating an organization"""
+
+    name: Optional[str] = None
+    industry: Optional[str] = None
+    size: Optional[OrganizationSize] = None
+
+
+class OrganizationResponse(OrganizationBase):
+    """Schema for organization response"""
+
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 # User schemas
@@ -20,15 +54,27 @@ class UserCreate(UserBase):
     """Schema for creating a user"""
 
     password: str
+    role: Optional[UserRole] = UserRole.ASSESSOR
+    organization_id: Optional[UUID] = None
+
+
+class UserUpdate(BaseModel):
+    """Schema for updating a user"""
+
+    full_name: Optional[str] = None
+    role: Optional[UserRole] = None
+    organization_id: Optional[UUID] = None
 
 
 class UserResponse(UserBase):
     """Schema for user response"""
 
     id: UUID
+    role: UserRole
+    organization_id: Optional[UUID] = None
     is_active: bool
-    is_admin: bool
     created_at: datetime
+    last_login: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -60,6 +106,7 @@ class AssessmentBase(BaseModel):
     """Base assessment schema"""
 
     team_name: str
+    organization_id: Optional[UUID] = None
 
 
 class AssessmentCreate(AssessmentBase):
@@ -83,9 +130,6 @@ class AssessmentResponse(AssessmentBase):
     status: AssessmentStatus
     overall_score: Optional[float] = None
     maturity_level: Optional[int] = None
-    domain1_score: Optional[float] = None
-    domain2_score: Optional[float] = None
-    domain3_score: Optional[float] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime
@@ -95,31 +139,51 @@ class AssessmentResponse(AssessmentBase):
         from_attributes = True
 
 
-# Response schemas
-class ResponseBase(BaseModel):
-    """Base response schema"""
+# Domain Score schemas
+class DomainScoreResponse(BaseModel):
+    """Schema for domain score response"""
 
-    question_number: int = Field(..., ge=1, le=20)
+    id: UUID
+    assessment_id: UUID
     domain: DomainType
-    score: int = Field(..., ge=0, le=5)
+    score: float
+    maturity_level: int
+    strengths: Optional[List[str]] = []
+    gaps: Optional[List[str]] = []
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Gate Response schemas
+class GateResponseBase(BaseModel):
+    """Base gate response schema"""
+
+    domain: DomainType
+    gate_id: str = Field(..., description="Gate identifier e.g. 'gate_1_1'")
+    question_id: str = Field(..., description="Question identifier e.g. 'q1'")
+    score: int = Field(..., ge=0, le=5, description="Score from 0-5")
     notes: Optional[str] = None
+    evidence: Optional[List[str]] = []
 
 
-class ResponseCreate(ResponseBase):
-    """Schema for creating a response"""
+class GateResponseCreate(GateResponseBase):
+    """Schema for creating a gate response"""
 
     pass
 
 
-class ResponseUpdate(BaseModel):
-    """Schema for updating a response"""
+class GateResponseUpdate(BaseModel):
+    """Schema for updating a gate response"""
 
     score: Optional[int] = Field(None, ge=0, le=5)
     notes: Optional[str] = None
+    evidence: Optional[List[str]] = None
 
 
-class ResponseData(ResponseBase):
-    """Schema for response data"""
+class GateResponseData(GateResponseBase):
+    """Schema for gate response data"""
 
     id: UUID
     assessment_id: UUID
@@ -130,10 +194,10 @@ class ResponseData(ResponseBase):
         from_attributes = True
 
 
-class ResponseBulkCreate(BaseModel):
-    """Schema for bulk creating/updating responses"""
+class GateResponseBulkCreate(BaseModel):
+    """Schema for bulk creating/updating gate responses"""
 
-    responses: List[ResponseCreate]
+    responses: List[GateResponseCreate]
 
 
 # Report schemas
@@ -150,16 +214,19 @@ class DomainBreakdown(BaseModel):
 
     domain: str
     score: float
-    questions_count: int
+    maturity_level: int
+    strengths: List[str]
+    gaps: List[str]
 
 
-class StrengthGap(BaseModel):
-    """Strength or gap item"""
+class GateScore(BaseModel):
+    """Gate-level score"""
 
-    question_number: int
-    question_text: str
-    score: int
-    domain: str
+    gate_id: str
+    gate_name: str
+    score: float
+    max_score: float
+    percentage: float
 
 
 class AssessmentReport(BaseModel):
@@ -168,8 +235,10 @@ class AssessmentReport(BaseModel):
     assessment: AssessmentResponse
     maturity_level: MaturityLevel
     domain_breakdown: List[DomainBreakdown]
-    strengths: List[StrengthGap]
-    gaps: List[StrengthGap]
+    gate_scores: List[GateScore]
+    top_strengths: List[str]
+    top_gaps: List[str]
+    recommendations: List[str]
 
 
 # Analytics schemas
@@ -180,3 +249,19 @@ class AnalyticsSummary(BaseModel):
     completed_assessments: int
     average_score: float
     average_maturity_level: float
+    assessments_by_domain: dict
+
+
+class TrendData(BaseModel):
+    """Historical trend data"""
+
+    date: datetime
+    score: float
+    maturity_level: int
+
+
+class AssessmentTrends(BaseModel):
+    """Assessment trends over time"""
+
+    overall_trends: List[TrendData]
+    domain_trends: dict  # domain_name -> List[TrendData]

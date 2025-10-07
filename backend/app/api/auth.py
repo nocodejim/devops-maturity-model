@@ -11,7 +11,7 @@ from app import schemas
 from app.config import settings
 from app.core import security
 from app.database import get_db
-from app.models import User
+from app.models import User, UserRole
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -70,7 +70,7 @@ async def register(
     current_user: User = Depends(get_current_user),
 ):
     """Register new user (admin only)"""
-    if not current_user.is_admin:
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     # Check if user already exists
@@ -83,7 +83,11 @@ async def register(
     # Create new user
     hashed_password = security.get_password_hash(user_in.password)
     db_user = User(
-        email=user_in.email, full_name=user_in.full_name, hashed_password=hashed_password
+        email=user_in.email,
+        full_name=user_in.full_name,
+        hashed_password=hashed_password,
+        role=user_in.role,
+        organization_id=user_in.organization_id,
     )
 
     db.add(db_user)

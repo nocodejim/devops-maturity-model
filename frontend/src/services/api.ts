@@ -3,11 +3,13 @@ import type {
   Assessment,
   AssessmentReport,
   LoginRequest,
-  Response,
-  ResponseCreate,
+  GateResponse,
+  GateResponseCreate,
   TokenResponse,
   User,
   AnalyticsSummary,
+  Organization,
+  GatesResponse,
 } from '@/types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
@@ -59,6 +61,24 @@ export const authApi = {
   },
 }
 
+// Organizations API
+export const organizationApi = {
+  list: async (): Promise<Organization[]> => {
+    const response = await api.get<Organization[]>('/organizations/')
+    return response.data
+  },
+
+  create: async (data: Partial<Organization>): Promise<Organization> => {
+    const response = await api.post<Organization>('/organizations/', data)
+    return response.data
+  },
+
+  get: async (id: string): Promise<Organization> => {
+    const response = await api.get<Organization>(`/organizations/${id}`)
+    return response.data
+  },
+}
+
 // Assessment API
 export const assessmentApi = {
   list: async (): Promise<Assessment[]> => {
@@ -66,8 +86,11 @@ export const assessmentApi = {
     return response.data
   },
 
-  create: async (teamName: string): Promise<Assessment> => {
-    const response = await api.post<Assessment>('/assessments/', { team_name: teamName })
+  create: async (teamName: string, organizationId?: string): Promise<Assessment> => {
+    const response = await api.post<Assessment>('/assessments/', {
+      team_name: teamName,
+      organization_id: organizationId,
+    })
     return response.data
   },
 
@@ -76,13 +99,18 @@ export const assessmentApi = {
     return response.data
   },
 
-  getResponses: async (id: string): Promise<Response[]> => {
-    const response = await api.get<Response[]>(`/assessments/${id}/responses`)
+  getResponses: async (id: string): Promise<GateResponse[]> => {
+    const response = await api.get<GateResponse[]>(`/assessments/${id}/responses`)
     return response.data
   },
 
-  saveResponses: async (id: string, responses: ResponseCreate[]): Promise<Response[]> => {
-    const response = await api.post<Response[]>(`/assessments/${id}/responses`, { responses })
+  saveResponses: async (
+    id: string,
+    responses: GateResponseCreate[]
+  ): Promise<GateResponse[]> => {
+    const response = await api.post<GateResponse[]>(`/assessments/${id}/responses`, {
+      responses,
+    })
     return response.data
   },
 
@@ -105,6 +133,24 @@ export const assessmentApi = {
 export const analyticsApi = {
   getSummary: async (): Promise<AnalyticsSummary> => {
     const response = await api.get<AnalyticsSummary>('/analytics/summary')
+    return response.data
+  },
+}
+
+// Gates API
+export const gatesApi = {
+  getAll: async (): Promise<GatesResponse> => {
+    const response = await api.get<GatesResponse>('/gates/')
+    return response.data
+  },
+
+  getGate: async (gateId: string): Promise<any> => {
+    const response = await api.get(`/gates/${gateId}`)
+    return response.data
+  },
+
+  getByDomain: async (domain: string): Promise<any> => {
+    const response = await api.get(`/gates/domain/${domain}`)
     return response.data
   },
 }

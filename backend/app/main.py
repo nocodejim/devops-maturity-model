@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.api import auth, assessments, analytics
+from app.api import auth, assessments, analytics, organizations, gates
 
 app = FastAPI(
     title="DevOps Maturity Assessment API",
@@ -23,8 +23,10 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(organizations.router, prefix="/api/organizations", tags=["Organizations"])
 app.include_router(assessments.router, prefix="/api/assessments", tags=["Assessments"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+app.include_router(gates.router, prefix="/api/gates", tags=["Gates"])
 
 
 @app.get("/")

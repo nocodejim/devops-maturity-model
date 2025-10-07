@@ -11,7 +11,7 @@ from app import schemas
 from app.api.auth import get_current_user
 from app.core import scoring
 from app.database import get_db
-from app.models import Assessment, Response, User, AssessmentStatus
+from app.models import Assessment, GateResponse, DomainScore, User, AssessmentStatus
 
 router = APIRouter()
 
@@ -43,6 +43,7 @@ async def create_assessment(
     """Create new assessment"""
     db_assessment = Assessment(
         team_name=assessment_in.team_name,
+        organization_id=assessment_in.organization_id,
         assessor_id=current_user.id,
         status=AssessmentStatus.DRAFT,
         started_at=datetime.utcnow(),
@@ -124,14 +125,14 @@ async def delete_assessment(
     return None
 
 
-@router.post("/{assessment_id}/responses", response_model=List[schemas.ResponseData])
+@router.post("/{assessment_id}/responses", response_model=List[schemas.GateResponseData])
 async def save_responses(
     assessment_id: UUID,
-    responses_in: schemas.ResponseBulkCreate,
+    responses_in: schemas.GateResponseBulkCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Save or update assessment responses"""
+    """Save or update gate responses"""
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
 
     if not assessment:
@@ -145,10 +146,11 @@ async def save_responses(
     for response_data in responses_in.responses:
         # Check if response already exists
         existing_response = (
-            db.query(Response)
+            db.query(GateResponse)
             .filter(
-                Response.assessment_id == assessment_id,
-                Response.question_number == response_data.question_number,
+                GateResponse.assessment_id == assessment_id,
+                GateResponse.gate_id == response_data.gate_id,
+                GateResponse.question_id == response_data.question_id,
             )
             .first()
         )
@@ -157,16 +159,19 @@ async def save_responses(
             # Update existing response
             existing_response.score = response_data.score
             existing_response.notes = response_data.notes
+            existing_response.evidence = response_data.evidence
             existing_response.updated_at = datetime.utcnow()
             saved_responses.append(existing_response)
         else:
             # Create new response
-            db_response = Response(
+            db_response = GateResponse(
                 assessment_id=assessment_id,
-                question_number=response_data.question_number,
                 domain=response_data.domain,
+                gate_id=response_data.gate_id,
+                question_id=response_data.question_id,
                 score=response_data.score,
                 notes=response_data.notes,
+                evidence=response_data.evidence,
             )
             db.add(db_response)
             saved_responses.append(db_response)
@@ -185,13 +190,13 @@ async def save_responses(
     return saved_responses
 
 
-@router.get("/{assessment_id}/responses", response_model=List[schemas.ResponseData])
+@router.get("/{assessment_id}/responses", response_model=List[schemas.GateResponseData])
 async def get_responses(
     assessment_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get all responses for an assessment"""
+    """Get all gate responses for an assessment"""
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
 
     if not assessment:
@@ -201,9 +206,9 @@ async def get_responses(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     responses = (
-        db.query(Response)
-        .filter(Response.assessment_id == assessment_id)
-        .order_by(Response.question_number)
+        db.query(GateResponse)
+        .filter(GateResponse.assessment_id == assessment_id)
+        .order_by(GateResponse.domain, GateResponse.gate_id, GateResponse.question_id)
         .all()
     )
 
@@ -225,24 +230,38 @@ async def submit_assessment(
     if assessment.assessor_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-    # Get all responses
-    responses = db.query(Response).filter(Response.assessment_id == assessment_id).all()
+    # Get all gate responses
+    gate_responses = db.query(GateResponse).filter(GateResponse.assessment_id == assessment_id).all()
 
-    if len(responses) < 20:
+    # Validate that all questions are answered (complete spec has variable questions per gate)
+    # For now, we just ensure we have responses
+    if not gate_responses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"All 20 questions must be answered. Currently answered: {len(responses)}",
+            detail="Assessment must have at least one gate response",
         )
 
-    # Calculate scores
-    domain_scores = scoring.calculate_domain_scores(responses)
-    overall_score = scoring.calculate_overall_score(domain_scores)
+    # Calculate scores and create domain score records
+    domain_score_data = scoring.calculate_domain_scores(gate_responses)
+    overall_score = scoring.calculate_overall_score(domain_score_data)
     maturity_level, _ = scoring.get_maturity_level(overall_score)
 
+    # Delete existing domain scores for this assessment (if resubmitting)
+    db.query(DomainScore).filter(DomainScore.assessment_id == assessment_id).delete()
+
+    # Create new domain score records
+    for domain, score_info in domain_score_data.items():
+        db_domain_score = DomainScore(
+            assessment_id=assessment_id,
+            domain=domain,
+            score=score_info["score"],
+            maturity_level=score_info["maturity_level"],
+            strengths=score_info.get("strengths", []),
+            gaps=score_info.get("gaps", []),
+        )
+        db.add(db_domain_score)
+
     # Update assessment
-    assessment.domain1_score = domain_scores.get("domain1")
-    assessment.domain2_score = domain_scores.get("domain2")
-    assessment.domain3_score = domain_scores.get("domain3")
     assessment.overall_score = overall_score
     assessment.maturity_level = maturity_level
     assessment.status = AssessmentStatus.COMPLETED
@@ -276,10 +295,11 @@ async def get_assessment_report(
             detail="Assessment must be completed to generate report",
         )
 
-    # Get responses
-    responses = db.query(Response).filter(Response.assessment_id == assessment_id).all()
+    # Get gate responses and domain scores
+    gate_responses = db.query(GateResponse).filter(GateResponse.assessment_id == assessment_id).all()
+    domain_scores = db.query(DomainScore).filter(DomainScore.assessment_id == assessment_id).all()
 
     # Generate report
-    report = scoring.generate_report(assessment, responses)
+    report = scoring.generate_report(assessment, gate_responses, domain_scores)
 
     return report
