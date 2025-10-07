@@ -24,7 +24,13 @@ Related to lessons-learned.md #<issue-number> if applicable
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-## Critical Rules
+## Critical Rules - NON-NEGOTIABLE
+- **DOCKER**: NEVER run commands that affect host system
+  - ❌ FORBIDDEN: `docker system prune`, `docker volume prune`, `docker network prune`
+  - ❌ FORBIDDEN: Any Docker command with `--all` or `-a` flag outside this project
+  - ✅ SAFE: `docker-compose down -v` (this project only)
+  - ✅ SAFE: `docker-compose build --no-cache` (this project only)
+  - ✅ SAFE: File/folder operations within `/home/jim/devops-maturity-model/`
 - NEVER mark features complete without browser/API testing
 - NEVER install dependencies on host (use Docker only)
 - ALWAYS check TypeScript compilation before frontend commits

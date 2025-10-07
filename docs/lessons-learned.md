@@ -112,11 +112,25 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-07 14:45] - Suggested Destructive Docker Command (docker system prune)
+- **Issue**: Suggested `docker system prune -f` as a debugging step, which would delete ALL unused Docker resources across the entire host system
+- **Impact**: CRITICAL - Could have destroyed hundreds of user's containers, volumes, and networks for other projects
+- **Root Cause**: Failed to consider scope of Docker commands - suggested host-wide command instead of project-scoped command
+- **Resolution**: Added explicit "NON-NEGOTIABLE" rules to CLAUDE.md forbidding system-wide Docker commands
+- **Lesson**: **NEVER suggest Docker commands that affect the host system**. Only use project-scoped commands: `docker-compose down -v`, `docker-compose build --no-cache`. User has other critical systems running.
+- **Category**: Process & Workflow, Safety
+- **Priority**: CRITICAL
+- **Safe Commands**: `docker-compose` commands are project-scoped and safe
+- **Forbidden Commands**: `docker system prune`, `docker volume prune`, `docker network prune`, any command with `--all` or `-a` outside project scope
+
+---
+
 ## Summary Statistics
-- **Total Issues**: 7
-- **Critical Issues**: 4 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors)
+- **Total Issues**: 8
+- **Critical Issues**: 5 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command)
 - **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
-- **Resolved Issues**: 7
+- **Safety Issues**: 1 (docker system prune suggestion - caught by user)
+- **Resolved Issues**: 8
 - **Open Issues**: 0
 - **TODOs**: 1 (Generate package-lock.json for frontend)
 
