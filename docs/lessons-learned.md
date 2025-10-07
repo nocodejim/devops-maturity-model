@@ -55,28 +55,6 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
-## Categories
-
-### 1. Development Environment
-- Track Docker, Python, Node.js, and tooling issues
-
-### 2. Architecture & Design
-- Track design decisions that caused problems or proved beneficial
-
-### 3. Dependencies & Packages
-- Track package conflicts, version issues, or missing dependencies
-
-### 4. Code Quality
-- Track bugs, type errors, linting issues
-
-### 5. Documentation
-- Track gaps in documentation or unclear instructions
-
-### 6. Process & Workflow
-- Track workflow inefficiencies or process improvements
-
----
-
 ### [2025-10-06 15:13] - Invalid Tailwind CSS Class
 - **Issue**: Frontend failing with error: "The `border-border` class does not exist"
 - **Impact**: Frontend completely non-functional - critical issue that was missed by insufficient testing
@@ -99,11 +77,26 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-07 12:28] - TypeScript Compilation Errors Preventing Frontend Execution
+- **Issue**: Login page displayed but clicking "Sign In" did nothing - no console messages, no network traffic
+- **Impact**: Critical - entire frontend non-functional despite appearing to load
+- **Root Cause**: TypeScript compilation errors in ResultsPage.tsx (possibly undefined overall_score) and api.ts (import.meta.env type issue) were preventing Vite from compiling the application
+- **Resolution**:
+  1. Fixed ResultsPage.tsx by adding null coalescing: `const overallScore = report.assessment.overall_score ?? 0`
+  2. Created vite-env.d.ts file to properly type import.meta.env
+  3. Restarted frontend container
+- **Lesson**: **Vite in development mode fails silently on TypeScript errors - the page loads but JavaScript doesn't execute**. Always run `npm run build` or check browser console for TypeScript errors when frontend appears broken.
+- **Category**: Code Quality, Process & Workflow
+- **Detection**: User reported broken functionality, ran `npm run build` to discover TypeScript errors
+- **Best Practice**: Add TypeScript type checking to CI/CD pipeline. Test in browser immediately after code changes.
+
+---
+
 ## Summary Statistics
-- **Total Issues**: 6
-- **Critical Issues**: 3 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error)
+- **Total Issues**: 7
+- **Critical Issues**: 4 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors)
 - **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
-- **Resolved Issues**: 6
+- **Resolved Issues**: 7
 - **Open Issues**: 0
 - **TODOs**: 1 (Generate package-lock.json for frontend)
 

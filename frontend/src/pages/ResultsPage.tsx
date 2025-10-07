@@ -31,9 +31,10 @@ export function ResultsPage() {
   }
 
   const maturityInfo = MATURITY_LEVELS[report.maturity_level.level as keyof typeof MATURITY_LEVELS]
-  const scoreColor = report.assessment.overall_score >= 80 ? 'green' :
-                     report.assessment.overall_score >= 60 ? 'blue' :
-                     report.assessment.overall_score >= 40 ? 'yellow' : 'orange'
+  const overallScore = report.assessment.overall_score ?? 0
+  const scoreColor = overallScore >= 80 ? 'green' :
+                     overallScore >= 60 ? 'blue' :
+                     overallScore >= 40 ? 'yellow' : 'orange'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -65,7 +66,7 @@ export function ResultsPage() {
           <div className="text-center">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Overall Maturity Score</h2>
             <div className={`text-6xl font-bold text-${scoreColor}-600 mb-2`}>
-              {report.assessment.overall_score?.toFixed(1)}
+              {overallScore.toFixed(1)}
             </div>
             <div className="text-2xl text-gray-600 mb-6">out of 100</div>
 
