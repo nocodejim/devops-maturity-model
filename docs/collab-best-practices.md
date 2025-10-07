@@ -1,8 +1,10 @@
-# Instructions for Claude Code - Documentation & Commit Protocol
+# Collaboration Best Practices - Reference Documentation
 
-## CRITICAL: Update Documentation Before EVERY Commit
+## Purpose
 
-This file serves as a reminder to maintain documentation integrity throughout development.
+This document provides detailed guidelines for maintaining documentation and commit quality. It is a **reference document** for human developers and AI collaborators.
+
+**For active instructions, see:** `/CLAUDE.md` (concise, loaded with every session)
 
 ---
 

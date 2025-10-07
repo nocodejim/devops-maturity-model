@@ -1,5 +1,26 @@
 # DevOps Maturity Assessment Platform - Progress Tracker
 
+## Document Format
+
+**When to Update:** Every time you complete a feature, phase, or milestone.
+
+**What to Update:**
+- Mark checkboxes as complete `[x]` when done
+- Update "Last Updated" date (format: YYYY-MM-DD)
+- Update "Current Phase" description
+- Update "Overall Progress" percentage
+- Add entry to Notes section with date and summary
+- Update milestone table with completion dates
+- Update blockers/risks if any arise
+
+**Checkpoint Markers:**
+- `[x]` = Complete
+- `[ ]` = Pending
+- `⏳` = In Progress
+- `⚠️` = Blocked/Issues
+
+---
+
 ## Complete Spec Development Status
 
 **Last Updated**: 2025-10-07

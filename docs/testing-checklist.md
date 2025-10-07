@@ -1,5 +1,25 @@
 # Testing Checklist - Phase 2 Frontend
 
+## Document Format
+
+**When to Update:** When adding new features that need testing or when test cases change.
+
+**Checklist Format:**
+```markdown
+#### Feature Name
+- [ ] Test case description
+- [ ] Expected result vs actual result
+- [ ] Edge cases covered
+```
+
+**How to Use:**
+- Check boxes `[x]` as tests are completed
+- Add new sections for new features
+- Document failures with expected vs actual results
+- Add integration test scenarios for multi-feature workflows
+
+---
+
 ## Critical Testing Directive
 **ALWAYS test by actually accessing the application in its intended environment, not just checking if endpoints respond.**
 - curl showing HTML ≠ working application

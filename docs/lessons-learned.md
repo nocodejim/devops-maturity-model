@@ -1,5 +1,25 @@
 # Lessons Learned
 
+## Document Format
+
+**When to Update:** Every time you encounter an issue, bug, error, or learn something significant during development.
+
+**Entry Format:**
+```markdown
+### [YYYY-MM-DD HH:MM] - Brief Issue Title
+- **Issue**: What went wrong (be specific)
+- **Impact**: How it affected development/functionality
+- **Root Cause**: Why it happened
+- **Resolution**: How it was fixed
+- **Lesson**: Key takeaway for future work
+- **Category**: Dependencies & Packages | Code Quality | Process & Workflow | Development Environment | Security
+- **Priority**: CRITICAL | High | Medium | Low (optional)
+```
+
+**Categories:** Dependencies & Packages, Code Quality, Process & Workflow, Development Environment, Security
+
+---
+
 ## Session Date: 2025-10-06
 
 ### Purpose
