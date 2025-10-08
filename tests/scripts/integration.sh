@@ -134,11 +134,13 @@ else
         test_failed "Cannot submit responses - endpoint not accessible"
     else
         if echo "$RESPONSES_RESPONSE" | python3 -m json.tool > /dev/null 2>&1; then
-            SUCCESS=$(echo "$RESPONSES_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('success', False))" 2>/dev/null || echo "False")
-            if [ "$SUCCESS" = "True" ]; then
+            # Check if response is an array of response objects
+            RESPONSE_COUNT=$(echo "$RESPONSES_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data) if isinstance(data, list) else 0)" 2>/dev/null || echo "0")
+            if [ "$RESPONSE_COUNT" -gt 0 ]; then
                 test_passed "Assessment responses submitted successfully"
+                log "Responses created: $RESPONSE_COUNT"
             else
-                test_failed "Response submission failed"
+                test_failed "Response submission failed - no responses returned"
                 log "Response: $RESPONSES_RESPONSE"
             fi
         else

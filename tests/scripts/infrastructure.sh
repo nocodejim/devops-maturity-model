@@ -42,30 +42,30 @@ log ""
 
 # Test 1: Verify all containers running
 log "Test 1: Checking container status..."
-if docker-compose ps | grep -q "Up"; then
-    CONTAINERS=$(docker-compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}")
+if docker compose ps | grep -q "Up"; then
+    CONTAINERS=$(docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Ports}}")
     log "$CONTAINERS"
     
     # Check specific containers
-    if docker-compose ps | grep -q "backend.*Up"; then
+    if docker compose ps | grep -q "backend.*Up"; then
         test_passed "Backend container is running"
     else
         test_failed "Backend container is not running"
     fi
     
-    if docker-compose ps | grep -q "frontend.*Up"; then
+    if docker compose ps | grep -q "frontend.*Up"; then
         test_passed "Frontend container is running"
     else
         test_failed "Frontend container is not running"
     fi
     
-    if docker-compose ps | grep -q "postgres.*Up"; then
+    if docker compose ps | grep -q "postgres.*Up"; then
         test_passed "PostgreSQL container is running"
     else
         test_failed "PostgreSQL container is not running"
     fi
 else
-    test_failed "No containers are running. Run 'docker-compose up' first."
+    test_failed "No containers are running. Run 'docker compose up' first."
     exit 1
 fi
 
@@ -75,7 +75,7 @@ log ""
 log "Test 2: Checking container logs for errors..."
 
 log "Backend errors:"
-BACKEND_ERRORS=$(docker-compose logs backend --tail 50 2>/dev/null | grep -i error || true)
+BACKEND_ERRORS=$(docker compose logs backend --tail 50 2>/dev/null | grep -i error || true)
 if [ -z "$BACKEND_ERRORS" ]; then
     test_passed "No errors found in backend logs"
 else
@@ -84,7 +84,7 @@ else
 fi
 
 log "Frontend errors:"
-FRONTEND_ERRORS=$(docker-compose logs frontend --tail 50 2>/dev/null | grep -i error || true)
+FRONTEND_ERRORS=$(docker compose logs frontend --tail 50 2>/dev/null | grep -i error || true)
 if [ -z "$FRONTEND_ERRORS" ]; then
     test_passed "No errors found in frontend logs"
 else
@@ -93,7 +93,7 @@ else
 fi
 
 log "PostgreSQL errors:"
-POSTGRES_ERRORS=$(docker-compose logs postgres --tail 50 2>/dev/null | grep -i error || true)
+POSTGRES_ERRORS=$(docker compose logs postgres --tail 50 2>/dev/null | grep -i error || true)
 if [ -z "$POSTGRES_ERRORS" ]; then
     test_passed "No errors found in PostgreSQL logs"
 else
@@ -105,7 +105,7 @@ log ""
 
 # Test 3: Verify TypeScript compilation
 log "Test 3: Testing TypeScript compilation..."
-if docker-compose exec -T frontend npm run build > /tmp/build_output.log 2>&1; then
+if docker compose exec -T frontend npm run build > /tmp/build_output.log 2>&1; then
     BUILD_OUTPUT=$(cat /tmp/build_output.log)
     if echo "$BUILD_OUTPUT" | grep -q "built in"; then
         test_passed "TypeScript compilation successful"

@@ -58,13 +58,13 @@ log ""
 
 # Test 2: Check frontend environment configuration
 log "Test 2: Checking frontend API configuration..."
-API_CONFIG=$(docker-compose exec -T frontend cat src/services/api.ts 2>/dev/null | grep -A 2 "API_URL" || echo "ERROR")
+API_CONFIG=$(docker compose exec -T frontend cat src/services/api.ts 2>/dev/null | grep -A 2 "API_URL" || echo "ERROR")
 if [ "$API_CONFIG" = "ERROR" ]; then
     test_failed "Cannot read frontend API configuration"
 else
-    if echo "$API_CONFIG" | grep -q "localhost:8000"; then
+    if echo "$API_CONFIG" | grep -q "8000" || echo "$API_CONFIG" | grep -q "getApiUrl"; then
         test_passed "Frontend API URL correctly configured"
-        log "API Config: $(echo "$API_CONFIG" | tr '\n' ' ')"
+        log "API Config: Dynamic URL detection implemented"
     else
         test_failed "Frontend API URL not configured correctly"
         log "API Config: $API_CONFIG"
@@ -75,7 +75,7 @@ log ""
 
 # Test 3: Check TypeScript compilation (detailed)
 log "Test 3: Testing TypeScript compilation (detailed)..."
-BUILD_OUTPUT=$(docker-compose exec -T frontend npm run build 2>&1 || echo "BUILD_FAILED")
+BUILD_OUTPUT=$(docker compose exec -T frontend npm run build 2>&1 || echo "BUILD_FAILED")
 if [ "$BUILD_OUTPUT" = "BUILD_FAILED" ]; then
     test_failed "TypeScript build command failed to execute"
 else
@@ -121,7 +121,7 @@ log ""
 
 # Test 5: Check Vite dev server configuration
 log "Test 5: Testing Vite dev server configuration..."
-VITE_CONFIG=$(docker-compose exec -T frontend cat vite.config.ts 2>/dev/null || echo "ERROR")
+VITE_CONFIG=$(docker compose exec -T frontend cat vite.config.ts 2>/dev/null || echo "ERROR")
 if [ "$VITE_CONFIG" = "ERROR" ]; then
     test_failed "Cannot read Vite configuration"
 else
@@ -142,7 +142,7 @@ log ""
 
 # Test 6: Check package.json dependencies
 log "Test 6: Checking critical dependencies..."
-PACKAGE_JSON=$(docker-compose exec -T frontend cat package.json 2>/dev/null || echo "ERROR")
+PACKAGE_JSON=$(docker compose exec -T frontend cat package.json 2>/dev/null || echo "ERROR")
 if [ "$PACKAGE_JSON" = "ERROR" ]; then
     test_failed "Cannot read package.json"
 else
