@@ -179,16 +179,40 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 ---
 
 ## Summary Statistics
-- **Total Issues**: 12
-- **Critical Issues**: 8 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility, 2x incomplete migrations causing regression)
+- **Total Issues**: 13
+- **Critical Issues**: 9 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility, 4x incomplete migrations causing regression)
 - **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
 - **Safety Issues**: 1 (docker system prune suggestion - caught by user)
 - **Process Failures**: 3 (Issues #5, #7, #10 - all testing-related)
-- **Migration Failures**: 2 (Issues #10, #12 - both incomplete migrations from manual writing)
+- **Migration Failures**: 4 (Issues #10, #12, #13 twice - ALL from manually writing migration)
 - **Regressions**: 1 (Issue #12 - broke working app from 8 hours ago)
-- **Resolved Issues**: 12
+- **Resolved Issues**: 13
 - **Open Issues**: 0
-- **TODOs**: 2 (Generate package-lock.json for frontend, Create migration validation test)
+- **TODOs**: 2 (Generate package-lock.json for frontend, URGENT: Create migration validation OR use autogenerate)
+
+---
+
+### [2025-10-07 21:00] - FOURTH Incomplete Migration (evidence column + maturity_level type) - Pattern Failure
+- **Issue**: Multiple 500 errors: missing `evidence` column, missing `updated_at` on domain_scores, wrong type for `maturity_level`
+- **Impact**: CRITICAL - App completely broken, all assessment endpoints failing with 500 errors
+- **Root Cause**: FOURTH time manually creating incomplete migration without systematic validation
+- **Resolution**:
+  1. User reported multiple CORS errors (actually 500 errors behind CORS)
+  2. Checked logs: Missing `evidence` column from gate_responses
+  3. Also found: Missing `updated_at` from domain_scores
+  4. Also found: `maturity_level` was ENUM instead of Integer (caused AVG() SQL error)
+  5. Fixed all three issues in migration
+  6. Reset database
+- **Lesson**: **THIS IS SYSTEMATIC FAILURE - 4 incomplete migrations in same session:**
+  - Issue #10: Missing last_login from User
+  - Issue #12: Missing started_at from Assessment
+  - Issue #13: Missing evidence from GateResponse, updated_at from DomainScore, wrong type for maturity_level
+  - All from manually writing migrations
+  - **MUST use alembic autogenerate or create validation script**
+- **Category**: Code Quality, Process & Workflow
+- **Priority**: CRITICAL
+- **Detection**: User frustration - multiple endpoints failing
+- **Files Changed**: backend/alembic/versions/20251007_1600_initial_schema.py (added evidence, updated_at, fixed maturity_level type)
 
 ---
 

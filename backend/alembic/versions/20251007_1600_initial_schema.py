@@ -24,7 +24,6 @@ def upgrade() -> None:
     op.execute("CREATE TYPE userrole AS ENUM ('ADMIN', 'ASSESSOR', 'VIEWER')")
     op.execute("CREATE TYPE domaintype AS ENUM ('DOMAIN1', 'DOMAIN2', 'DOMAIN3', 'DOMAIN4', 'DOMAIN5')")
     op.execute("CREATE TYPE assessmentstatus AS ENUM ('DRAFT', 'IN_PROGRESS', 'COMPLETED')")
-    op.execute("CREATE TYPE maturitylevel AS ENUM ('LEVEL1', 'LEVEL2', 'LEVEL3', 'LEVEL4', 'LEVEL5')")
 
     # Organizations table
     op.create_table(
@@ -63,7 +62,7 @@ def upgrade() -> None:
         sa.Column('team_name', sa.String(length=255), nullable=False),
         sa.Column('status', postgresql.ENUM('DRAFT', 'IN_PROGRESS', 'COMPLETED', name='assessmentstatus', create_type=False), nullable=False, server_default='DRAFT'),
         sa.Column('overall_score', sa.Float(), nullable=True),
-        sa.Column('maturity_level', postgresql.ENUM('LEVEL1', 'LEVEL2', 'LEVEL3', 'LEVEL4', 'LEVEL5', name='maturitylevel', create_type=False), nullable=True),
+        sa.Column('maturity_level', sa.Integer(), nullable=True),
         sa.Column('assessor_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('organization_id', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('started_at', sa.DateTime(), nullable=True),
@@ -86,6 +85,7 @@ def upgrade() -> None:
         sa.Column('strengths', postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column('gaps', postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.ForeignKeyConstraint(['assessment_id'], ['assessments.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
@@ -100,6 +100,7 @@ def upgrade() -> None:
         sa.Column('question_id', sa.String(length=50), nullable=False),
         sa.Column('score', sa.Integer(), nullable=False),
         sa.Column('notes', sa.Text(), nullable=True),
+        sa.Column('evidence', postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.ForeignKeyConstraint(['assessment_id'], ['assessments.id'], ondelete='CASCADE'),
@@ -135,7 +136,6 @@ def downgrade() -> None:
     op.drop_table('organizations')
 
     # Drop enum types
-    op.execute('DROP TYPE maturitylevel')
     op.execute('DROP TYPE assessmentstatus')
     op.execute('DROP TYPE domaintype')
     op.execute('DROP TYPE userrole')
