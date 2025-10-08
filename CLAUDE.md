@@ -39,5 +39,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Test User
 - Email: admin@example.com
 - Password: admin123
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000
+
+## Network Access
+- Dev PC Network IP: 192.168.44.93
+- Frontend (local): http://localhost:5173
+- Frontend (network): http://192.168.44.93:5173
+- Backend (local): http://localhost:8000
+- Backend (network): http://192.168.44.93:8000

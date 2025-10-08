@@ -16,7 +16,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://192.168.44.93:5173",
+        "http://192.168.44.93:8000",
+    ]
 
     # Application
     PROJECT_NAME: str = "DevOps Maturity Assessment"

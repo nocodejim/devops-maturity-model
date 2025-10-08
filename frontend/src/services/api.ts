@@ -12,7 +12,17 @@ import type {
   GatesResponse,
 } from '@/types'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+// Detect backend URL based on current host
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  // Use same host as frontend but port 8000
+  const host = window.location.hostname
+  return `http://${host}:8000/api`
+}
+
+const API_URL = getApiUrl()
 
 const api = axios.create({
   baseURL: API_URL,
