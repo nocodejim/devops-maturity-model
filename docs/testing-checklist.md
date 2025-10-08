@@ -1,4 +1,22 @@
-# Testing Checklist - Phase 2 Frontend
+# Testing Checklist - Comprehensive Application Testing
+
+## Quick Start
+
+**Automated Tests:**
+```bash
+# Run all automated tests
+./tests/run-all-tests.sh
+
+# Or run individual test phases
+./tests/scripts/infrastructure.sh
+./tests/scripts/backend-api.sh
+./tests/scripts/frontend-build.sh
+./tests/scripts/integration.sh
+```
+
+**Manual Tests:**
+- Follow guide: `tests/manual/browser-testing.md`
+- Use debugging guide: `tests/manual/debugging-guide.md`
 
 ## Document Format
 

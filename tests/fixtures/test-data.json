@@ -1,0 +1,81 @@
+{
+  "test_user": {
+    "email": "admin@example.com",
+    "password": "admin123",
+    "role": "admin"
+  },
+  "test_assessment": {
+    "team_name": "Integration Test Team",
+    "status": "in_progress"
+  },
+  "sample_responses": [
+    {
+      "domain": "domain1",
+      "gate_id": "gate_1_1",
+      "question_id": "q1",
+      "score": 3,
+      "notes": "Integration test response 1"
+    },
+    {
+      "domain": "domain1",
+      "gate_id": "gate_1_1",
+      "question_id": "q2",
+      "score": 4,
+      "notes": "Integration test response 2"
+    },
+    {
+      "domain": "domain1",
+      "gate_id": "gate_1_2",
+      "question_id": "q3",
+      "score": 2,
+      "notes": "Integration test response 3"
+    },
+    {
+      "domain": "domain1",
+      "gate_id": "gate_1_2",
+      "question_id": "q4",
+      "score": 5,
+      "notes": "Integration test response 4"
+    }
+  ],
+  "expected_api_responses": {
+    "root_endpoint": {
+      "status": "healthy",
+      "service": "DevOps Maturity Assessment API",
+      "version": "0.1.0"
+    },
+    "health_endpoint": {
+      "status": "healthy",
+      "database": "connected"
+    },
+    "gates_endpoint": {
+      "total_gates": 20,
+      "total_questions": 40
+    }
+  },
+  "test_scenarios": {
+    "valid_login": {
+      "username": "admin@example.com",
+      "password": "admin123",
+      "expected_status": 200,
+      "expected_token_format": "eyJ"
+    },
+    "invalid_login": {
+      "username": "wrong@example.com",
+      "password": "wrongpassword",
+      "expected_status": 401
+    },
+    "missing_credentials": {
+      "username": "",
+      "password": "",
+      "expected_status": 422
+    }
+  },
+  "browser_test_urls": {
+    "frontend_root": "http://localhost:5173",
+    "login_page": "http://localhost:5173/login",
+    "dashboard_page": "http://localhost:5173/dashboard",
+    "backend_root": "http://localhost:8000",
+    "api_docs": "http://localhost:8000/docs"
+  }
+}
