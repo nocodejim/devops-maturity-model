@@ -45,8 +45,7 @@ services:
     container_name: devops-maturity-frontend
     ports:
       - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:8000/api
+    # VITE_API_URL removed - frontend auto-detects backend URL based on hostname
     volumes:
       - ./frontend:/app
       - /app/node_modules
