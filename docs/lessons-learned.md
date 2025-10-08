@@ -263,4 +263,81 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-07 22:15] - AuthContext Not Updating on Login (Navigation Loop)
+- **Issue**: Login succeeded (200 OK, JWT token stored) but navigation to /dashboard immediately redirected back to /login
+- **Impact**: Complete login failure - app appeared broken despite successful authentication
+- **Root Cause**: AuthContext only loaded user on mount via useEffect. When LoginPage stored token and navigated, ProtectedRoute checked AuthContext.user (still null), redirected to login
+- **Resolution**:
+  1. Added `login(user: User)` function to AuthContext interface
+  2. LoginPage now calls `login(user)` after fetching user data, before navigation
+  3. This updates AuthContext.user state before navigation, allowing ProtectedRoute to pass
+- **Lesson**: When using context-based auth, must synchronize state updates with navigation. Storing token in localStorage is not enough - context state must be updated explicitly
+- **Category**: Code Quality
+- **Priority**: CRITICAL
+- **Detection**: Extensive console logging revealed navigation was called but user stayed on login page
+- **Files Changed**:
+  - frontend/src/contexts/AuthContext.tsx (added login function)
+  - frontend/src/pages/LoginPage.tsx (call login before navigate)
+
+---
+
+### [2025-10-07 22:30] - Insufficient Console Logging Slowing Diagnosis
+- **Issue**: Multiple hours spent diagnosing issues that would have been immediately obvious with proper logging
+- **Impact**: Wasted development time, user frustration, guessing instead of knowing
+- **Examples**:
+  - AuthContext login issue: Only found after adding 8+ console.log statements
+  - Mobile network issue: Still debugging because can't access Chrome DevTools on Android
+  - API URL detection: Had to add logging to verify what URL was being used
+- **Root Cause**: Too little debugging built into MVP code - assuming code works without verification
+- **Resolution**: Added debugging requirements to CLAUDE.md as MANDATORY for MVP/early testing
+- **Lesson**: During MVP development, **extensive console logging is not optional**:
+  - Log every critical step in async flows
+  - Log API request/response details
+  - Log state changes and navigation calls
+  - Use prefixed format: `[ComponentName] Description`
+  - Better to have too much logging than too little
+- **Category**: Process & Workflow
+- **Priority**: CRITICAL
+- **User Feedback**: "we're missing so much and so much guessing"
+- **Action Item**: Add comprehensive console.log statements to all critical paths in codebase
+
+---
+
+### [2025-10-07 22:45] - Mobile Network Login Failure (UNRESOLVED)
+- **Issue**: Login works locally (localhost:5173) but fails from phone at network IP (192.168.44.93:5173) with "invalid email or password"
+- **Impact**: Cannot access application from mobile devices on local network - limits testing and usability
+- **Investigation Completed**:
+  - ✅ Network connectivity: Phone can access frontend (login page loads)
+  - ✅ Backend accessibility: Phone can access http://192.168.44.93:8000/docs
+  - ✅ Backend logs: Show POST /api/auth/login 200 OK from 172.31.0.1 (Docker internal network)
+  - ✅ CORS: Added 192.168.44.93 to ALLOWED_ORIGINS
+  - ✅ Hardcoded URL: Removed VITE_API_URL from docker-compose.yml, using dynamic hostname detection
+  - ✅ AuthContext: Fixed login function to update user state before navigation
+  - ✅ Local testing: Login works perfectly from dev PC
+  - ❌ Mobile browser: Still shows "invalid email or password"
+- **Root Cause**: UNKNOWN - backend receiving requests and returning 200 OK, but frontend showing error
+- **Possible Causes**:
+  1. Mobile browser localStorage issue
+  2. CORS preflight failing silently
+  3. Response parsing issue on mobile browser
+  4. Network/proxy interference between phone and Docker container
+  5. Frontend error handling catching success as error
+- **Next Steps**:
+  1. Add remote debugging capability for mobile Chrome
+  2. Check if browser console logs available via USB debugging
+  3. Test with different mobile browser (Firefox, Safari)
+  4. Add more detailed error logging to understand exact failure point
+  5. Test from different device on same network
+- **Category**: Development Environment, Code Quality
+- **Priority**: HIGH
+- **Detection**: User testing from phone - critical for mobile use cases
+- **User Feedback**: "i want to give someone else a shot at fixing it"
+- **Files to Investigate**:
+  - frontend/src/services/api.ts (axios interceptors, error handling)
+  - frontend/src/pages/LoginPage.tsx (error handling in catch block)
+  - Backend CORS middleware configuration
+- **Documentation Created**: docs/mobile-network-troubleshooting.md with full diagnostic details
+
+---
+
 *This document will be updated throughout the development session.*

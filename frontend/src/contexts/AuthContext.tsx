@@ -6,6 +6,7 @@ import type { User } from '@/types'
 interface AuthContextType {
   user: User | null
   loading: boolean
+  login: (user: User) => void
   logout: () => void
 }
 
@@ -38,6 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser()
   }, [])
 
+  const login = (user: User) => {
+    setUser(user)
+  }
+
   const logout = () => {
     localStorage.removeItem('access_token')
     setUser(null)
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

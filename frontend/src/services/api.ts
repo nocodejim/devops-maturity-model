@@ -19,7 +19,9 @@ const getApiUrl = () => {
   }
   // Use same host as frontend but port 8000
   const host = window.location.hostname
-  return `http://${host}:8000/api`
+  const url = `http://${host}:8000/api`
+  console.log('[API] Detected backend URL:', url)
+  return url
 }
 
 const API_URL = getApiUrl()

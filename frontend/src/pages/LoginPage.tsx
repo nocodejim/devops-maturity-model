@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '@/services/api'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,17 +18,37 @@ export function LoginPage() {
     setLoading(true)
 
     try {
+      console.log('[Login] Starting login with email:', email)
       const response = await authApi.login({ email, password })
+      console.log('[Login] Login response received:', response)
+
+      if (!response.access_token) {
+        console.error('[Login] No access token in response!')
+        throw new Error('No access token received')
+      }
+
       localStorage.setItem('access_token', response.access_token)
+      console.log('[Login] Token stored in localStorage')
 
       // Fetch user info to verify token
-      await authApi.getCurrentUser()
+      console.log('[Login] Fetching current user...')
+      const user = await authApi.getCurrentUser()
+      console.log('[Login] User verified successfully:', user)
 
+      // Update auth context with user
+      console.log('[Login] Updating AuthContext with user...')
+      login(user)
+
+      console.log('[Login] Navigating to dashboard...')
       navigate('/dashboard')
+      console.log('[Login] Navigate called')
     } catch (err: any) {
-      console.error('Login error:', err)
-      setError(err.response?.data?.detail || 'Invalid email or password')
+      console.error('[Login] Error occurred:', err)
+      console.error('[Login] Error response:', err.response)
+      console.error('[Login] Error message:', err.message)
+      setError(err.response?.data?.detail || err.message || 'Invalid email or password')
     } finally {
+      console.log('[Login] Finally block - setting loading to false')
       setLoading(false)
     }
   }

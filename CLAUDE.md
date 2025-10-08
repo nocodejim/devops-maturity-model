@@ -36,6 +36,17 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - ALWAYS check TypeScript compilation before frontend commits
 - See `docs/collab-best-practices.md` for detailed workflow
 
+## Debugging Requirements - MANDATORY FOR MVP/EARLY TESTING
+- **ALWAYS add extensive console.log debugging during MVP development**
+- Console logs should use prefixed format: `[ComponentName] Description`
+- Log every critical step in async flows (API calls, auth, navigation)
+- Log both success and error states with full context
+- Include request/response details for all API interactions
+- Add console.log to api.ts to show detected backend URL
+- DO NOT assume code works - verify with actual console output
+- We are missing too much information without comprehensive logging
+- Better to have too much logging than too little during early testing
+
 ## Test User
 - Email: admin@example.com
 - Password: admin123
