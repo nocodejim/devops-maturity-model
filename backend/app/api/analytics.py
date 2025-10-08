@@ -57,4 +57,5 @@ async def get_analytics_summary(
         "completed_assessments": completed_assessments or 0,
         "average_score": round(float(avg_score), 2),
         "average_maturity_level": round(float(avg_maturity), 2),
+        "assessments_by_domain": {},  # TODO: Implement domain breakdown
     }
