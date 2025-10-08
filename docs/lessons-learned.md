@@ -190,4 +190,24 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-07 20:40] - Login Failure After FastAPI/Pydantic Upgrade (Investigation In Progress)
+- **Issue**: User reports login not working after FastAPI 0.104 → 0.115 upgrade
+- **Impact**: Unknown - backend API fully functional via curl, issue appears frontend/browser specific
+- **Testing Completed**:
+  - ✅ Backend API: All endpoints tested with curl - working correctly
+  - ✅ Login endpoint: Returns JWT token via curl
+  - ✅ Authenticated endpoints: Work with JWT token
+  - ✅ Frontend build: TypeScript compiles without errors
+  - ✅ Frontend serving: HTML delivered correctly
+  - ❌ Browser testing: Cannot test without actual browser DevTools
+- **Root Cause**: UNKNOWN - requires browser DevTools inspection
+- **Next Steps**: Created comprehensive testing document at docs/TESTING-SESSION-PROMPT.md
+- **Category**: Process & Workflow, Testing
+- **Priority**: HIGH
+- **Detection**: User reported issue during work PC testing
+- **Best Practice**: Backend API tests are not sufficient - must test actual browser behavior with DevTools
+- **Note**: Cannot replicate browser environment with curl - need Console/Network tab inspection
+
+---
+
 *This document will be updated throughout the development session.*
