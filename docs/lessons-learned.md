@@ -179,18 +179,47 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 ---
 
 ## Summary Statistics
-- **Total Issues**: 10
-- **Critical Issues**: 7 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility, incomplete migration + repeated testing failure)
+- **Total Issues**: 12
+- **Critical Issues**: 8 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility, 2x incomplete migrations causing regression)
 - **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
 - **Safety Issues**: 1 (docker system prune suggestion - caught by user)
 - **Process Failures**: 3 (Issues #5, #7, #10 - all testing-related)
-- **Resolved Issues**: 10
+- **Migration Failures**: 2 (Issues #10, #12 - both incomplete migrations from manual writing)
+- **Regressions**: 1 (Issue #12 - broke working app from 8 hours ago)
+- **Resolved Issues**: 12
 - **Open Issues**: 0
-- **TODOs**: 1 (Generate package-lock.json for frontend)
+- **TODOs**: 2 (Generate package-lock.json for frontend, Create migration validation test)
 
 ---
 
-### [2025-10-07 20:40] - Login Failure After FastAPI/Pydantic Upgrade (Investigation In Progress)
+### [2025-10-07 20:52] - SECOND Incomplete Migration (started_at column) and Regression
+- **Issue**: Assessment creation failing with 500 error: "column started_at of relation assessments does not exist"
+- **Impact**: CRITICAL - Core functionality broken, app was working 8 hours ago, regressed
+- **Root Cause**: EXACT SAME MISTAKE as issue #10 - manually created migration without checking ALL model fields
+- **Resolution**:
+  1. User reported: "we had this working 8 hours ago and we've worked our way backwards"
+  2. Checked backend logs: SQLAlchemy error for missing started_at column
+  3. Compared Assessment model vs migration: started_at in model, NOT in migration
+  4. Added started_at column to migration
+  5. Reset database, re-ran migration
+  6. Tested: Assessment creation now works ✅
+- **Lesson**: **This is the SECOND incomplete migration in the same session.** Pattern identified:
+  - Issue #10: Missing last_login from User table
+  - Issue #12: Missing started_at from Assessment table
+  - Root cause: Manually writing migrations without systematically checking every Column definition
+  - **MUST create automated check or use alembic autogenerate properly**
+- **Category**: Code Quality, Process & Workflow
+- **Priority**: CRITICAL
+- **Detection**: User frustration - "we've worked our way backwards"
+- **Best Practice**:
+  - Use `alembic revision --autogenerate` against clean database with all models imported
+  - OR manually verify every single Column() in models.py matches migration
+  - Add migration validation test to CI/CD
+- **Files Changed**: backend/alembic/versions/20251007_1600_initial_schema.py (added started_at column)
+
+---
+
+### [2025-10-07 20:40] - Login Failure After FastAPI/Pydantic Upgrade (Investigation In Progress - SUPERSEDED by issue #12)
 - **Issue**: User reports login not working after FastAPI 0.104 → 0.115 upgrade
 - **Impact**: Unknown - backend API fully functional via curl, issue appears frontend/browser specific
 - **Testing Completed**:

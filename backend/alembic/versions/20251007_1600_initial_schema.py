@@ -66,9 +66,10 @@ def upgrade() -> None:
         sa.Column('maturity_level', postgresql.ENUM('LEVEL1', 'LEVEL2', 'LEVEL3', 'LEVEL4', 'LEVEL5', name='maturitylevel', create_type=False), nullable=True),
         sa.Column('assessor_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('organization_id', postgresql.UUID(as_uuid=True), nullable=True),
+        sa.Column('started_at', sa.DateTime(), nullable=True),
+        sa.Column('completed_at', sa.DateTime(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
-        sa.Column('completed_at', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(['assessor_id'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['organization_id'], ['organizations.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id')
