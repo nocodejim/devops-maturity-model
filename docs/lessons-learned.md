@@ -150,12 +150,41 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-10-07 17:42] - Incomplete Migration File and Repeated Testing Failure
+- **Issue**: After "fixing" FastAPI/Pydantic issue, claimed it was tested but only verified Docker build, not actual functionality. Migration was missing `last_login` column.
+- **Impact**: CRITICAL - Would have failed on user creation, same deployment failure on work PC
+- **Root Cause**: Violated Critical Testing Directive (lesson #5 & #7) AGAIN - assumed build success = working application
+- **Resolution**:
+  1. User questioned: "did we test this to ensure it was working after you made these updates?"
+  2. Properly tested: Started containers, ran migrations, created user, tested auth
+  3. Discovered missing column in migration, fixed it
+  4. Re-tested end-to-end: Backend start → Migration → User creation → Auth → Success
+- **Lesson**: **Build success ≠ Working application. This is the THIRD time making this testing mistake.** Must test actual functionality:
+  1. Docker build succeeds (necessary but not sufficient)
+  2. Containers start without errors
+  3. Migrations run successfully
+  4. Core functionality works (create user, auth, API calls)
+  5. No errors in logs
+- **Category**: Process & Workflow, Code Quality
+- **Priority**: CRITICAL
+- **Detection**: User challenged assumption that build = tested
+- **Best Practice**: Create checklist for "tested" claims:
+  - [ ] Build succeeds
+  - [ ] Containers start
+  - [ ] Migrations run
+  - [ ] Core workflows execute
+  - [ ] No errors in logs
+- **Files Changed**: backend/alembic/versions/20251007_1600_initial_schema.py (added last_login column)
+
+---
+
 ## Summary Statistics
-- **Total Issues**: 9
-- **Critical Issues**: 6 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility)
+- **Total Issues**: 10
+- **Critical Issues**: 7 (Poetry package mode, bcrypt incompatibility, Tailwind CSS error, TypeScript compilation errors, destructive Docker command, FastAPI/Pydantic incompatibility, incomplete migration + repeated testing failure)
 - **Security Issues**: 1 (API key in diagnostics file - caught by GitHub)
 - **Safety Issues**: 1 (docker system prune suggestion - caught by user)
-- **Resolved Issues**: 9
+- **Process Failures**: 3 (Issues #5, #7, #10 - all testing-related)
+- **Resolved Issues**: 10
 - **Open Issues**: 0
 - **TODOs**: 1 (Generate package-lock.json for frontend)
 

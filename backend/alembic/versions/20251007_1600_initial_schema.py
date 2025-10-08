@@ -50,6 +50,7 @@ def upgrade() -> None:
         sa.Column('organization_id', postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
         sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+        sa.Column('last_login', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(['organization_id'], ['organizations.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('email')
