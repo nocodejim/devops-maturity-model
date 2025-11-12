@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+import sqlalchemy as sa
 from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, String, Text, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -38,11 +39,11 @@ class AssessmentStatus(str, enum.Enum):
 class DomainType(str, enum.Enum):
     """Domain type enumeration - Complete spec has 5 domains"""
 
-    DOMAIN1 = "domain1"  # Source Control & Development Practices
-    DOMAIN2 = "domain2"  # Security & Compliance
-    DOMAIN3 = "domain3"  # CI/CD & Deployment
-    DOMAIN4 = "domain4"  # Infrastructure & Platform Engineering
-    DOMAIN5 = "domain5"  # Observability & Continuous Improvement
+    SOURCE_CONTROL = "source_control"  # Source Control & Development Practices
+    SECURITY = "security"  # Security & Compliance
+    CICD = "cicd"  # CI/CD & Deployment
+    INFRASTRUCTURE = "infrastructure"  # Infrastructure & Platform Engineering
+    OBSERVABILITY = "observability"  # Observability & Continuous Improvement
 
 
 class Organization(Base):
@@ -152,3 +153,8 @@ class GateResponse(Base):
 
     # Relationships
     assessment = relationship("Assessment", back_populates="gate_responses")
+    
+    # Table constraints
+    __table_args__ = (
+        sa.UniqueConstraint('assessment_id', 'question_id', name='uq_assessment_question'),
+    )

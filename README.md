@@ -40,12 +40,19 @@ This MVP focuses on **20 highest-impact questions** covering three core domains:
 
 ## Quick Start
 
-### Prerequisites
+### Deployment with Docker Hub Images
+
+**Want to deploy the application without the source code?**
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for instructions on running the application using pre-built Docker images from Docker Hub.
+
+### Development Setup
+
+#### Prerequisites
 
 - Docker Desktop (with WSL2 support on Windows)
 - Git
 
-### Setup & Run
+#### Setup & Run
 
 1. **Clone the repository**
    ```bash
@@ -217,6 +224,7 @@ Once the backend is running, visit:
 
 ## Documentation
 
+- **Deployment Guide**: `DEPLOYMENT.md` - Deploy using Docker Hub images
 - **Spec Document**: `devops-maturity-spec-MVP.md`
 - **Progress Tracker**: `docs/progress-tracker.md`
 - **Lessons Learned**: `docs/lessons-learned.md`

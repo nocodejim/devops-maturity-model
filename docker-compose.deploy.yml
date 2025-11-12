@@ -1,0 +1,79 @@
+version: '3.8'
+
+# DevOps Maturity Assessment Platform - Deployment Configuration
+# This docker-compose file uses pre-built images from Docker Hub
+# For development setup, use docker-compose.yml instead
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: devops-maturity-db
+    environment:
+      POSTGRES_USER: devops
+      POSTGRES_PASSWORD: devops123
+      POSTGRES_DB: devops_maturity
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devops"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    image: buckeye90/devops-maturity-backend:1.0
+    container_name: devops-maturity-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # IMPORTANT: Change these values for production!
+      DATABASE_URL: postgresql://devops:devops123@postgres:5432/devops_maturity
+      SECRET_KEY: change-this-to-a-secure-random-string-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      DEBUG: "False"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: buckeye90/devops-maturity-frontend:1.0
+    container_name: devops-maturity-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+# After starting services with: docker-compose -f docker-compose.deploy.yml up -d
+# Initialize the database with:
+#   docker-compose -f docker-compose.deploy.yml exec backend alembic upgrade head
+#
+# Create admin user with:
+#   docker-compose -f docker-compose.deploy.yml exec backend python -c "
+#   from app.database import SessionLocal
+#   from app.models import User
+#   from app.core.security import get_password_hash
+#   db = SessionLocal()
+#   admin = User(
+#       email='admin@example.com',
+#       full_name='Admin User',
+#       hashed_password=get_password_hash('admin123'),
+#       is_admin=True
+#   )
+#   db.add(admin)
+#   db.commit()
+#   print('Admin user created')
+#   "
+#
+# Access the application at:
+#   Frontend: http://localhost:5173
+#   Backend:  http://localhost:8000
+#   API Docs: http://localhost:8000/docs
