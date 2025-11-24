@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+import sqlalchemy as sa
 from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, String, Text, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -152,3 +153,8 @@ class GateResponse(Base):
 
     # Relationships
     assessment = relationship("Assessment", back_populates="gate_responses")
+    
+    # Table constraints
+    __table_args__ = (
+        sa.UniqueConstraint('assessment_id', 'question_id', name='uq_assessment_question'),
+    )

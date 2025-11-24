@@ -40,12 +40,19 @@ This MVP focuses on **20 highest-impact questions** covering three core domains:
 
 ## Quick Start
 
-### Prerequisites
+### Deployment with Docker Hub Images
+
+**Want to deploy the application without the source code?**
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for instructions on running the application using pre-built Docker images from Docker Hub.
+
+### Development Setup
+
+#### Prerequisites
 
 - Docker Desktop (with WSL2 support on Windows)
 - Git
 
-### Setup & Run
+#### Setup & Run
 
 1. **Clone the repository**
    ```bash
@@ -217,60 +224,14 @@ Once the backend is running, visit:
 
 ## Documentation
 
+- **Deployment Guide**: `DEPLOYMENT.md` - Deploy using Docker Hub images
 - **Spec Document**: `devops-maturity-spec-MVP.md`
 - **Progress Tracker**: `docs/progress-tracker.md`
 - **Lessons Learned**: `docs/lessons-learned.md`
 - **Backend README**: `backend/README.md`
 - **Frontend README**: `frontend/README.md`
 
-## Testing
-
-### Quick Test Execution
-
-```bash
-# Run all automated tests
-./tests/run-all-tests.sh
-
-# Run individual test phases
-./tests/scripts/infrastructure.sh    # Verify containers and services
-./tests/scripts/backend-api.sh      # Test all API endpoints
-./tests/scripts/frontend-build.sh   # Verify frontend builds correctly
-./tests/scripts/integration.sh      # Test complete workflows
-```
-
-### Manual Browser Testing
-
-For comprehensive testing including actual user interactions:
-
-```bash
-# Follow the detailed browser testing guide
-cat tests/manual/browser-testing.md
-
-# Use debugging guide if issues found
-cat tests/manual/debugging-guide.md
-```
-
-### Test Documentation
-
-- **Complete Test Guide**: `tests/EXECUTION-GUIDE.md`
-- **Browser Testing**: `tests/manual/browser-testing.md`
-- **Debugging Guide**: `tests/manual/debugging-guide.md`
-- **Test Results**: `tests/results/` (auto-generated)
-
 ## Troubleshooting
-
-### Quick Diagnostics
-
-```bash
-# Run infrastructure tests to check system health
-./tests/scripts/infrastructure.sh
-
-# Check all container status
-docker-compose ps
-
-# View recent logs for all services
-docker-compose logs --tail 50
-```
 
 ### Database Connection Issues
 
@@ -306,15 +267,6 @@ docker-compose restart frontend
 docker-compose build frontend
 docker-compose up -d frontend
 ```
-
-### Login Issues
-
-If you can't login after setup:
-
-1. **Run backend API tests**: `./tests/scripts/backend-api.sh`
-2. **Check browser console** for JavaScript errors
-3. **Follow browser testing guide**: `tests/manual/browser-testing.md`
-4. **Use debugging guide**: `tests/manual/debugging-guide.md`
 
 ## Environment Variables
 
