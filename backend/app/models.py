@@ -39,11 +39,11 @@ class AssessmentStatus(str, enum.Enum):
 class DomainType(str, enum.Enum):
     """Domain type enumeration - Complete spec has 5 domains"""
 
-    SOURCE_CONTROL = "source_control"  # Source Control & Development Practices
-    SECURITY = "security"  # Security & Compliance
-    CICD = "cicd"  # CI/CD & Deployment
-    INFRASTRUCTURE = "infrastructure"  # Infrastructure & Platform Engineering
-    OBSERVABILITY = "observability"  # Observability & Continuous Improvement
+    DOMAIN1 = "domain1"  # Source Control & Development Practices
+    DOMAIN2 = "domain2"  # Security & Compliance
+    DOMAIN3 = "domain3"  # CI/CD & Deployment
+    DOMAIN4 = "domain4"  # Infrastructure & Platform Engineering
+    DOMAIN5 = "domain5"  # Observability & Continuous Improvement
 
 
 class Organization(Base):
