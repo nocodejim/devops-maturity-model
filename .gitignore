@@ -95,3 +95,4 @@ pip-delete-this-directory.txt
 # Production
 /build
 /dist
+tests/results/auth_token.txt
