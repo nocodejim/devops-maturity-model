@@ -27,7 +27,7 @@ services:
     image: buckeye90/devops-maturity-backend:1.1
     container_name: devops-maturity-backend
     ports:
-      - "8000:8000"
+      - "8580:8000"
     environment:
       # IMPORTANT: Change these values for production!
       DATABASE_URL: postgresql://devops:devops123@postgres:5432/devops_maturity
@@ -44,7 +44,7 @@ services:
     image: buckeye90/devops-maturity-frontend:1.1
     container_name: devops-maturity-frontend
     ports:
-      - "5173:5173"
+      - "8573:5173"
     depends_on:
       - backend
     restart: unless-stopped
