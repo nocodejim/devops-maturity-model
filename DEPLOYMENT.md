@@ -7,7 +7,7 @@ This guide explains how to deploy the DevOps Maturity Assessment Platform using 
 - Docker Engine 20.10+ or Docker Desktop
 - Docker Compose 2.0+
 - At least 2GB available RAM
-- Ports 5173, 8000, and 5432 available
+- Ports 8673, 8680, and 8682 available
 
 ## Quick Start
 
@@ -48,7 +48,7 @@ services:
       POSTGRES_PASSWORD: devops123
       POSTGRES_DB: devops_maturity
     ports:
-      - "5432:5432"
+      - "8682:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -62,7 +62,7 @@ services:
     image: buckeye90/devops-maturity-backend:1.0
     container_name: devops-maturity-backend
     ports:
-      - "8000:8000"
+      - "8680:8000"
     environment:
       DATABASE_URL: postgresql://devops:devops123@postgres:5432/devops_maturity
       SECRET_KEY: change-this-to-a-secure-random-string-in-production
@@ -78,7 +78,7 @@ services:
     image: buckeye90/devops-maturity-frontend:1.0
     container_name: devops-maturity-frontend
     ports:
-      - "5173:5173"
+      - "8673:5173"
     depends_on:
       - backend
     restart: unless-stopped
@@ -128,9 +128,9 @@ print('Admin user created: admin@example.com / admin123')
 
 ### 5. Access the Application
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+- **Frontend**: http://localhost:8673
+- **Backend API**: http://localhost:8680
+- **API Documentation**: http://localhost:8680/docs
 
 **Default Login Credentials:**
 - Email: `admin@example.com`
@@ -164,7 +164,7 @@ print('Admin user created: admin@example.com / admin123')
    ```
 
 5. **Restrict network access:**
-   - Remove port mappings for PostgreSQL (5432) if not needed externally
+   - Remove port mappings for PostgreSQL (8682) if not needed externally
    - Use a reverse proxy (nginx, Traefik) for SSL/TLS
    - Configure firewall rules
 
@@ -196,7 +196,7 @@ services:
     image: buckeye90/devops-maturity-backend:1.0
     container_name: devops-maturity-backend
     ports:
-      - "8000:8000"
+      - "8680:8000"
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       SECRET_KEY: ${SECRET_KEY}
@@ -214,7 +214,7 @@ services:
     image: buckeye90/devops-maturity-frontend:1.0
     container_name: devops-maturity-frontend
     ports:
-      - "5173:5173"
+      - "8673:5173"
     depends_on:
       - backend
     networks:
@@ -253,10 +253,10 @@ To access the application from other devices on your local network:
    ```
 
 2. Access the application using your host IP:
-   - Frontend: `http://<your-ip>:5173`
-   - Backend: `http://<your-ip>:8000`
+   - Frontend: `http://<your-ip>:8673`
+   - Backend: `http://<your-ip>:8680`
 
-3. Ensure your firewall allows connections on ports 5173 and 8000
+3. Ensure your firewall allows connections on ports 8673 and 8680
 
 ### Using a Custom Domain/Reverse Proxy
 
@@ -269,7 +269,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://localhost:5173;
+        proxy_pass http://localhost:8673;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -278,7 +278,7 @@ server {
     }
 
     location /api {
-        proxy_pass http://localhost:8000;
+        proxy_pass http://localhost:8680;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -406,7 +406,7 @@ docker-compose exec backend alembic current
 The frontend auto-detects the backend URL based on the hostname. If you're having connection issues:
 
 1. Ensure backend is running: `docker-compose ps backend`
-2. Check backend is accessible: `curl http://localhost:8000/health`
+2. Check backend is accessible: `curl http://localhost:8680/health`
 3. Check browser console for errors
 4. Verify no firewall is blocking connections
 

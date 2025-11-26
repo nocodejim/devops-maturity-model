@@ -21,11 +21,17 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://192.168.44.93:5173",
         "http://192.168.44.93:8000",
+        "http://devdocker.cinf.net:8673",
+        "https://devdocker.cinf.net:8673",
+        "http://10.224.139.62:8673",
+        "http://10.224.139.61:8673",
+        "http://lnxvthfth001:8673",
+        "http://lnxvthfth002:8673",
     ]
 
     # Application
     PROJECT_NAME: str = "DevOps Maturity Assessment"
-    VERSION: str = "0.1.0"
+    VERSION: str = "1.0.0"
     DEBUG: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)

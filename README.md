@@ -66,14 +66,14 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** for instructions on running the applicati
    ```
 
    This will start:
-   - PostgreSQL database on port 5432
-   - Backend API on port 8000
-   - Frontend app on port 5173
+   - PostgreSQL database on port 8682
+   - Backend API on port 8680
+   - Frontend app on port 8673
 
 3. **Access the application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
+   - Frontend: http://localhost:8673
+   - Backend API: http://localhost:8680
+   - API Docs: http://localhost:8680/docs
 
 4. **Initialize the database** (first time only)
    ```bash
@@ -83,22 +83,28 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** for instructions on running the applicati
    # Create an admin user (optional - for development)
    docker-compose exec backend python -c "
 from app.database import SessionLocal
-from app.models import User
+from app.models import User, UserRole
 from app.core.security import get_password_hash
 
 db = SessionLocal()
-admin = User(
-    email='admin@example.com',
-    full_name='Admin User',
-    hashed_password=get_password_hash('admin123'),
-    is_admin=True
-)
-db.add(admin)
-db.commit()
-print('Admin user created: admin@example.com / admin123')
+existing = db.query(User).filter(User.email == 'admin@example.com').first()
+if not existing:
+    admin = User(
+        email='admin@example.com',
+        full_name='Admin User',
+        hashed_password=get_password_hash('admin123'),
+        role=UserRole.ADMIN
+    )
+    db.add(admin)
+    db.commit()
+    print('Admin user created: admin@example.com / admin123')
+else:
+    print('Admin user already exists')
+db.close()
 "
    ```
-
+   **Note**: You may see a bcrypt warning - this is harmless and can be ignored.
+   
 ### Stop Services
 
 ```bash
@@ -193,8 +199,8 @@ docker-compose logs -f postgres
 ## API Documentation
 
 Once the backend is running, visit:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8680/docs
+- **ReDoc**: http://localhost:8680/redoc
 
 ### Key Endpoints
 
