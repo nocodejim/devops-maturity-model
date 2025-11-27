@@ -1,7 +1,15 @@
 """Gate and question definitions for complete spec - 20 gates across 5 domains"""
 
 from typing import Dict, List
-from app.models import DomainType
+import enum
+
+class DomainType(str, enum.Enum):
+    """Domain type enumeration - Complete spec has 5 domains"""
+    DOMAIN1 = "domain1"  # Source Control & Development Practices
+    DOMAIN2 = "domain2"  # Security & Compliance
+    DOMAIN3 = "domain3"  # CI/CD & Deployment
+    DOMAIN4 = "domain4"  # Infrastructure & Platform Engineering
+    DOMAIN5 = "domain5"  # Observability & Continuous Improvement
 
 # Question structure: {question_id, text, guidance}
 GATES_DEFINITION = {

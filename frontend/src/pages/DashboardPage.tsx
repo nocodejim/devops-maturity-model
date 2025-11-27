@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { assessmentApi, analyticsApi } from '@/services/api'
-import type { Assessment } from '@/types'
+import { assessmentApi, analyticsApi, frameworkApi } from '@/services/api'
+import type { Assessment, Framework } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -11,11 +11,18 @@ export function DashboardPage() {
   const queryClient = useQueryClient()
   const [showNewAssessment, setShowNewAssessment] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
+  const [selectedFrameworkId, setSelectedFrameworkId] = useState<string>('')
 
   // Fetch assessments
   const { data: assessments, isLoading: assessmentsLoading } = useQuery({
     queryKey: ['assessments'],
     queryFn: assessmentApi.list,
+  })
+
+  // Fetch frameworks
+  const { data: frameworks, isLoading: frameworksLoading } = useQuery({
+    queryKey: ['frameworks'],
+    queryFn: frameworkApi.list,
   })
 
   // Fetch analytics
@@ -26,12 +33,14 @@ export function DashboardPage() {
 
   // Create assessment mutation
   const createMutation = useMutation({
-    mutationFn: (teamName: string) => assessmentApi.create(teamName, user?.organization_id),
+    mutationFn: (data: { teamName: string; frameworkId: string }) =>
+      assessmentApi.create(data.teamName, data.frameworkId, user?.organization_id),
     onSuccess: assessment => {
       queryClient.invalidateQueries({ queryKey: ['assessments'] })
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
       setShowNewAssessment(false)
       setNewTeamName('')
+      setSelectedFrameworkId('')
       navigate(`/assessment/${assessment.id}`)
     },
   })
@@ -47,8 +56,8 @@ export function DashboardPage() {
 
   const handleCreateAssessment = (e: React.FormEvent) => {
     e.preventDefault()
-    if (newTeamName.trim()) {
-      createMutation.mutate(newTeamName.trim())
+    if (newTeamName.trim() && selectedFrameworkId) {
+      createMutation.mutate({ teamName: newTeamName.trim(), frameworkId: selectedFrameworkId })
     }
   }
 
@@ -136,7 +145,12 @@ export function DashboardPage() {
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900">Assessments</h2>
             <button
-              onClick={() => setShowNewAssessment(true)}
+              onClick={() => {
+                setShowNewAssessment(true)
+                if (frameworks && frameworks.length > 0) {
+                    setSelectedFrameworkId(frameworks[0].id)
+                }
+              }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
             >
               + New Assessment
@@ -145,32 +159,59 @@ export function DashboardPage() {
 
           {showNewAssessment && (
             <div className="px-6 py-4 bg-blue-50 border-b border-blue-200">
-              <form onSubmit={handleCreateAssessment} className="flex gap-4">
-                <input
-                  type="text"
-                  value={newTeamName}
-                  onChange={e => setNewTeamName(e.target.value)}
-                  placeholder="Enter team name..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  autoFocus
-                />
-                <button
-                  type="submit"
-                  disabled={createMutation.isPending || !newTeamName.trim()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                >
-                  {createMutation.isPending ? 'Creating...' : 'Create'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewAssessment(false)
-                    setNewTeamName('')
-                  }}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                >
-                  Cancel
-                </button>
+              <form onSubmit={handleCreateAssessment} className="space-y-4">
+                <div>
+                  <label htmlFor="teamName" className="block text-sm font-medium text-gray-700 mb-1">Team Name</label>
+                  <input
+                    id="teamName"
+                    type="text"
+                    value={newTeamName}
+                    onChange={e => setNewTeamName(e.target.value)}
+                    placeholder="Enter team name..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="framework" className="block text-sm font-medium text-gray-700 mb-1">Assessment Framework</label>
+                  {frameworksLoading ? (
+                    <div className="text-sm text-gray-500">Loading frameworks...</div>
+                  ) : (
+                    <select
+                        id="framework"
+                        value={selectedFrameworkId}
+                        onChange={e => setSelectedFrameworkId(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="" disabled>Select a framework</option>
+                        {frameworks?.map(f => (
+                            <option key={f.id} value={f.id}>{f.name} (v{f.version})</option>
+                        ))}
+                    </select>
+                  )}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                    <button
+                    type="submit"
+                    disabled={createMutation.isPending || !newTeamName.trim() || !selectedFrameworkId}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                    {createMutation.isPending ? 'Creating...' : 'Create'}
+                    </button>
+                    <button
+                    type="button"
+                    onClick={() => {
+                        setShowNewAssessment(false)
+                        setNewTeamName('')
+                        setSelectedFrameworkId('')
+                    }}
+                    className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                    >
+                    Cancel
+                    </button>
+                </div>
               </form>
             </div>
           )}

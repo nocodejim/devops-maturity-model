@@ -45,6 +45,7 @@ async def create_assessment(
         team_name=assessment_in.team_name,
         organization_id=assessment_in.organization_id,
         assessor_id=current_user.id,
+        framework_id=assessment_in.framework_id, # Added framework_id
         status=AssessmentStatus.DRAFT,
         started_at=datetime.utcnow(),
     )
@@ -149,7 +150,6 @@ async def save_responses(
             db.query(GateResponse)
             .filter(
                 GateResponse.assessment_id == assessment_id,
-                GateResponse.gate_id == response_data.gate_id,
                 GateResponse.question_id == response_data.question_id,
             )
             .first()
@@ -166,8 +166,6 @@ async def save_responses(
             # Create new response
             db_response = GateResponse(
                 assessment_id=assessment_id,
-                domain=response_data.domain,
-                gate_id=response_data.gate_id,
                 question_id=response_data.question_id,
                 score=response_data.score,
                 notes=response_data.notes,
@@ -208,7 +206,6 @@ async def get_responses(
     responses = (
         db.query(GateResponse)
         .filter(GateResponse.assessment_id == assessment_id)
-        .order_by(GateResponse.domain, GateResponse.gate_id, GateResponse.question_id)
         .all()
     )
 
@@ -233,27 +230,26 @@ async def submit_assessment(
     # Get all gate responses
     gate_responses = db.query(GateResponse).filter(GateResponse.assessment_id == assessment_id).all()
 
-    # Validate that all questions are answered (complete spec has variable questions per gate)
-    # For now, we just ensure we have responses
     if not gate_responses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Assessment must have at least one gate response",
         )
 
-    # Calculate scores and create domain score records
-    domain_score_data = scoring.calculate_domain_scores(gate_responses)
-    overall_score = scoring.calculate_overall_score(domain_score_data)
+    # Calculate scores using the new dynamic scoring
+    domain_score_data = scoring.calculate_scores(db, assessment, gate_responses)
+
+    overall_score = scoring.calculate_overall_score(db, assessment, domain_score_data)
     maturity_level, _ = scoring.get_maturity_level(overall_score)
 
-    # Delete existing domain scores for this assessment (if resubmitting)
+    # Delete existing domain scores
     db.query(DomainScore).filter(DomainScore.assessment_id == assessment_id).delete()
 
     # Create new domain score records
-    for domain, score_info in domain_score_data.items():
+    for domain_id, score_info in domain_score_data.items():
         db_domain_score = DomainScore(
             assessment_id=assessment_id,
-            domain=domain,
+            domain_id=domain_id,
             score=score_info["score"],
             maturity_level=score_info["maturity_level"],
             strengths=score_info.get("strengths", []),
@@ -300,6 +296,6 @@ async def get_assessment_report(
     domain_scores = db.query(DomainScore).filter(DomainScore.assessment_id == assessment_id).all()
 
     # Generate report
-    report = scoring.generate_report(assessment, gate_responses, domain_scores)
+    report = scoring.generate_report(db, assessment, gate_responses, domain_scores)
 
     return report

@@ -1,35 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { assessmentApi, gatesApi } from '@/services/api'
-import { DomainType, Gate, GateResponseCreate } from '@/types'
-
-const DOMAIN_NAMES = {
-  domain1: 'Source Control & Development',
-  domain2: 'Security & Compliance',
-  domain3: 'CI/CD & Deployment',
-  domain4: 'Infrastructure & Platform',
-  domain5: 'Observability & Improvement',
-}
+import { assessmentApi, frameworkApi } from '@/services/api'
+import { GateResponseCreate, FrameworkDomain } from '@/types'
 
 export function AssessmentPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [currentDomain, setCurrentDomain] = useState<DomainType>(DomainType.DOMAIN1)
+  const [currentDomainId, setCurrentDomainId] = useState<string>('')
   const [responses, setResponses] = useState<Record<string, GateResponseCreate>>({})
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   // Fetch assessment
-  const { data: assessment } = useQuery({
+  const { data: assessment, isLoading: assessmentLoading } = useQuery({
     queryKey: ['assessment', id],
     queryFn: () => assessmentApi.get(id!),
   })
 
-  // Fetch gates definitions
-  const { data: gatesData, isLoading: gatesLoading } = useQuery({
-    queryKey: ['gates'],
-    queryFn: gatesApi.getAll,
+  // Fetch framework structure
+  const { data: frameworkStructure, isLoading: frameworkLoading } = useQuery({
+    queryKey: ['framework', assessment?.framework_id],
+    queryFn: () => frameworkApi.getStructure(assessment!.framework_id),
+    enabled: !!assessment?.framework_id,
   })
 
   // Fetch existing responses
@@ -38,15 +31,20 @@ export function AssessmentPage() {
     queryFn: () => assessmentApi.getResponses(id!),
   })
 
+  // Initialize current domain
+  useEffect(() => {
+    if (frameworkStructure?.domains.length && !currentDomainId) {
+      setCurrentDomainId(frameworkStructure.domains[0].id)
+    }
+  }, [frameworkStructure, currentDomainId])
+
   // Load existing responses into state
   useEffect(() => {
     if (existingResponses) {
       const responseMap: Record<string, GateResponseCreate> = {}
       existingResponses.forEach(r => {
-        const key = `${r.gate_id}_${r.question_id}`
-        responseMap[key] = {
-          domain: r.domain,
-          gate_id: r.gate_id,
+        // Use question_id as key since it's unique
+        responseMap[r.question_id] = {
           question_id: r.question_id,
           score: r.score,
           notes: r.notes,
@@ -76,31 +74,25 @@ export function AssessmentPage() {
     },
   })
 
-  const handleScoreChange = (gateId: string, questionId: string, domain: DomainType, score: number) => {
-    const key = `${gateId}_${questionId}`
+  const handleScoreChange = (questionId: string, score: number) => {
     setResponses(prev => ({
       ...prev,
-      [key]: {
-        domain,
-        gate_id: gateId,
+      [questionId]: {
         question_id: questionId,
         score,
-        notes: prev[key]?.notes,
-        evidence: prev[key]?.evidence,
+        notes: prev[questionId]?.notes,
+        evidence: prev[questionId]?.evidence,
       },
     }))
   }
 
-  const handleNotesChange = (gateId: string, questionId: string, domain: DomainType, notes: string) => {
-    const key = `${gateId}_${questionId}`
+  const handleNotesChange = (questionId: string, notes: string) => {
     setResponses(prev => ({
       ...prev,
-      [key]: {
-        ...prev[key],
-        domain,
-        gate_id: gateId,
+      [questionId]: {
+        ...prev[questionId],
         question_id: questionId,
-        score: prev[key]?.score ?? 0,
+        score: prev[questionId]?.score ?? 0,
         notes,
       },
     }))
@@ -118,26 +110,33 @@ export function AssessmentPage() {
     }
   }
 
-  const getDomainGates = (domain: DomainType): Array<[string, Gate]> => {
-    if (!gatesData?.gates) return []
-    return Object.entries(gatesData.gates)
-      .filter(([_, gate]) => gate.domain === domain)
-      .sort(([a], [b]) => a.localeCompare(b))
+  const getCurrentDomain = (): FrameworkDomain | undefined => {
+    return frameworkStructure?.domains.find(d => d.id === currentDomainId)
   }
 
   const getTotalResponses = () => Object.keys(responses).length
-  const getTotalQuestions = () => gatesData?.total_questions ?? 0
+
+  const getTotalQuestions = () => {
+    if (!frameworkStructure) return 0
+    let count = 0
+    frameworkStructure.domains.forEach(d => {
+      d.gates.forEach(g => {
+        count += g.questions.length
+      })
+    })
+    return count
+  }
+
   const getProgress = () => {
     const total = getTotalQuestions()
     return total > 0 ? (getTotalResponses() / total) * 100 : 0
   }
 
   const canSubmit = () => {
-    // At least some responses required
     return getTotalResponses() > 0
   }
 
-  if (gatesLoading || !gatesData) {
+  if (assessmentLoading || frameworkLoading || !frameworkStructure) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -148,13 +147,7 @@ export function AssessmentPage() {
     )
   }
 
-  const domains = [
-    DomainType.DOMAIN1,
-    DomainType.DOMAIN2,
-    DomainType.DOMAIN3,
-    DomainType.DOMAIN4,
-    DomainType.DOMAIN5,
-  ]
+  const currentDomain = getCurrentDomain()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -166,6 +159,7 @@ export function AssessmentPage() {
               <h1 className="text-xl font-bold text-gray-900">
                 Assessment: {assessment?.team_name}
               </h1>
+              <div className="text-sm text-gray-500">{frameworkStructure.framework.name}</div>
               <div className="mt-1 flex items-center gap-4 text-sm text-gray-600">
                 <span>
                   Progress: {getTotalResponses()} / {getTotalQuestions()} questions
@@ -210,28 +204,34 @@ export function AssessmentPage() {
             <div className="bg-white rounded-lg shadow p-4 sticky top-24">
               <h2 className="font-semibold text-gray-900 mb-4">Domains</h2>
               <nav className="space-y-2">
-                {domains.map(domain => {
-                  const gates = getDomainGates(domain)
-                  const domainQuestions = gates.reduce((sum, [_, gate]) => sum + gate.questions.length, 0)
-                  const domainResponses = Object.values(responses).filter(r => r.domain === domain).length
-                  const completed = domainQuestions > 0 ? domainResponses === domainQuestions : false
+                {frameworkStructure.domains.map(domain => {
+                  const domainQuestions = domain.gates.reduce((sum, gate) => sum + gate.questions.length, 0)
+
+                  // Calculate responses for this domain
+                  // We need to check if response's question_id belongs to any gate in this domain
+                  // Optimization: Create a Set of question IDs for this domain
+                  const domainQuestionIds = new Set<string>()
+                  domain.gates.forEach(g => g.questions.forEach(q => domainQuestionIds.add(q.id)))
+
+                  const domainResponseCount = Object.keys(responses).filter(qId => domainQuestionIds.has(qId)).length
+                  const completed = domainQuestions > 0 ? domainResponseCount === domainQuestions : false
 
                   return (
                     <button
-                      key={domain}
-                      onClick={() => setCurrentDomain(domain)}
+                      key={domain.id}
+                      onClick={() => setCurrentDomainId(domain.id)}
                       className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        currentDomain === domain
+                        currentDomainId === domain.id
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">{DOMAIN_NAMES[domain]}</span>
+                        <span className="text-sm">{domain.name}</span>
                         {completed && <span className="text-green-600">✓</span>}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {domainResponses} / {domainQuestions}
+                        {domainResponseCount} / {domainQuestions}
                       </div>
                     </button>
                   )
@@ -254,18 +254,20 @@ export function AssessmentPage() {
             <div className="bg-white rounded-lg shadow">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {DOMAIN_NAMES[currentDomain]}
+                  {currentDomain?.name}
                 </h2>
+                {currentDomain?.description && (
+                  <p className="text-gray-500 mt-1">{currentDomain.description}</p>
+                )}
               </div>
 
               <div className="p-6 space-y-8">
-                {getDomainGates(currentDomain).map(([gateId, gate]) => (
-                  <div key={gateId} className="border-l-4 border-blue-500 pl-6">
+                {currentDomain?.gates.map((gate) => (
+                  <div key={gate.id} className="border-l-4 border-blue-500 pl-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">{gate.name}</h3>
 
                     {gate.questions.map(question => {
-                      const key = `${gateId}_${question.id}`
-                      const response = responses[key]
+                      const response = responses[question.id]
 
                       return (
                         <div key={question.id} className="mb-6 pb-6 border-b border-gray-200 last:border-0">
@@ -281,7 +283,7 @@ export function AssessmentPage() {
                               {[0, 1, 2, 3, 4, 5].map(score => (
                                 <button
                                   key={score}
-                                  onClick={() => handleScoreChange(gateId, question.id, currentDomain, score)}
+                                  onClick={() => handleScoreChange(question.id, score)}
                                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                                     response?.score === score
                                       ? 'bg-blue-600 text-white'
@@ -301,7 +303,7 @@ export function AssessmentPage() {
                             </label>
                             <textarea
                               value={response?.notes || ''}
-                              onChange={e => handleNotesChange(gateId, question.id, currentDomain, e.target.value)}
+                              onChange={e => handleNotesChange(question.id, e.target.value)}
                               rows={2}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                               placeholder="Add any notes or context..."

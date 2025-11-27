@@ -48,12 +48,43 @@ export enum AssessmentStatus {
   COMPLETED = 'completed',
 }
 
-export enum DomainType {
-  DOMAIN1 = 'domain1', // Source Control & Development
-  DOMAIN2 = 'domain2', // Security & Compliance
-  DOMAIN3 = 'domain3', // CI/CD & Deployment
-  DOMAIN4 = 'domain4', // Infrastructure & Platform
-  DOMAIN5 = 'domain5', // Observability & Improvement
+// Framework Types
+export interface Framework {
+  id: string
+  name: string
+  description?: string
+  version: string
+  created_at: string
+  updated_at: string
+}
+
+export interface FrameworkQuestion {
+  id: string
+  text: string
+  guidance?: string
+  order: number
+}
+
+export interface FrameworkGate {
+  id: string
+  name: string
+  description?: string
+  order: number
+  questions: FrameworkQuestion[]
+}
+
+export interface FrameworkDomain {
+  id: string
+  name: string
+  description?: string
+  weight: number
+  order: number
+  gates: FrameworkGate[]
+}
+
+export interface FrameworkStructure {
+  framework: Framework
+  domains: FrameworkDomain[]
 }
 
 export interface Assessment {
@@ -61,6 +92,7 @@ export interface Assessment {
   team_name: string
   organization_id?: string
   assessor_id: string
+  framework_id: string
   status: AssessmentStatus
   overall_score?: number
   maturity_level?: number
@@ -73,7 +105,8 @@ export interface Assessment {
 export interface DomainScore {
   id: string
   assessment_id: string
-  domain: DomainType
+  domain_id: string
+  domain_name?: string
   score: number
   maturity_level: number
   strengths: string[]
@@ -84,8 +117,6 @@ export interface DomainScore {
 export interface GateResponse {
   id: string
   assessment_id: string
-  domain: DomainType
-  gate_id: string
   question_id: string
   score: number
   notes?: string
@@ -95,8 +126,6 @@ export interface GateResponse {
 }
 
 export interface GateResponseCreate {
-  domain: DomainType
-  gate_id: string
   question_id: string
   score: number
   notes?: string
@@ -140,23 +169,4 @@ export interface AnalyticsSummary {
   completed_assessments: number
   average_score: number
   average_maturity_level: number
-}
-
-// Gates definitions
-export interface GateQuestion {
-  id: string
-  text: string
-  guidance: string
-}
-
-export interface Gate {
-  name: string
-  domain: DomainType
-  questions: GateQuestion[]
-}
-
-export interface GatesResponse {
-  gates: Record<string, Gate>
-  total_gates: number
-  total_questions: number
 }

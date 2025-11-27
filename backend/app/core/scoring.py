@@ -1,128 +1,94 @@
-"""Scoring engine for assessments - Complete Spec"""
+"""Scoring engine for assessments - Dynamic Spec"""
 
 from typing import Dict, List, Tuple
+from uuid import UUID
+from sqlalchemy.orm import Session, joinedload
 
 from app import schemas
-from app.models import Assessment, DomainType, GateResponse, DomainScore
+from app.models import Assessment, GateResponse, DomainScore, FrameworkDomain, FrameworkQuestion, FrameworkGate
 
-
-# Domain weights as per complete spec
-DOMAIN_WEIGHTS = {
-    DomainType.DOMAIN1: 0.15,  # Source Control & Development Practices - 15%
-    DomainType.DOMAIN2: 0.25,  # Security & Compliance - 25%
-    DomainType.DOMAIN3: 0.25,  # CI/CD & Deployment - 25%
-    DomainType.DOMAIN4: 0.20,  # Infrastructure & Platform Engineering - 20%
-    DomainType.DOMAIN5: 0.15,  # Observability & Continuous Improvement - 15%
-}
-
-DOMAIN_NAMES = {
-    DomainType.DOMAIN1: "Source Control & Development Practices",
-    DomainType.DOMAIN2: "Security & Compliance",
-    DomainType.DOMAIN3: "CI/CD & Deployment",
-    DomainType.DOMAIN4: "Infrastructure & Platform Engineering",
-    DomainType.DOMAIN5: "Observability & Continuous Improvement",
-}
-
-# Gate names per domain (4 gates per domain = 20 gates total)
-GATE_NAMES = {
-    # Domain 1: Source Control & Development
-    "gate_1_1": "Version Control & Branching",
-    "gate_1_2": "Code Review & Quality",
-    "gate_1_3": "Testing Practices",
-    "gate_1_4": "Build & Integration",
-    # Domain 2: Security & Compliance
-    "gate_2_1": "Security Scanning & Vulnerability Management",
-    "gate_2_2": "Secrets & Access Management",
-    "gate_2_3": "Supply Chain Security",
-    "gate_2_4": "Compliance & Audit",
-    # Domain 3: CI/CD & Deployment
-    "gate_3_1": "Continuous Integration",
-    "gate_3_2": "Deployment Automation",
-    "gate_3_3": "Release Management",
-    "gate_3_4": "Feature Management",
-    # Domain 4: Infrastructure & Platform
-    "gate_4_1": "Infrastructure as Code",
-    "gate_4_2": "Cloud & Container Orchestration",
-    "gate_4_3": "Platform Services",
-    "gate_4_4": "Disaster Recovery & Resilience",
-    # Domain 5: Observability & Improvement
-    "gate_5_1": "Monitoring & Alerting",
-    "gate_5_2": "Logging & Tracing",
-    "gate_5_3": "Performance & SLOs",
-    "gate_5_4": "Continuous Improvement & Feedback",
-}
-
-
-def calculate_domain_scores(gate_responses: List[GateResponse]) -> Dict[DomainType, Dict]:
+def calculate_scores(db: Session, assessment: Assessment, gate_responses: List[GateResponse]) -> Dict[UUID, Dict]:
     """
-    Calculate scores for each domain from gate responses.
-
-    Returns dict with domain -> {score, maturity_level, strengths, gaps}
-    Formula: (total_score / max_possible) * 100
+    Calculate scores for each domain from gate responses based on Framework definitions.
     """
+
+    # 1. Fetch Framework Structure
+    framework_id = assessment.framework_id
+    domains = db.query(FrameworkDomain).filter(FrameworkDomain.framework_id == framework_id).all()
+
     domain_scores = {}
 
-    for domain in DomainType:
-        domain_responses = [r for r in gate_responses if r.domain == domain]
+    # Pre-fetch questions to map question_id -> gate -> domain
+    # Or rely on joined loading in GateResponse if configured, but here we iterate domains
 
-        if not domain_responses:
-            domain_scores[domain] = {
-                "score": 0.0,
-                "maturity_level": 1,
-                "strengths": [],
-                "gaps": [],
-            }
-            continue
+    # Optimization: Load all responses into a map
+    response_map = {r.question_id: r for r in gate_responses}
 
-        total_score = sum(r.score for r in domain_responses)
-        max_possible = len(domain_responses) * 5  # Max score per question is 5
+    for domain in domains:
+        # Get all gates for this domain
+        gates = db.query(FrameworkGate).filter(FrameworkGate.domain_id == domain.id).all()
+        gate_ids = [g.id for g in gates]
 
-        score = (total_score / max_possible) * 100 if max_possible > 0 else 0.0
-        maturity_level, _ = get_maturity_level(score)
+        # Get all questions for these gates
+        questions = db.query(FrameworkQuestion).filter(FrameworkQuestion.gate_id.in_(gate_ids)).all()
+        question_ids = [q.id for q in questions]
 
-        # Identify strengths (scores >= 4) and gaps (scores <= 2)
+        # Calculate score
+        total_score = 0
+        max_possible = len(questions) * 5
+
         strengths = []
         gaps = []
-        for r in domain_responses:
-            gate_name = GATE_NAMES.get(r.gate_id, r.gate_id)
-            if r.score >= 4:
-                strengths.append(f"{gate_name} - Q{r.question_id}: Score {r.score}/5")
-            elif r.score <= 2:
-                gaps.append(f"{gate_name} - Q{r.question_id}: Score {r.score}/5")
 
-        domain_scores[domain] = {
-            "score": round(score, 2),
+        for q in questions:
+            resp = response_map.get(q.id)
+            if resp:
+                total_score += resp.score
+
+                # Identify strengths/gaps
+                # Need gate name for context
+                gate = next((g for g in gates if g.id == q.gate_id), None)
+                gate_name = gate.name if gate else "Unknown Gate"
+
+                if resp.score >= 4:
+                    strengths.append(f"{gate_name} - {q.text[:50]}...: Score {resp.score}/5")
+                elif resp.score <= 2:
+                    gaps.append(f"{gate_name} - {q.text[:50]}...: Score {resp.score}/5")
+
+        score_percent = (total_score / max_possible) * 100 if max_possible > 0 else 0.0
+        maturity_level, _ = get_maturity_level(score_percent)
+
+        domain_scores[domain.id] = {
+            "domain_name": domain.name,
+            "score": round(score_percent, 2),
             "maturity_level": maturity_level,
-            "strengths": strengths[:5],  # Top 5
-            "gaps": gaps[:5],  # Top 5
+            "strengths": strengths[:5],
+            "gaps": gaps[:5],
+            "weight": domain.weight
         }
 
     return domain_scores
 
 
-def calculate_overall_score(domain_scores: Dict[DomainType, Dict]) -> float:
+def calculate_overall_score(db: Session, assessment: Assessment, domain_scores: Dict[UUID, Dict]) -> float:
     """
     Calculate weighted average of domain scores.
-
-    Formula: sum(domain_score * weight)
     """
-    overall = sum(
-        domain_scores.get(domain, {}).get("score", 0) * weight
-        for domain, weight in DOMAIN_WEIGHTS.items()
-    )
-    return round(overall, 2)
+    # Normalize weights if they don't sum to 1?
+    # Assuming weights are relative (e.g. 0.15, 0.25...)
+
+    total_weight = sum(d["weight"] for d in domain_scores.values())
+    weighted_sum = sum(d["score"] * d["weight"] for d in domain_scores.values())
+
+    if total_weight == 0:
+        return 0.0
+
+    return round(weighted_sum / total_weight, 2)
 
 
 def get_maturity_level(score: float) -> Tuple[int, str]:
     """
     Map overall score to maturity level.
-
-    Levels:
-    1. Initial (0-20%)
-    2. Developing (21-40%)
-    3. Defined (41-60%)
-    4. Managed (61-80%)
-    5. Optimizing (81-100%)
     """
     if score <= 20:
         return (1, "Initial")
@@ -149,7 +115,7 @@ def get_maturity_level_description(level: int) -> str:
 
 
 def generate_report(
-    assessment: Assessment, gate_responses: List[GateResponse], domain_scores: List[DomainScore]
+    db: Session, assessment: Assessment, gate_responses: List[GateResponse], domain_scores: List[DomainScore]
 ) -> schemas.AssessmentReport:
     """Generate complete assessment report"""
 
@@ -161,11 +127,21 @@ def generate_report(
     )
 
     # Domain breakdown
+    # Need to fetch domain names since they are not stored in DomainScore directly (only ID)
+    # Actually, we can fetch the FrameworkDomain objects
+
     domain_breakdown = []
+
+    # Pre-fetch domain definitions
+    framework_domains = db.query(FrameworkDomain).filter(
+        FrameworkDomain.id.in_([ds.domain_id for ds in domain_scores])
+    ).all()
+    domain_name_map = {d.id: d.name for d in framework_domains}
+
     for ds in domain_scores:
         domain_breakdown.append(
             schemas.DomainBreakdown(
-                domain=DOMAIN_NAMES.get(ds.domain, ds.domain.value),
+                domain=domain_name_map.get(ds.domain_id, "Unknown Domain"),
                 score=ds.score,
                 maturity_level=ds.maturity_level,
                 strengths=ds.strengths or [],
@@ -174,15 +150,29 @@ def generate_report(
         )
 
     # Gate scores
-    gate_scores = []
-    gate_score_map = {}
-    for response in gate_responses:
-        if response.gate_id not in gate_score_map:
-            gate_score_map[response.gate_id] = {"total": 0, "count": 0}
-        gate_score_map[response.gate_id]["total"] += response.score
-        gate_score_map[response.gate_id]["count"] += 1
+    # Need to map question_id -> gate -> name
+    # Fetch all questions involved
+    question_ids = [r.question_id for r in gate_responses]
+    questions = db.query(FrameworkQuestion).filter(FrameworkQuestion.id.in_(question_ids)).options(joinedload(FrameworkQuestion.gate)).all()
 
-    for gate_id, data in gate_score_map.items():
+    question_gate_map = {q.id: q.gate for q in questions}
+
+    gate_scores_data = {} # gate_id -> {total, count, name}
+
+    for response in gate_responses:
+        gate = question_gate_map.get(response.question_id)
+        if not gate:
+            continue
+
+        gate_id = str(gate.id)
+        if gate_id not in gate_scores_data:
+            gate_scores_data[gate_id] = {"total": 0, "count": 0, "name": gate.name}
+
+        gate_scores_data[gate_id]["total"] += response.score
+        gate_scores_data[gate_id]["count"] += 1
+
+    gate_scores = []
+    for gate_id, data in gate_scores_data.items():
         max_score = data["count"] * 5
         score = data["total"]
         percentage = (score / max_score * 100) if max_score > 0 else 0
@@ -190,7 +180,7 @@ def generate_report(
         gate_scores.append(
             schemas.GateScore(
                 gate_id=gate_id,
-                gate_name=GATE_NAMES.get(gate_id, gate_id),
+                gate_name=data["name"],
                 score=float(score),
                 max_score=float(max_score),
                 percentage=round(percentage, 2),
