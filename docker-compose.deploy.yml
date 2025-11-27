@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: devops123
       POSTGRES_DB: devops_maturity
     ports:
-      - "5432:5432"
+      - "8682:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,7 +27,7 @@ services:
     image: buckeye90/devops-maturity-backend:1.1
     container_name: devops-maturity-backend
     ports:
-      - "8580:8000"
+      - "8680:8000"
     environment:
       # IMPORTANT: Change these values for production!
       DATABASE_URL: postgresql://devops:devops123@postgres:5432/devops_maturity
@@ -44,7 +44,7 @@ services:
     image: buckeye90/devops-maturity-frontend:1.1
     container_name: devops-maturity-frontend
     ports:
-      - "8573:5173"
+      - "8673:5173"
     depends_on:
       - backend
     restart: unless-stopped
@@ -74,6 +74,6 @@ volumes:
 #   "
 #
 # Access the application at:
-#   Frontend: http://localhost:5173
-#   Backend:  http://localhost:8000
-#   API Docs: http://localhost:8000/docs
+#   Frontend: http://localhost:8673
+#   Backend:  http://localhost:8680
+#   API Docs: http://localhost:8680/docs

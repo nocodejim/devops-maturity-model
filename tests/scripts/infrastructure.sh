@@ -126,17 +126,17 @@ log ""
 log "Test 4: Checking port accessibility..."
 
 # Check backend port
-if curl -s --connect-timeout 5 http://localhost:8000/ > /dev/null; then
-    test_passed "Backend port 8000 is accessible"
+if curl -s --connect-timeout 5 http://localhost:8680/ > /dev/null; then
+    test_passed "Backend port 8680 is accessible"
 else
-    test_failed "Backend port 8000 is not accessible"
+    test_failed "Backend port 8680 is not accessible"
 fi
 
 # Check frontend port
-if curl -s --connect-timeout 5 http://localhost:5173/ > /dev/null; then
-    test_passed "Frontend port 5173 is accessible"
+if curl -s --connect-timeout 5 http://localhost:8673/ > /dev/null; then
+    test_passed "Frontend port 8673 is accessible"
 else
-    test_failed "Frontend port 5173 is not accessible"
+    test_failed "Frontend port 8673 is not accessible"
 fi
 
 log ""

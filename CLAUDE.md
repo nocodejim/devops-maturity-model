@@ -53,7 +53,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## Network Access
 - Dev PC Network IP: 192.168.44.93
-- Frontend (local): http://localhost:5173
-- Frontend (network): http://192.168.44.93:5173
-- Backend (local): http://localhost:8000
-- Backend (network): http://192.168.44.93:8000
+- Frontend (local): http://localhost:8673
+- Frontend (network): http://192.168.44.93:8673
+- Backend (local): http://localhost:8680
+- Backend (network): http://192.168.44.93:8680
+- Database (local): localhost:8682

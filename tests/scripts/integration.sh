@@ -53,7 +53,7 @@ fi
 # Test 1: Login and capture token (if not already available)
 log "Test 1: Authentication setup..."
 if [ -z "$TOKEN" ]; then
-    LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8000/api/auth/login \
+    LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8680/api/auth/login \
       -H "Content-Type: application/x-www-form-urlencoded" \
       -d "username=admin@example.com&password=admin123" 2>/dev/null || echo "ERROR")
     
@@ -77,7 +77,7 @@ log ""
 
 # Test 2: Create assessment
 log "Test 2: Creating test assessment..."
-CREATE_RESPONSE=$(curl -s -X POST http://localhost:8000/api/assessments/ \
+CREATE_RESPONSE=$(curl -s -X POST http://localhost:8680/api/assessments/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -125,7 +125,7 @@ else
       ]
     }'
     
-    RESPONSES_RESPONSE=$(curl -s -X POST "http://localhost:8000/api/assessments/$ASSESSMENT_ID/responses" \
+    RESPONSES_RESPONSE=$(curl -s -X POST "http://localhost:8680/api/assessments/$ASSESSMENT_ID/responses" \
       -H "Authorization: Bearer $TOKEN" \
       -H "Content-Type: application/json" \
       -d "$RESPONSES_JSON" 2>/dev/null || echo "ERROR")
@@ -157,7 +157,7 @@ log "Test 4: Retrieving assessment data..."
 if [ -z "$ASSESSMENT_ID" ]; then
     test_failed "Cannot test retrieval - no valid assessment ID"
 else
-    GET_RESPONSE=$(curl -s "http://localhost:8000/api/assessments/$ASSESSMENT_ID" \
+    GET_RESPONSE=$(curl -s "http://localhost:8680/api/assessments/$ASSESSMENT_ID" \
       -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
     
     if [ "$GET_RESPONSE" = "ERROR" ]; then
@@ -183,7 +183,7 @@ log ""
 
 # Test 5: List assessments (should include our test assessment)
 log "Test 5: Listing all assessments..."
-LIST_RESPONSE=$(curl -s http://localhost:8000/api/assessments/ \
+LIST_RESPONSE=$(curl -s http://localhost:8680/api/assessments/ \
   -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
 
 if [ "$LIST_RESPONSE" = "ERROR" ]; then
@@ -221,7 +221,7 @@ if [ -z "$ASSESSMENT_ID" ]; then
     test_failed "Cannot test completion - no valid assessment ID"
 else
     # Try to complete the assessment (this might require all responses)
-    COMPLETE_RESPONSE=$(curl -s -X PUT "http://localhost:8000/api/assessments/$ASSESSMENT_ID/complete" \
+    COMPLETE_RESPONSE=$(curl -s -X PUT "http://localhost:8680/api/assessments/$ASSESSMENT_ID/complete" \
       -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
     
     if [ "$COMPLETE_RESPONSE" = "ERROR" ]; then
@@ -247,7 +247,7 @@ log "Test 7: Cleaning up test data..."
 if [ -z "$ASSESSMENT_ID" ]; then
     test_warning "No test assessment to clean up"
 else
-    DELETE_RESPONSE=$(curl -s -X DELETE "http://localhost:8000/api/assessments/$ASSESSMENT_ID" \
+    DELETE_RESPONSE=$(curl -s -X DELETE "http://localhost:8680/api/assessments/$ASSESSMENT_ID" \
       -H "Authorization: Bearer $TOKEN" -o /dev/null -w "%{http_code}" 2>/dev/null || echo "000")
     
     if [ "$DELETE_RESPONSE" = "204" ] || [ "$DELETE_RESPONSE" = "200" ]; then
