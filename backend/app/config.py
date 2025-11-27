@@ -17,10 +17,10 @@ class Settings(BaseSettings):
 
     # CORS
     ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:5173",
+        "http://localhost:8673",
         "http://localhost:3000",
-        "http://192.168.44.93:5173",
-        "http://192.168.44.93:8000",
+        "http://192.168.44.93:8673",
+        "http://192.168.44.93:8680",
         "http://devdocker.cinf.net:8673",
         "https://devdocker.cinf.net:8673",
         "http://10.224.139.62:8673",
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
 
     # Application
     PROJECT_NAME: str = "DevOps Maturity Assessment"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.2.1"
     DEBUG: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)

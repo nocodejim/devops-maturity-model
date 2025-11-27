@@ -19,6 +19,7 @@ const getApiUrl = () => {
   }
 // Use same host as frontend
 const protocol = window.location.protocol
+const host = window.location.hostname
 
 // If running on non-standard frontend port (8673), use port 8680 (backend)
 // Otherwise use port 8000 (development)
