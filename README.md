@@ -230,6 +230,7 @@ Once the backend is running, visit:
 
 ## Documentation
 
+- **User Guide**: `docs/USER-GUIDE.md` - Complete guide for users taking assessments
 - **Deployment Guide**: `DEPLOYMENT.md` - Deploy using Docker Hub images
 - **Spec Document**: `devops-maturity-spec-MVP.md`
 - **Progress Tracker**: `docs/progress-tracker.md`

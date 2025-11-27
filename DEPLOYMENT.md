@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: buckeye90/devops-maturity-backend:1.0
+    image: buckeye90/devops-maturity-backend:1.2.1
     container_name: devops-maturity-backend
     ports:
       - "8680:8000"
@@ -75,7 +75,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: buckeye90/devops-maturity-frontend:1.0
+    image: buckeye90/devops-maturity-frontend:1.2.1
     container_name: devops-maturity-frontend
     ports:
       - "8673:5173"
@@ -193,7 +193,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: buckeye90/devops-maturity-backend:1.0
+    image: buckeye90/devops-maturity-backend:1.2.1
     container_name: devops-maturity-backend
     ports:
       - "8680:8000"
@@ -211,7 +211,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: buckeye90/devops-maturity-frontend:1.0
+    image: buckeye90/devops-maturity-frontend:1.2.1
     container_name: devops-maturity-frontend
     ports:
       - "8673:5173"
@@ -462,13 +462,13 @@ For issues or questions:
 
 ## Docker Hub Images
 
-- **Backend**: `buckeye90/devops-maturity-backend:1.0`
-- **Frontend**: `buckeye90/devops-maturity-frontend:1.0`
+- **Backend**: `buckeye90/devops-maturity-backend:1.2.1`
+- **Frontend**: `buckeye90/devops-maturity-frontend:1.2.1`
 - **Latest**: Both images also tagged with `:latest`
 
 To use a specific version, update the image tags in docker-compose.yml:
 ```yaml
-image: buckeye90/devops-maturity-backend:1.0
+image: buckeye90/devops-maturity-backend:1.2.1
 ```
 
 ## License
