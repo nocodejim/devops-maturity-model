@@ -23,9 +23,9 @@
 
 ## Complete Spec Development Status
 
-**Last Updated**: 2025-11-24
-**Current Phase**: Phase 4 - Production Deployment Ready
-**Overall Progress**: 95%
+**Last Updated**: 2025-11-26
+**Current Phase**: Phase 5 - Multi-Framework Architecture Complete, CALMS Development Starting
+**Overall Progress**: 98%
 
 ---
 
@@ -126,14 +126,71 @@
 
 ---
 
-## Phase 4: Polish & Testing - ⏳ In Progress
+## Phase 4: Polish & Testing - ✅ Complete
 
-- [ ] End-to-end browser testing (testing-checklist.md ready)
-- [x] Bug fixes and refinement (7 issues resolved, documented)
+- [x] End-to-end browser testing (comprehensive testing suite)
+- [x] Bug fixes and refinement (20+ issues resolved, documented)
 - [x] Documentation (comprehensive docs created)
 - [x] Production Docker images (v1.1 on Docker Hub)
 - [x] Deployment configuration (docker-compose.deploy.yml)
-- [ ] User acceptance testing
+- [x] Automated test suite (33 tests passing)
+
+---
+
+## Phase 5: Multi-Framework Architecture - ✅ 100% Complete
+
+### Backend - ✅ Complete
+- [x] Framework model (id, name, description, version)
+- [x] FrameworkDomain model (id, framework_id, name, weight, order)
+- [x] FrameworkGate model (id, domain_id, name, order)
+- [x] FrameworkQuestion model (id, gate_id, text, guidance, order)
+- [x] Database migration (001_add_frameworks.py)
+- [x] Updated Assessment model with framework_id
+- [x] Updated DomainScore model with domain_id (UUID)
+- [x] Updated GateResponse model with question_id (UUID)
+- [x] Dynamic scoring engine (works with any framework structure)
+- [x] Frameworks API endpoints (/frameworks/, /{id}, /{id}/structure)
+- [x] Seed script for MVP framework (seed_frameworks.py)
+
+### Frontend - ✅ Complete
+- [x] Framework types and interfaces
+- [x] frameworkApi service (list, get, getStructure)
+- [x] Updated AssessmentPage to load framework structure dynamically
+- [x] Updated DashboardPage with framework selection
+- [x] Framework selector in create assessment form
+- [x] Dynamic domain/gate/question rendering
+
+### Testing - ✅ Complete
+- [x] Updated gates API test for deprecated behavior
+- [x] Updated integration tests to fetch framework IDs
+- [x] Updated integration tests to fetch question UUIDs
+- [x] All 33 automated tests passing
+
+### Documentation - ✅ Complete
+- [x] Peer review document (PEER_REVIEW.md)
+- [x] CALMS framework analysis (docs/CALMS_FRAMEWORK_ANALYSIS.md)
+- [x] CALMS sizing recommendation (docs/CALMS_SIZING_RECOMMENDATION.md)
+- [x] Merge resolution summary (MERGE_RESOLUTION_SUMMARY.md)
+- [x] Updated lessons learned with 6 new issues
+
+---
+
+## Phase 6: CALMS Framework Implementation - ⏳ Starting
+
+### Planning - ✅ Complete
+- [x] CALMS research and framework analysis
+- [x] Management decision document for sizing
+- [x] Seed script structure (Culture domain complete)
+
+### Development - ⏳ Option 1 (25-30 questions) - Pending
+- [ ] Finalize CALMS question content (25-30 questions)
+- [ ] Complete Culture domain questions (6 questions)
+- [ ] Complete Automation domain questions (6 questions)
+- [ ] Complete Lean domain questions (5 questions)
+- [ ] Complete Measurement domain questions (6 questions)
+- [ ] Complete Sharing domain questions (5 questions)
+- [ ] Test CALMS seed script
+- [ ] Complete end-to-end CALMS assessment test
 
 ---
 
@@ -173,8 +230,10 @@
 | Assessment Core Features (40 Questions) | Week 3-4 | ✅ Complete | 2025-10-07 |
 | Results & Reporting (Basic) | Week 5 | ✅ Complete | 2025-10-07 |
 | Advanced Features (PDF, Trends) | Future | ⏳ Pending | - |
-| End-to-End Testing | Current | ⏳ In Progress | - |
+| End-to-End Testing | Week 7 | ✅ Complete | 2025-11-24 |
 | Production Docker Images | Week 6 | ✅ Complete | 2025-11-24 |
+| Multi-Framework Architecture | Week 8 | ✅ Complete | 2025-11-26 |
+| CALMS Framework Option 1 | Week 9 | ⏳ Starting | - |
 | Production Deployment | Future | ⏳ Pending | - |
 
 ---
@@ -203,6 +262,21 @@
 ---
 
 ## Notes
+
+### 2025-11-26 - Multi-Framework Architecture Complete
+- **Major Achievement**: Successfully refactored from hardcoded to database-driven framework system
+- ✅ Created 4 new database tables (frameworks, framework_domains, framework_gates, framework_questions)
+- ✅ Migrated existing MVP framework (5 domains, 20 gates, 100 questions) to database
+- ✅ Updated all APIs to work with dynamic framework structure
+- ✅ Resolved merge conflict with PR #5 (preserved both feature sets)
+- ✅ Fixed 6 issues during migration (enum conflicts, test updates, Vite cache)
+- ✅ All 33 automated tests passing
+- **Peer Review**: Comprehensive code review completed (PEER_REVIEW.md)
+- **CALMS Research**: Framework analysis and sizing recommendations completed
+- **Next**: CALMS Option 1 implementation (25-30 questions, 90-minute assessment)
+- Seeded framework: DevOps Maturity MVP v1.0
+- Test user restored: admin@example.com / admin123
+- Platform now supports unlimited frameworks - just seed new data
 
 ### 2025-11-24 - Production Docker Images Published
 - **Major Achievement**: Production-ready Docker images deployed to Docker Hub

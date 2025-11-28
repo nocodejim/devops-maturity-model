@@ -340,4 +340,98 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-11-26 20:16] - Multi-Framework Architecture Migration Issues
+- **Issue**: Database migration failed with "type assessmentstatus already exists" error
+- **Impact**: CRITICAL - Could not migrate to new multi-framework schema, all APIs failing with "column framework_id does not exist"
+- **Root Cause**: Migration tried to recreate enum types that already existed from previous migrations
+- **Resolution**:
+  1. Added `op.execute('DROP TYPE IF EXISTS assessmentstatus CASCADE')` before recreating tables
+  2. Reset database completely with `docker-compose down -v`
+  3. Ran migrations successfully
+  4. Seeded MVP framework data
+  5. Restored test user/organization from backup
+- **Lesson**: When dropping and recreating tables that use enum types, must explicitly drop the enum types first or they persist and cause conflicts
+- **Category**: Code Quality, Database Migrations
+- **Priority**: HIGH
+- **Files Changed**: backend/alembic/versions/001_add_frameworks.py
+
+---
+
+### [2025-11-26 15:50] - Merge Conflict Resolution - Preserving Both Feature Sets
+- **Issue**: Merge conflict in frontend/src/services/api.ts between feature branch (multi-framework) and master (improved URL detection from PR #5)
+- **Impact**: HIGH - Needed to integrate two different improvements without losing either
+- **Root Cause**: Two branches modified same file for different purposes:
+  - PR #5: Added protocol-aware URL detection with port mapping (8673→8680)
+  - feature branch: Added frameworkApi, framework_id parameter, deprecated gatesApi
+- **Resolution**: Merged both changes:
+  - Kept improved URL detection logic from PR #5
+  - Kept multi-framework support from feature branch
+  - Kept deprecated gatesApi stub for backward compatibility
+- **Lesson**: For merge conflicts with complementary features, combine both improvements rather than choosing one. Review what each branch adds and preserve valuable changes from both.
+- **Category**: Process & Workflow
+- **Priority**: HIGH
+- **Files Changed**: frontend/src/services/api.ts
+
+---
+
+### [2025-11-26 15:46] - Vite Dev Server Caching Conflict Markers
+- **Issue**: After resolving merge conflict, frontend tests failed with "ERROR: Unexpected '<<' in api.ts:1:0"
+- **Impact**: HIGH - Frontend completely non-functional even though source file was correct
+- **Root Cause**: Vite dev server cached the old conflicted version of api.ts with merge conflict markers, even though git showed clean file
+- **Resolution**: Restarted frontend container with `docker-compose restart frontend` to clear Vite cache
+- **Lesson**: After resolving merge conflicts in files watched by Vite, restart the dev server to clear cache. The hot reload doesn't always detect conflict resolution.
+- **Category**: Development Environment
+- **Priority**: MEDIUM
+- **Detection**: Tests showed syntax error but source file was clean - indicated cache issue
+
+---
+
+### [2025-11-26 15:47] - TypeScript Unused Import After Refactor
+- **Issue**: TypeScript compilation failed with "error TS6196: 'Framework' is declared but never used"
+- **Impact**: MEDIUM - Blocked TypeScript build and tests
+- **Root Cause**: After multi-framework refactor, Framework type was imported but TypeScript could infer it from the API response
+- **Resolution**: Removed unused `Framework` import from DashboardPage.tsx line 6
+- **Lesson**: After major refactors, check for unused imports - TypeScript strict mode catches these. Type inference may make explicit imports unnecessary.
+- **Category**: Code Quality
+- **Priority**: LOW
+- **Files Changed**: frontend/src/pages/DashboardPage.tsx
+
+---
+
+### [2025-11-26 15:51] - Test Suite Updates for Architectural Changes
+- **Issue**: Multiple test failures after multi-framework refactor:
+  1. Gates API test expected 20/40 but got 0/0
+  2. Integration test missing framework_id parameter
+  3. Integration test using hardcoded question IDs ("q1", "q2") instead of UUIDs
+- **Impact**: HIGH - 4 test failures blocking validation of new architecture
+- **Root Cause**: Tests were written for old hardcoded framework system, not updated for database-driven approach
+- **Resolution**:
+  1. Updated gates API test to expect 0/0 for deprecated endpoint
+  2. Updated integration test to fetch framework ID from API
+  3. Updated integration test to fetch question UUIDs from framework structure endpoint
+- **Lesson**: **Major architectural changes require comprehensive test updates**. Don't assume tests will work with new data structures. Tests for hardcoded systems must be rewritten for dynamic systems.
+- **Category**: Process & Workflow, Testing
+- **Priority**: CRITICAL
+- **Files Changed**:
+  - tests/scripts/backend-api.sh (updated gates test expectations)
+  - tests/scripts/integration.sh (fetch framework/question UUIDs dynamically)
+- **Best Practice**: When changing from hardcoded to database-driven, update all tests to fetch real IDs from APIs
+
+---
+
+### [2025-11-26 20:50] - Fresh Database Requires Test Data Restoration
+- **Issue**: After database reset, login tests failed with "incorrect email or password"
+- **Impact**: HIGH - All authenticated tests failing
+- **Root Cause**: `docker-compose down -v` removed ALL data including test users. Migration creates schema but not sample data.
+- **Resolution**:
+  1. Extracted test user and organization from backup SQL
+  2. Inserted with correct enum values (MEDIUM not "medium", ADMIN not "admin")
+  3. Verified authentication works
+- **Lesson**: Database resets require restoring test data. Keep backup SQL or create seed script for test users. Watch enum case sensitivity.
+- **Category**: Development Environment, Testing
+- **Priority**: MEDIUM
+- **Best Practice**: Create seed_test_data.py script for repeatable test user creation
+
+---
+
 *This document will be updated throughout the development session.*
