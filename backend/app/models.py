@@ -36,16 +36,6 @@ class AssessmentStatus(str, enum.Enum):
     COMPLETED = "completed"
 
 
-class DomainType(str, enum.Enum):
-    """Domain type enumeration - Complete spec has 5 domains"""
-
-    DOMAIN1 = "domain1"  # Source Control & Development Practices
-    DOMAIN2 = "domain2"  # Security & Compliance
-    DOMAIN3 = "domain3"  # CI/CD & Deployment
-    DOMAIN4 = "domain4"  # Infrastructure & Platform Engineering
-    DOMAIN5 = "domain5"  # Observability & Continuous Improvement
-
-
 class Organization(Base):
     """Organization model"""
 
@@ -84,14 +74,88 @@ class User(Base):
     assessments = relationship("Assessment", back_populates="assessor")
 
 
+class Framework(Base):
+    """Framework model (e.g. DevOps Maturity MVP, CALMS)"""
+
+    __tablename__ = "frameworks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    version = Column(String(50), nullable=False, default="1.0")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    domains = relationship("FrameworkDomain", back_populates="framework", cascade="all, delete-orphan")
+    assessments = relationship("Assessment", back_populates="framework")
+
+
+class FrameworkDomain(Base):
+    """Domain definition within a framework"""
+
+    __tablename__ = "framework_domains"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    weight = Column(Float, nullable=False, default=1.0)
+    order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    framework = relationship("Framework", back_populates="domains")
+    gates = relationship("FrameworkGate", back_populates="domain", cascade="all, delete-orphan")
+    domain_scores = relationship("DomainScore", back_populates="domain_def")
+
+
+class FrameworkGate(Base):
+    """Gate definition within a domain"""
+
+    __tablename__ = "framework_gates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id = Column(UUID(as_uuid=True), ForeignKey("framework_domains.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    domain = relationship("FrameworkDomain", back_populates="gates")
+    questions = relationship("FrameworkQuestion", back_populates="gate", cascade="all, delete-orphan")
+
+
+class FrameworkQuestion(Base):
+    """Question definition within a gate"""
+
+    __tablename__ = "framework_questions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    gate_id = Column(UUID(as_uuid=True), ForeignKey("framework_gates.id", ondelete="CASCADE"), nullable=False)
+    text = Column(Text, nullable=False)
+    guidance = Column(Text, nullable=True)
+    order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    gate = relationship("FrameworkGate", back_populates="questions")
+    responses = relationship("GateResponse", back_populates="question")
+
+
 class Assessment(Base):
-    """Assessment model - Complete spec version"""
+    """Assessment model"""
 
     __tablename__ = "assessments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
     assessor_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id"), nullable=False)
     team_name = Column(String(255), nullable=False)
     status = Column(Enum(AssessmentStatus), default=AssessmentStatus.DRAFT, nullable=False)
 
@@ -108,6 +172,7 @@ class Assessment(Base):
     # Relationships
     organization = relationship("Organization", back_populates="assessments")
     assessor = relationship("User", back_populates="assessments")
+    framework = relationship("Framework", back_populates="assessments")
     domain_scores = relationship("DomainScore", back_populates="assessment", cascade="all, delete-orphan")
     gate_responses = relationship("GateResponse", back_populates="assessment", cascade="all, delete-orphan")
 
@@ -121,7 +186,7 @@ class DomainScore(Base):
     assessment_id = Column(
         UUID(as_uuid=True), ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False
     )
-    domain = Column(Enum(DomainType), nullable=False)
+    domain_id = Column(UUID(as_uuid=True), ForeignKey("framework_domains.id"), nullable=False)
     score = Column(Float, nullable=False)  # 0-100
     maturity_level = Column(Integer, nullable=False)  # 1-5
     strengths = Column(ARRAY(String), nullable=True)  # Array of strength descriptions
@@ -131,10 +196,11 @@ class DomainScore(Base):
 
     # Relationships
     assessment = relationship("Assessment", back_populates="domain_scores")
+    domain_def = relationship("FrameworkDomain", back_populates="domain_scores")
 
 
 class GateResponse(Base):
-    """Gate response model - Complete spec version with gates and questions"""
+    """Gate response model"""
 
     __tablename__ = "gate_responses"
 
@@ -142,9 +208,7 @@ class GateResponse(Base):
     assessment_id = Column(
         UUID(as_uuid=True), ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False
     )
-    domain = Column(Enum(DomainType), nullable=False)
-    gate_id = Column(String(50), nullable=False)  # e.g., "gate_1_1", "gate_2_1"
-    question_id = Column(String(50), nullable=False)  # e.g., "q1", "q2"
+    question_id = Column(UUID(as_uuid=True), ForeignKey("framework_questions.id"), nullable=False)
     score = Column(Integer, nullable=False)  # 0-5
     notes = Column(Text, nullable=True)
     evidence = Column(ARRAY(String), nullable=True)  # Array of URLs or evidence descriptions
@@ -153,6 +217,7 @@ class GateResponse(Base):
 
     # Relationships
     assessment = relationship("Assessment", back_populates="gate_responses")
+    question = relationship("FrameworkQuestion", back_populates="responses")
     
     # Table constraints
     __table_args__ = (

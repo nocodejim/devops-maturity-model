@@ -9,7 +9,8 @@ import type {
   User,
   AnalyticsSummary,
   Organization,
-  GatesResponse,
+  Framework,
+  FrameworkStructure,
 } from '@/types'
 
 // Detect backend URL based on current host
@@ -17,15 +18,15 @@ const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL
   }
-// Use same host as frontend
-const protocol = window.location.protocol
-const host = window.location.hostname
+  // Use same host as frontend
+  const protocol = window.location.protocol
+  const host = window.location.hostname
 
-// If running on non-standard frontend port (8673), use port 8680 (backend)
-// Otherwise use port 8000 (development)
-const port = window.location.port === '8673' ? '8680' : '8000'
+  // If running on non-standard frontend port (8673), use port 8680 (backend)
+  // Otherwise use port 8000 (development)
+  const port = window.location.port === '8673' ? '8680' : '8000'
 
-const url = `${protocol}//${host}:${port}/api`
+  const url = `${protocol}//${host}:${port}/api`
   console.log('[API] Detected backend URL:', url)
   return url
 }
@@ -97,6 +98,24 @@ export const organizationApi = {
   },
 }
 
+// Frameworks API
+export const frameworkApi = {
+  list: async (): Promise<Framework[]> => {
+    const response = await api.get<Framework[]>('/frameworks/')
+    return response.data
+  },
+
+  get: async (id: string): Promise<Framework> => {
+    const response = await api.get<Framework>(`/frameworks/${id}`)
+    return response.data
+  },
+
+  getStructure: async (id: string): Promise<FrameworkStructure> => {
+    const response = await api.get<FrameworkStructure>(`/frameworks/${id}/structure`)
+    return response.data
+  }
+}
+
 // Assessment API
 export const assessmentApi = {
   list: async (): Promise<Assessment[]> => {
@@ -104,9 +123,10 @@ export const assessmentApi = {
     return response.data
   },
 
-  create: async (teamName: string, organizationId?: string): Promise<Assessment> => {
+  create: async (teamName: string, frameworkId: string, organizationId?: string): Promise<Assessment> => {
     const response = await api.post<Assessment>('/assessments/', {
       team_name: teamName,
+      framework_id: frameworkId,
       organization_id: organizationId,
     })
     return response.data
@@ -155,21 +175,10 @@ export const analyticsApi = {
   },
 }
 
-// Gates API
+// DEPRECATED: Gates API (kept for compilation safety if needed, but should be unused)
 export const gatesApi = {
-  getAll: async (): Promise<GatesResponse> => {
-    const response = await api.get<GatesResponse>('/gates/')
-    return response.data
-  },
-
-  getGate: async (gateId: string): Promise<any> => {
-    const response = await api.get(`/gates/${gateId}`)
-    return response.data
-  },
-
-  getByDomain: async (domain: string): Promise<any> => {
-    const response = await api.get(`/gates/domain/${domain}`)
-    return response.data
+  getAll: async (): Promise<any> => {
+    return Promise.resolve({ gates: [], total_gates: 0, total_questions: 0 })
   },
 }
 

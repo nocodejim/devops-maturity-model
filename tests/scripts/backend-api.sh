@@ -89,8 +89,8 @@ fi
 
 log ""
 
-# Test 3: Gates endpoint (no auth required)
-log "Test 3: Testing gates endpoint..."
+# Test 3: Gates endpoint (DEPRECATED - kept for backward compatibility)
+log "Test 3: Testing gates endpoint (deprecated)..."
 RESPONSE=$(curl -s http://localhost:8680/api/gates/ 2>/dev/null || echo "ERROR")
 if [ "$RESPONSE" = "ERROR" ]; then
     test_failed "Gates endpoint not accessible"
@@ -98,13 +98,15 @@ else
     if echo "$RESPONSE" | python3 -m json.tool > /dev/null 2>&1; then
         TOTAL_GATES=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('total_gates', 0))" 2>/dev/null || echo "0")
         TOTAL_QUESTIONS=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('total_questions', 0))" 2>/dev/null || echo "0")
-        
-        if [ "$TOTAL_GATES" = "20" ] && [ "$TOTAL_QUESTIONS" = "40" ]; then
-            test_passed "Gates endpoint returns correct data structure"
-            log "Gates: $TOTAL_GATES, Questions: $TOTAL_QUESTIONS"
+
+        # Gates API is deprecated in multi-framework architecture
+        # It now returns 0/0 as frameworks are database-driven
+        if [ "$TOTAL_GATES" = "0" ] && [ "$TOTAL_QUESTIONS" = "0" ]; then
+            test_passed "Gates endpoint returns expected deprecated response"
+            log "Gates API deprecated (returns 0/0) - use Frameworks API instead"
         else
             test_failed "Gates endpoint data structure incorrect"
-            log "Gates: $TOTAL_GATES, Questions: $TOTAL_QUESTIONS (expected 20/40)"
+            log "Gates: $TOTAL_GATES, Questions: $TOTAL_QUESTIONS (expected 0/0 for deprecated API)"
         fi
     else
         test_failed "Gates endpoint response is not valid JSON"

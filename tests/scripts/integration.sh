@@ -77,13 +77,26 @@ log ""
 
 # Test 2: Create assessment
 log "Test 2: Creating test assessment..."
+
+# First, get available frameworks
+FRAMEWORKS_RESPONSE=$(curl -s http://localhost:8680/api/frameworks/ \
+  -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
+
+if [ "$FRAMEWORKS_RESPONSE" != "ERROR" ]; then
+    FRAMEWORK_ID=$(echo "$FRAMEWORKS_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data[0]['id'] if data else '')" 2>/dev/null || echo "")
+    log "Using framework ID: $FRAMEWORK_ID"
+else
+    FRAMEWORK_ID=""
+    log "WARNING: Could not fetch frameworks"
+fi
+
 CREATE_RESPONSE=$(curl -s -X POST http://localhost:8680/api/assessments/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{
-    "team_name": "Integration Test Team",
-    "status": "in_progress"
-  }' 2>/dev/null || echo "ERROR")
+  -d "{
+    \"team_name\": \"Integration Test Team\",
+    \"framework_id\": \"$FRAMEWORK_ID\"
+  }" 2>/dev/null || echo "ERROR")
 
 if [ "$CREATE_RESPONSE" = "ERROR" ]; then
     test_failed "Cannot create assessment - endpoint not accessible"
@@ -112,18 +125,57 @@ log ""
 
 # Test 3: Submit gate responses (sample responses for first few gates)
 log "Test 3: Submitting sample assessment responses..."
-if [ -z "$ASSESSMENT_ID" ]; then
-    test_failed "Cannot test responses - no valid assessment ID"
+if [ -z "$ASSESSMENT_ID" ] || [ -z "$FRAMEWORK_ID" ]; then
+    test_failed "Cannot test responses - no valid assessment ID or framework ID"
 else
-    # Submit responses for first 2 gates (4 questions total)
-    RESPONSES_JSON='{
-      "responses": [
-        {"domain": "domain1", "gate_id": "gate_1_1", "question_id": "q1", "score": 3, "notes": "Integration test response 1"},
-        {"domain": "domain1", "gate_id": "gate_1_1", "question_id": "q2", "score": 4, "notes": "Integration test response 2"},
-        {"domain": "domain1", "gate_id": "gate_1_2", "question_id": "q3", "score": 2, "notes": "Integration test response 3"},
-        {"domain": "domain1", "gate_id": "gate_1_2", "question_id": "q4", "score": 5, "notes": "Integration test response 4"}
-      ]
-    }'
+    # Fetch framework structure to get real question UUIDs
+    STRUCTURE_RESPONSE=$(curl -s "http://localhost:8680/api/frameworks/$FRAMEWORK_ID/structure" \
+      -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
+
+    if [ "$STRUCTURE_RESPONSE" != "ERROR" ]; then
+        # Extract first 4 question IDs from the framework structure
+        QUESTION_IDS=$(echo "$STRUCTURE_RESPONSE" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+questions = []
+for domain in data.get('domains', [])[:1]:  # Just first domain
+    for gate in domain.get('gates', [])[:2]:  # Just first 2 gates
+        for question in gate.get('questions', [])[:2]:  # Just first 2 questions per gate
+            questions.append(question['id'])
+            if len(questions) >= 4:
+                break
+        if len(questions) >= 4:
+            break
+    if len(questions) >= 4:
+        break
+print(','.join(questions[:4]))
+" 2>/dev/null || echo "")
+
+        if [ -n "$QUESTION_IDS" ]; then
+            # Split comma-separated IDs
+            IFS=',' read -ra Q_ARRAY <<< "$QUESTION_IDS"
+            Q1="${Q_ARRAY[0]}"
+            Q2="${Q_ARRAY[1]}"
+            Q3="${Q_ARRAY[2]}"
+            Q4="${Q_ARRAY[3]}"
+
+            # Submit responses using real question UUIDs
+            RESPONSES_JSON="{
+              \"responses\": [
+                {\"question_id\": \"$Q1\", \"score\": 3, \"notes\": \"Integration test response 1\"},
+                {\"question_id\": \"$Q2\", \"score\": 4, \"notes\": \"Integration test response 2\"},
+                {\"question_id\": \"$Q3\", \"score\": 2, \"notes\": \"Integration test response 3\"},
+                {\"question_id\": \"$Q4\", \"score\": 5, \"notes\": \"Integration test response 4\"}
+              ]
+            }"
+        else
+            log "WARNING: Could not extract question IDs from framework structure"
+            RESPONSES_JSON='{"responses": []}'
+        fi
+    else
+        log "WARNING: Could not fetch framework structure"
+        RESPONSES_JSON='{"responses": []}'
+    fi
     
     RESPONSES_RESPONSE=$(curl -s -X POST "http://localhost:8680/api/assessments/$ASSESSMENT_ID/responses" \
       -H "Authorization: Bearer $TOKEN" \

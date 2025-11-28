@@ -1,11 +1,11 @@
 """Pydantic schemas for request/response validation - Complete Spec"""
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models import AssessmentStatus, DomainType, UserRole, OrganizationSize
+from app.models import AssessmentStatus, UserRole, OrganizationSize
 
 
 # Organization schemas
@@ -101,6 +101,56 @@ class LoginRequest(BaseModel):
     password: str
 
 
+# Framework schemas
+class FrameworkBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    version: str = "1.0"
+
+class FrameworkResponse(FrameworkBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class FrameworkQuestionResponse(BaseModel):
+    id: UUID
+    text: str
+    guidance: Optional[str] = None
+    order: int
+
+    class Config:
+        from_attributes = True
+
+class FrameworkGateResponse(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    order: int
+    questions: List[FrameworkQuestionResponse]
+
+    class Config:
+        from_attributes = True
+
+class FrameworkDomainResponse(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    weight: float
+    order: int
+    gates: List[FrameworkGateResponse]
+
+    class Config:
+        from_attributes = True
+
+class FrameworkStructure(BaseModel):
+    """Complete framework structure with nested domains/gates/questions"""
+    framework: FrameworkResponse
+    domains: List[FrameworkDomainResponse]
+
+
 # Assessment schemas
 class AssessmentBase(BaseModel):
     """Base assessment schema"""
@@ -111,8 +161,7 @@ class AssessmentBase(BaseModel):
 
 class AssessmentCreate(AssessmentBase):
     """Schema for creating an assessment"""
-
-    pass
+    framework_id: UUID
 
 
 class AssessmentUpdate(BaseModel):
@@ -127,6 +176,7 @@ class AssessmentResponse(AssessmentBase):
 
     id: UUID
     assessor_id: UUID
+    framework_id: UUID
     status: AssessmentStatus
     overall_score: Optional[float] = None
     maturity_level: Optional[int] = None
@@ -145,7 +195,8 @@ class DomainScoreResponse(BaseModel):
 
     id: UUID
     assessment_id: UUID
-    domain: DomainType
+    domain_id: UUID
+    domain_name: Optional[str] = None # Enriched field
     score: float
     maturity_level: int
     strengths: Optional[List[str]] = []
@@ -160,9 +211,7 @@ class DomainScoreResponse(BaseModel):
 class GateResponseBase(BaseModel):
     """Base gate response schema"""
 
-    domain: DomainType
-    gate_id: str = Field(..., description="Gate identifier e.g. 'gate_1_1'")
-    question_id: str = Field(..., description="Question identifier e.g. 'q1'")
+    question_id: UUID = Field(..., description="Question UUID")
     score: int = Field(..., ge=0, le=5, description="Score from 0-5")
     notes: Optional[str] = None
     evidence: Optional[List[str]] = []

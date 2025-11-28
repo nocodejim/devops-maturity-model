@@ -10,6 +10,11 @@ const MATURITY_LEVELS = {
   5: { name: 'Optimizing', description: 'Industry-leading, continuous improvement', color: 'green' },
 }
 
+// Function to safely get maturity info with fallback
+const getMaturityInfo = (level: number) => {
+  return MATURITY_LEVELS[level as keyof typeof MATURITY_LEVELS] || MATURITY_LEVELS[1]
+}
+
 export function ResultsPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -30,7 +35,7 @@ export function ResultsPage() {
     )
   }
 
-  const maturityInfo = MATURITY_LEVELS[report.maturity_level.level as keyof typeof MATURITY_LEVELS]
+  const maturityInfo = getMaturityInfo(report.maturity_level.level)
   const overallScore = report.assessment.overall_score ?? 0
   const scoreColor = overallScore >= 80 ? 'green' :
                      overallScore >= 60 ? 'blue' :
@@ -47,7 +52,7 @@ export function ResultsPage() {
                 Assessment Results: {report.assessment.team_name}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                Completed: {new Date(report.assessment.completed_at!).toLocaleDateString()}
+                Completed: {report.assessment.completed_at ? new Date(report.assessment.completed_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
             <button
