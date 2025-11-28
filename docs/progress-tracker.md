@@ -179,16 +179,16 @@
 
 ### Planning - ✅ Complete
 - [x] CALMS research and framework analysis
-- [x] Management decision document for sizing
+- [x] Management decision document for sizing (Option 1: 28 questions)
 - [x] Seed script structure created
 
-### Development - ✅ Complete (100 questions implemented)
-- [x] Finalize CALMS question content (100 questions total)
-- [x] Complete Culture domain questions (20 questions across 4 gates)
-- [x] Complete Automation domain questions (20 questions across 4 gates)
-- [x] Complete Lean domain questions (20 questions across 4 gates)
-- [x] Complete Measurement domain questions (20 questions across 4 gates)
-- [x] Complete Sharing domain questions (20 questions across 4 gates)
+### Development - ✅ Complete (28-question lightweight assessment)
+- [x] Finalize CALMS question content (28 questions total per spec)
+- [x] Complete Culture domain (6 questions, 25% weight)
+- [x] Complete Automation domain (6 questions, 25% weight)
+- [x] Complete Lean domain (5 questions, 15% weight)
+- [x] Complete Measurement domain (6 questions, 20% weight)
+- [x] Complete Sharing domain (5 questions, 15% weight)
 - [x] Test CALMS seed script (successfully seeded to database)
 - [ ] Complete end-to-end CALMS assessment test (pending browser testing)
 
