@@ -9,7 +9,7 @@ from app.api import auth, assessments, analytics, organizations, gates, framewor
 app = FastAPI(
     title="DevOps Maturity Assessment API",
     description="Internal tool for assessing team DevOps maturity and readiness",
-    version="0.1.0",
+    version="1.2.1",
 )
 
 # CORS configuration for local development
@@ -37,7 +37,7 @@ async def root():
     return {
         "status": "healthy",
         "service": "DevOps Maturity Assessment API",
-        "version": "0.1.0",
+        "version": "1.2.1",
     }
 
 

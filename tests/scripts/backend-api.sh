@@ -42,7 +42,7 @@ log ""
 
 # Test 1: Root endpoint
 log "Test 1: Testing root endpoint..."
-RESPONSE=$(curl -s http://localhost:8000/ 2>/dev/null || echo "ERROR")
+RESPONSE=$(curl -s http://localhost:8680/ 2>/dev/null || echo "ERROR")
 if [ "$RESPONSE" = "ERROR" ]; then
     test_failed "Root endpoint not accessible"
 else
@@ -67,7 +67,7 @@ log ""
 
 # Test 2: Health endpoint
 log "Test 2: Testing health endpoint..."
-RESPONSE=$(curl -s http://localhost:8000/health 2>/dev/null || echo "ERROR")
+RESPONSE=$(curl -s http://localhost:8680/health 2>/dev/null || echo "ERROR")
 if [ "$RESPONSE" = "ERROR" ]; then
     test_failed "Health endpoint not accessible"
 else
@@ -91,7 +91,7 @@ log ""
 
 # Test 3: Gates endpoint (no auth required)
 log "Test 3: Testing gates endpoint..."
-RESPONSE=$(curl -s http://localhost:8000/api/gates/ 2>/dev/null || echo "ERROR")
+RESPONSE=$(curl -s http://localhost:8680/api/gates/ 2>/dev/null || echo "ERROR")
 if [ "$RESPONSE" = "ERROR" ]; then
     test_failed "Gates endpoint not accessible"
 else
@@ -115,7 +115,7 @@ log ""
 
 # Test 4: Login endpoint
 log "Test 4: Testing login endpoint..."
-LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8000/api/auth/login \
+LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8680/api/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin@example.com&password=admin123" 2>/dev/null || echo "ERROR")
 
@@ -149,7 +149,7 @@ log "Test 5: Testing authenticated endpoint..."
 if [ -z "$TOKEN" ]; then
     test_failed "Cannot test authenticated endpoint - no valid token from login"
 else
-    ME_RESPONSE=$(curl -s http://localhost:8000/api/auth/me \
+    ME_RESPONSE=$(curl -s http://localhost:8680/api/auth/me \
       -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
     
     if [ "$ME_RESPONSE" = "ERROR" ]; then
@@ -180,7 +180,7 @@ log "Test 6: Testing assessments list endpoint..."
 if [ -z "$TOKEN" ]; then
     test_failed "Cannot test assessments endpoint - no valid token"
 else
-    ASSESSMENTS_RESPONSE=$(curl -s http://localhost:8000/api/assessments/ \
+    ASSESSMENTS_RESPONSE=$(curl -s http://localhost:8680/api/assessments/ \
       -H "Authorization: Bearer $TOKEN" 2>/dev/null || echo "ERROR")
     
     if [ "$ASSESSMENTS_RESPONSE" = "ERROR" ]; then

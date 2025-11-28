@@ -18,9 +18,15 @@ const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL
   }
-  // Use same host as frontend but port 8000
+  // Use same host as frontend
+  const protocol = window.location.protocol
   const host = window.location.hostname
-  const url = `http://${host}:8000/api`
+
+  // If running on non-standard frontend port (8673), use port 8680 (backend)
+  // Otherwise use port 8000 (development)
+  const port = window.location.port === '8673' ? '8680' : '8000'
+
+  const url = `${protocol}//${host}:${port}/api`
   console.log('[API] Detected backend URL:', url)
   return url
 }

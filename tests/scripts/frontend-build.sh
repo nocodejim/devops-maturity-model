@@ -42,9 +42,9 @@ log ""
 
 # Test 1: Verify frontend is serving
 log "Test 1: Testing frontend serving..."
-RESPONSE=$(curl -s http://localhost:5173 2>/dev/null || echo "ERROR")
+RESPONSE=$(curl -s http://localhost:8673 2>/dev/null || echo "ERROR")
 if [ "$RESPONSE" = "ERROR" ]; then
-    test_failed "Frontend not accessible at http://localhost:5173"
+    test_failed "Frontend not accessible at http://localhost:8673"
 else
     if echo "$RESPONSE" | grep -q "DevOps Maturity Assessment"; then
         test_passed "Frontend serves HTML with correct title"
@@ -102,7 +102,7 @@ log ""
 log "Test 4: Testing frontend asset availability..."
 
 # Check if main JS bundle is accessible
-JS_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5173/src/main.tsx 2>/dev/null || echo "000")
+JS_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8673/src/main.tsx 2>/dev/null || echo "000")
 if [ "$JS_RESPONSE" = "200" ]; then
     test_passed "Main TypeScript file is accessible"
 else
@@ -110,7 +110,7 @@ else
 fi
 
 # Check if CSS/styling is working
-CSS_CHECK=$(curl -s http://localhost:5173 | grep -o "tailwind\|css" | head -1 || echo "")
+CSS_CHECK=$(curl -s http://localhost:8673 | grep -o "tailwind\|css" | head -1 || echo "")
 if [ -n "$CSS_CHECK" ]; then
     test_passed "CSS/styling configuration detected"
 else
@@ -172,14 +172,14 @@ log ""
 
 # Test 7: Test frontend routing (if accessible)
 log "Test 7: Testing frontend routing..."
-LOGIN_PAGE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5173/login 2>/dev/null || echo "000")
+LOGIN_PAGE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8673/login 2>/dev/null || echo "000")
 if [ "$LOGIN_PAGE" = "200" ]; then
     test_passed "Login route is accessible"
 else
     test_warning "Login route returned status: $LOGIN_PAGE (may be SPA routing)"
 fi
 
-DASHBOARD_PAGE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5173/dashboard 2>/dev/null || echo "000")
+DASHBOARD_PAGE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8673/dashboard 2>/dev/null || echo "000")
 if [ "$DASHBOARD_PAGE" = "200" ]; then
     test_passed "Dashboard route is accessible"
 else
