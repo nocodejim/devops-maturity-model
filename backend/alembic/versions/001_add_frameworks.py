@@ -76,6 +76,9 @@ def upgrade():
     op.drop_table('domain_scores')
     op.drop_table('assessments')
 
+    # Drop enum types so we can recreate them
+    op.execute('DROP TYPE IF EXISTS assessmentstatus CASCADE')
+
     # Recreate assessments table with framework_id
     op.create_table('assessments',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
