@@ -340,4 +340,154 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-11-26 20:16] - Multi-Framework Architecture Migration Issues
+- **Issue**: Database migration failed with "type assessmentstatus already exists" error
+- **Impact**: CRITICAL - Could not migrate to new multi-framework schema, all APIs failing with "column framework_id does not exist"
+- **Root Cause**: Migration tried to recreate enum types that already existed from previous migrations
+- **Resolution**:
+  1. Added `op.execute('DROP TYPE IF EXISTS assessmentstatus CASCADE')` before recreating tables
+  2. Reset database completely with `docker-compose down -v`
+  3. Ran migrations successfully
+  4. Seeded MVP framework data
+  5. Restored test user/organization from backup
+- **Lesson**: When dropping and recreating tables that use enum types, must explicitly drop the enum types first or they persist and cause conflicts
+- **Category**: Code Quality, Database Migrations
+- **Priority**: HIGH
+- **Files Changed**: backend/alembic/versions/001_add_frameworks.py
+
+---
+
+### [2025-11-26 15:50] - Merge Conflict Resolution - Preserving Both Feature Sets
+- **Issue**: Merge conflict in frontend/src/services/api.ts between feature branch (multi-framework) and master (improved URL detection from PR #5)
+- **Impact**: HIGH - Needed to integrate two different improvements without losing either
+- **Root Cause**: Two branches modified same file for different purposes:
+  - PR #5: Added protocol-aware URL detection with port mapping (8673→8680)
+  - feature branch: Added frameworkApi, framework_id parameter, deprecated gatesApi
+- **Resolution**: Merged both changes:
+  - Kept improved URL detection logic from PR #5
+  - Kept multi-framework support from feature branch
+  - Kept deprecated gatesApi stub for backward compatibility
+- **Lesson**: For merge conflicts with complementary features, combine both improvements rather than choosing one. Review what each branch adds and preserve valuable changes from both.
+- **Category**: Process & Workflow
+- **Priority**: HIGH
+- **Files Changed**: frontend/src/services/api.ts
+
+---
+
+### [2025-11-26 15:46] - Vite Dev Server Caching Conflict Markers
+- **Issue**: After resolving merge conflict, frontend tests failed with "ERROR: Unexpected '<<' in api.ts:1:0"
+- **Impact**: HIGH - Frontend completely non-functional even though source file was correct
+- **Root Cause**: Vite dev server cached the old conflicted version of api.ts with merge conflict markers, even though git showed clean file
+- **Resolution**: Restarted frontend container with `docker-compose restart frontend` to clear Vite cache
+- **Lesson**: After resolving merge conflicts in files watched by Vite, restart the dev server to clear cache. The hot reload doesn't always detect conflict resolution.
+- **Category**: Development Environment
+- **Priority**: MEDIUM
+- **Detection**: Tests showed syntax error but source file was clean - indicated cache issue
+
+---
+
+### [2025-11-26 15:47] - TypeScript Unused Import After Refactor
+- **Issue**: TypeScript compilation failed with "error TS6196: 'Framework' is declared but never used"
+- **Impact**: MEDIUM - Blocked TypeScript build and tests
+- **Root Cause**: After multi-framework refactor, Framework type was imported but TypeScript could infer it from the API response
+- **Resolution**: Removed unused `Framework` import from DashboardPage.tsx line 6
+- **Lesson**: After major refactors, check for unused imports - TypeScript strict mode catches these. Type inference may make explicit imports unnecessary.
+- **Category**: Code Quality
+- **Priority**: LOW
+- **Files Changed**: frontend/src/pages/DashboardPage.tsx
+
+---
+
+### [2025-11-26 15:51] - Test Suite Updates for Architectural Changes
+- **Issue**: Multiple test failures after multi-framework refactor:
+  1. Gates API test expected 20/40 but got 0/0
+  2. Integration test missing framework_id parameter
+  3. Integration test using hardcoded question IDs ("q1", "q2") instead of UUIDs
+- **Impact**: HIGH - 4 test failures blocking validation of new architecture
+- **Root Cause**: Tests were written for old hardcoded framework system, not updated for database-driven approach
+- **Resolution**:
+  1. Updated gates API test to expect 0/0 for deprecated endpoint
+  2. Updated integration test to fetch framework ID from API
+  3. Updated integration test to fetch question UUIDs from framework structure endpoint
+- **Lesson**: **Major architectural changes require comprehensive test updates**. Don't assume tests will work with new data structures. Tests for hardcoded systems must be rewritten for dynamic systems.
+- **Category**: Process & Workflow, Testing
+- **Priority**: CRITICAL
+- **Files Changed**:
+  - tests/scripts/backend-api.sh (updated gates test expectations)
+  - tests/scripts/integration.sh (fetch framework/question UUIDs dynamically)
+- **Best Practice**: When changing from hardcoded to database-driven, update all tests to fetch real IDs from APIs
+
+---
+
+### [2025-11-26 20:50] - Fresh Database Requires Test Data Restoration
+- **Issue**: After database reset, login tests failed with "incorrect email or password"
+- **Impact**: HIGH - All authenticated tests failing
+- **Root Cause**: `docker-compose down -v` removed ALL data including test users. Migration creates schema but not sample data.
+- **Resolution**:
+  1. Extracted test user and organization from backup SQL
+  2. Inserted with correct enum values (MEDIUM not "medium", ADMIN not "admin")
+  3. Verified authentication works
+- **Lesson**: Database resets require restoring test data. Keep backup SQL or create seed script for test users. Watch enum case sensitivity.
+- **Category**: Development Environment, Testing
+- **Priority**: MEDIUM
+- **Best Practice**: Create seed_test_data.py script for repeatable test user creation
+
+---
+
+### [2025-11-28 18:20] - CRITICAL: Failed to Read Requirements, Created 4x Too Many Questions
+- **Issue**: Created 100-question CALMS framework instead of 28-question lightweight assessment specified in requirements
+- **Impact**: CRITICAL
+  - Wasted **52% of session token budget** (80,000+ tokens) on wrong implementation
+  - Created feature/CALMS-overkill branch with incorrect solution
+  - Required complete rewrite of seed script
+  - Wasted 2+ hours of development time
+  - User frustration and loss of trust
+- **Root Cause**: **Did not read the requirements documentation before starting work**
+  - CALMS_SIZING_RECOMMENDATION.md clearly specified Option 1: 25-30 questions (90 minutes)
+  - HANDOFF-SUMMARY.md clearly stated 28 questions total
+  - Blindly copied MVP framework pattern (100 questions) without checking requirements
+  - Assumed structure instead of reading provided documentation
+- **Resolution**:
+  1. Renamed branch to feature/CALMS-overkill
+  2. Created new feature/CALMS branch
+  3. Rebuilt seed script with correct 28-question structure (6+6+5+6+5)
+  4. Proper domain weights: Culture 25%, Automation 25%, Lean 15%, Measurement 20%, Sharing 15%
+- **Lesson**: **ALWAYS READ THE REQUIREMENTS FIRST. NO EXCEPTIONS.**
+  - Before writing ANY code, read ALL specification documents provided
+  - Don't assume patterns from other features apply to new work
+  - Token budget is user's money - wasting it by not reading requirements is unacceptable
+  - If instructions exist, FOLLOW THEM EXACTLY
+  - Question count, structure, and weights were all documented - there was no excuse
+- **Category**: Process & Workflow
+- **Priority**: CRITICAL
+- **Cost Impact**: 52% token waste = significant cost to user
+- **Prevention**:
+  - Read specification documents BEFORE starting implementation
+  - Confirm understanding of requirements with user if unclear
+  - Check for sizing/scoping documents (like CALMS_SIZING_RECOMMENDATION.md)
+  - Don't blindly copy patterns from existing code
+- **Files Affected**:
+  - backend/app/scripts/seed_calms_framework.py (completely rewritten)
+  - Wasted commits on feature/CALMS-overkill branch
+
+---
+
+### [2025-11-28 18:40] - Missing Score 1 Guidance in All 28 Questions
+- **Issue**: All 28 CALMS questions missing Score 1 in maturity scale, jumping from Score 0 to Score 2
+- **Impact**: HIGH - Incomplete maturity model with only 5 levels instead of standard 6 levels (0-5)
+- **Root Cause**: Rushed question writing, didn't follow established maturity model pattern from existing framework
+- **Resolution**: Added Score 1 guidance to all 28 questions across all 5 domains
+- **Lesson**: Quality matters even in rush situations. Each question must have complete 6-level scoring:
+  - Score 0: None/Not applicable
+  - Score 1: Initial/Ad-hoc
+  - Score 2: Developing
+  - Score 3: Defined
+  - Score 4: Managed
+  - Score 5: Optimizing
+- **Category**: Code Quality
+- **Priority**: HIGH
+- **Prevention**: Use checklist for question creation, verify all score levels present before committing
+
+---
+
 *This document will be updated throughout the development session.*
