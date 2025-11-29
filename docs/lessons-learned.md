@@ -434,4 +434,60 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-11-28 18:20] - CRITICAL: Failed to Read Requirements, Created 4x Too Many Questions
+- **Issue**: Created 100-question CALMS framework instead of 28-question lightweight assessment specified in requirements
+- **Impact**: CRITICAL
+  - Wasted **52% of session token budget** (80,000+ tokens) on wrong implementation
+  - Created feature/CALMS-overkill branch with incorrect solution
+  - Required complete rewrite of seed script
+  - Wasted 2+ hours of development time
+  - User frustration and loss of trust
+- **Root Cause**: **Did not read the requirements documentation before starting work**
+  - CALMS_SIZING_RECOMMENDATION.md clearly specified Option 1: 25-30 questions (90 minutes)
+  - HANDOFF-SUMMARY.md clearly stated 28 questions total
+  - Blindly copied MVP framework pattern (100 questions) without checking requirements
+  - Assumed structure instead of reading provided documentation
+- **Resolution**:
+  1. Renamed branch to feature/CALMS-overkill
+  2. Created new feature/CALMS branch
+  3. Rebuilt seed script with correct 28-question structure (6+6+5+6+5)
+  4. Proper domain weights: Culture 25%, Automation 25%, Lean 15%, Measurement 20%, Sharing 15%
+- **Lesson**: **ALWAYS READ THE REQUIREMENTS FIRST. NO EXCEPTIONS.**
+  - Before writing ANY code, read ALL specification documents provided
+  - Don't assume patterns from other features apply to new work
+  - Token budget is user's money - wasting it by not reading requirements is unacceptable
+  - If instructions exist, FOLLOW THEM EXACTLY
+  - Question count, structure, and weights were all documented - there was no excuse
+- **Category**: Process & Workflow
+- **Priority**: CRITICAL
+- **Cost Impact**: 52% token waste = significant cost to user
+- **Prevention**:
+  - Read specification documents BEFORE starting implementation
+  - Confirm understanding of requirements with user if unclear
+  - Check for sizing/scoping documents (like CALMS_SIZING_RECOMMENDATION.md)
+  - Don't blindly copy patterns from existing code
+- **Files Affected**:
+  - backend/app/scripts/seed_calms_framework.py (completely rewritten)
+  - Wasted commits on feature/CALMS-overkill branch
+
+---
+
+### [2025-11-28 18:40] - Missing Score 1 Guidance in All 28 Questions
+- **Issue**: All 28 CALMS questions missing Score 1 in maturity scale, jumping from Score 0 to Score 2
+- **Impact**: HIGH - Incomplete maturity model with only 5 levels instead of standard 6 levels (0-5)
+- **Root Cause**: Rushed question writing, didn't follow established maturity model pattern from existing framework
+- **Resolution**: Added Score 1 guidance to all 28 questions across all 5 domains
+- **Lesson**: Quality matters even in rush situations. Each question must have complete 6-level scoring:
+  - Score 0: None/Not applicable
+  - Score 1: Initial/Ad-hoc
+  - Score 2: Developing
+  - Score 3: Defined
+  - Score 4: Managed
+  - Score 5: Optimizing
+- **Category**: Code Quality
+- **Priority**: HIGH
+- **Prevention**: Use checklist for question creation, verify all score levels present before committing
+
+---
+
 *This document will be updated throughout the development session.*
