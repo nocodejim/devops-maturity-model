@@ -24,7 +24,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: buckeye90/devops-maturity-backend:1.1
+    image: buckeye90/devops-maturity-backend:2.0
     container_name: devops-maturity-backend
     ports:
       - "8680:8000"
@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: buckeye90/devops-maturity-frontend:1.1
+    image: buckeye90/devops-maturity-frontend:2.0
     container_name: devops-maturity-frontend
     ports:
       - "8673:5173"
