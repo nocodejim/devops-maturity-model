@@ -490,4 +490,41 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2025-11-28 19:50] - Missing Upgrade Path Documentation for Existing Installations
+- **Issue**: Released v2.0 with breaking database schema changes but no upgrade documentation for users running v1.x
+- **Impact**: MEDIUM-HIGH
+  - Users upgrading from v1.x don't know how to migrate to v2.0
+  - Breaking changes (multi-framework architecture) destroy v1.x data
+  - No clear path to rebuild database with new schema
+  - Assumption that all users are doing fresh installs
+- **Root Cause**: Focused only on new installation/development workflow, didn't consider upgrade path for existing deployments
+- **Resolution**: Created comprehensive upgrade guide (docs/UPGRADE-TO-2.0.md) with:
+  1. Manual step-by-step upgrade instructions
+  2. Automated upgrade script
+  3. Troubleshooting section
+  4. Rollback instructions
+  5. Clear warnings about data loss
+- **Lesson**: **When releasing breaking changes, ALWAYS provide upgrade documentation**
+  - Don't assume all users are doing fresh installs
+  - Document what data will be lost/preserved
+  - Provide clear migration or upgrade path
+  - Include rollback instructions
+  - Consider existing production deployments
+  - Upgrade path is as important as installation instructions
+- **Category**: Process & Workflow, Documentation
+- **Priority**: HIGH
+- **Best Practice**:
+  - Create `docs/UPGRADE-FROM-vX-TO-vY.md` for each breaking release
+  - Include both manual and automated upgrade paths
+  - Test upgrade process on fresh v1.x install before releasing
+  - Document what features/data are incompatible
+  - Provide data export/backup instructions if applicable
+- **Prevention**:
+  - Add "Upgrade Path" to release checklist
+  - Test upgrade scenarios, not just fresh installs
+  - Consider backward compatibility when making schema changes
+- **Related Documentation**: docs/UPGRADE-TO-2.0.md
+
+---
+
 *This document will be updated throughout the development session.*
