@@ -9,7 +9,7 @@ author: Automation Team
 url: https://github.com/Inflectra/devops-maturity-model
 license: MIT
 copyright: Copyright 2026
-version: 1.0.0
+version: 1.0
 
 dashboards:
   - dashboardTypeId: 1
