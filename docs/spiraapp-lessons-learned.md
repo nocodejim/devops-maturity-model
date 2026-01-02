@@ -60,3 +60,9 @@ const alternatives = [
 - **Console Logs**: Use `dmmLog()` helper that writes to both console and localStorage for persistent debugging
 - **localStorage**: Check `localStorage.getItem('dmm_debug_log')` after errors
 - **Network Tab**: Check response body for `PluginRestException` details
+## 7. Manifest & Data Saving Pitfalls
+- **Issue: Manifest Name Spaces**: Analyzed working examples (`AWSBedrock`, `AzureOpenAI`) and confirmed that `manifest.yaml` `name` **MUST NOT** contain spaces (e.g., `awsBedrock`, `azureOpenAI`).
+- **Correction**: My previous attempt to change the name was correct in principle, but failed due to an accidental code deletion (user error).
+- **Rule**: Keep `name` code-friendly (camelCase) and use `caption` for the user-facing title (spaces allowed).
+- **Binding**: Changing the name might still require reinstalling the app if Spira binds storage to the install-time name.
+- **Process Warning**: When refactoring large files like `widget.js`, verify the diff carefully to ensure huge chunks (like question arrays or templates) aren't accidentally deleted.
