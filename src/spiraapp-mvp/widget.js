@@ -1,15 +1,20 @@
 // DevOps Maturity Model SpiraApp Widget
 
-// --- CONSTANTS & CONFIG ---
-const DMM_STORAGE_KEY = "dmm_assessments_history";
-const DOMAIN_WEIGHTS = {
-    "domain1": 0.35, // Source Control
-    "domain2": 0.30, // Security
-    "domain3": 0.35  // CI/CD
-};
+(function () {
 
-// --- CSS STYLES (Injected) ---
-const WIDGET_STYLES = `
+    // --- CONSTANTS & CONFIG ---
+    const DMM_STORAGE_KEY = "dmm_assessments_history";
+    // Defined in manifest.yaml
+    const APP_GUID = "4B8D9721-6A99-4786-903D-9346739A0673";
+    const APP_NAME = "DevOps Maturity Model Assessment"; // Must match manifest name
+    const DOMAIN_WEIGHTS = {
+        "domain1": 0.35, // Source Control
+        "domain2": 0.30, // Security
+        "domain3": 0.35  // CI/CD
+    };
+
+    // --- CSS STYLES (Injected) ---
+    const WIDGET_STYLES = `
 /* DevOps Maturity Model Widget Styles */
 .dmm-widget {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -79,227 +84,227 @@ const WIDGET_STYLES = `
 .dmm-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
 `;
 
-// --- DATA: QUESTIONS ---
-const DMM_QUESTIONS = [
-    // Domain 1: Source Control & Development
-    {
-        id: "Q1", domain: "domain1", text: "What version control system do you use?",
-        options: [
-            { score: 0, text: "No version control" },
-            { score: 1, text: "Centralized VCS (SVN, etc.)" },
-            { score: 2, text: "Git with basic usage" },
-            { score: 3, text: "Git with defined strategy" },
-            { score: 4, text: "Git with trunk-based or optimized flow" },
-            { score: 5, text: "Git with automated enforcement" }
-        ]
-    },
-    {
-        id: "Q2", domain: "domain1", text: "How do you manage code branches?",
-        options: [
-            { score: 0, text: "No defined strategy, ad-hoc" },
-            { score: 1, text: "Long-lived feature branches" },
-            { score: 2, text: "GitFlow with manual merges" },
-            { score: 4, text: "Trunk-based with feature flags" }, // Note: skip 3 in spec
-            { score: 5, text: "Trunk-based with automated CI checks" }
-        ]
-    },
-    {
-        id: "Q3", domain: "domain1", text: "How are code changes reviewed?",
-        options: [
-            { score: 0, text: "No formal review" },
-            { score: 1, text: "Manual/email review" },
-            { score: 2, text: "Pull requests, no automation" },
-            { score: 3, text: "PR with required approvals" },
-            { score: 4, text: "PR with automated checks + approvals" },
-            { score: 5, text: "PR + checks + 2+ reviewers + protected branches" }
-        ]
-    },
-    {
-        id: "Q4", domain: "domain1", text: "What automated code quality checks run on every commit?",
-        options: [
-            { score: 0, text: "None" },
-            { score: 2, text: "Linting only" },
-            { score: 3, text: "Linting + basic static analysis" },
-            { score: 4, text: "SAST + linting + complexity checks" },
-            { score: 5, text: "Comprehensive analysis + security + coverage gates" }
-        ]
-    },
-    {
-        id: "Q5", domain: "domain1", text: "What is your test coverage and automation level?",
-        options: [
-            { score: 0, text: "No automated tests" },
-            { score: 1, text: "<40% coverage, manual tests" },
-            { score: 2, text: "40-60% coverage, some automation" },
-            { score: 3, text: "60-80% coverage, mostly automated" },
-            { score: 4, text: ">80% coverage, fully automated" },
-            { score: 5, text: ">80% + integration tests + test pyramid" }
-        ]
-    },
-    {
-        id: "Q6", domain: "domain1", text: "How long does a typical build + test cycle take?",
-        options: [
-            { score: 0, text: ">60 minutes" },
-            { score: 1, text: "30-60 minutes" },
-            { score: 2, text: "15-30 minutes" },
-            { score: 3, text: "5-15 minutes" },
-            { score: 5, text: "<5 minutes with caching/parallelization" }
-        ]
-    },
-    {
-        id: "Q7", domain: "domain1", text: "How quickly do developers get feedback on code changes?",
-        options: [
-            { score: 0, text: "Hours or next day" },
-            { score: 1, text: "30-60 minutes" },
-            { score: 2, text: "10-30 minutes" },
-            { score: 3, text: "5-10 minutes" },
-            { score: 5, text: "<5 minutes with local pre-commit checks" }
-        ]
-    },
+    // --- DATA: QUESTIONS ---
+    const DMM_QUESTIONS = [
+        // Domain 1: Source Control & Development
+        {
+            id: "Q1", domain: "domain1", text: "What version control system do you use?",
+            options: [
+                { score: 0, text: "No version control" },
+                { score: 1, text: "Centralized VCS (SVN, etc.)" },
+                { score: 2, text: "Git with basic usage" },
+                { score: 3, text: "Git with defined strategy" },
+                { score: 4, text: "Git with trunk-based or optimized flow" },
+                { score: 5, text: "Git with automated enforcement" }
+            ]
+        },
+        {
+            id: "Q2", domain: "domain1", text: "How do you manage code branches?",
+            options: [
+                { score: 0, text: "No defined strategy, ad-hoc" },
+                { score: 1, text: "Long-lived feature branches" },
+                { score: 2, text: "GitFlow with manual merges" },
+                { score: 4, text: "Trunk-based with feature flags" }, // Note: skip 3 in spec
+                { score: 5, text: "Trunk-based with automated CI checks" }
+            ]
+        },
+        {
+            id: "Q3", domain: "domain1", text: "How are code changes reviewed?",
+            options: [
+                { score: 0, text: "No formal review" },
+                { score: 1, text: "Manual/email review" },
+                { score: 2, text: "Pull requests, no automation" },
+                { score: 3, text: "PR with required approvals" },
+                { score: 4, text: "PR with automated checks + approvals" },
+                { score: 5, text: "PR + checks + 2+ reviewers + protected branches" }
+            ]
+        },
+        {
+            id: "Q4", domain: "domain1", text: "What automated code quality checks run on every commit?",
+            options: [
+                { score: 0, text: "None" },
+                { score: 2, text: "Linting only" },
+                { score: 3, text: "Linting + basic static analysis" },
+                { score: 4, text: "SAST + linting + complexity checks" },
+                { score: 5, text: "Comprehensive analysis + security + coverage gates" }
+            ]
+        },
+        {
+            id: "Q5", domain: "domain1", text: "What is your test coverage and automation level?",
+            options: [
+                { score: 0, text: "No automated tests" },
+                { score: 1, text: "<40% coverage, manual tests" },
+                { score: 2, text: "40-60% coverage, some automation" },
+                { score: 3, text: "60-80% coverage, mostly automated" },
+                { score: 4, text: ">80% coverage, fully automated" },
+                { score: 5, text: ">80% + integration tests + test pyramid" }
+            ]
+        },
+        {
+            id: "Q6", domain: "domain1", text: "How long does a typical build + test cycle take?",
+            options: [
+                { score: 0, text: ">60 minutes" },
+                { score: 1, text: "30-60 minutes" },
+                { score: 2, text: "15-30 minutes" },
+                { score: 3, text: "5-15 minutes" },
+                { score: 5, text: "<5 minutes with caching/parallelization" }
+            ]
+        },
+        {
+            id: "Q7", domain: "domain1", text: "How quickly do developers get feedback on code changes?",
+            options: [
+                { score: 0, text: "Hours or next day" },
+                { score: 1, text: "30-60 minutes" },
+                { score: 2, text: "10-30 minutes" },
+                { score: 3, text: "5-10 minutes" },
+                { score: 5, text: "<5 minutes with local pre-commit checks" }
+            ]
+        },
 
-    // Domain 2: Security & Compliance
-    {
-        id: "Q8", domain: "domain2", text: "What security scans run automatically in your pipeline?",
-        options: [
-            { score: 0, text: "None" },
-            { score: 1, text: "Manual security reviews only" },
-            { score: 2, text: "Dependency scanning only" },
-            { score: 3, text: "SAST + dependency scanning" },
-            { score: 4, text: "SAST + DAST + dependency + container scanning" },
-            { score: 5, text: "Full scan suite + secret detection + IaC scanning" }
-        ]
-    },
-    {
-        id: "Q9", domain: "domain2", text: "How do you handle security vulnerabilities?",
-        options: [
-            { score: 0, text: "No process" },
-            { score: 1, text: "Manual tracking when found" },
-            { score: 2, text: "Automated detection, manual remediation" },
-            { score: 3, text: "Automated detection + SLA tracking" },
-            { score: 4, text: "Automated detection + blocking + SLA" },
-            { score: 5, text: "Automated detection + auto-remediation + SLA" }
-        ]
-    },
-    {
-        id: "Q10", domain: "domain2", text: "How are secrets and credentials managed?",
-        options: [
-            { score: 0, text: "Hardcoded in code/configs" },
-            { score: 1, text: "Environment variables" },
-            { score: 2, text: "Encrypted config files" },
-            { score: 4, text: "Secrets management tool (Vault, etc.)" },
-            { score: 5, text: "Centralized secrets + rotation + audit" }
-        ]
-    },
-    {
-        id: "Q11", domain: "domain2", text: "Do you track your software dependencies and supply chain?",
-        options: [
-            { score: 0, text: "No tracking" },
-            { score: 1, text: "Manual dependency list" },
-            { score: 3, text: "Automated dependency scanning" },
-            { score: 4, text: "SBOM generation + license compliance" },
-            { score: 5, text: "SBOM + provenance + signing + SLSA" }
-        ]
-    },
-    {
-        id: "Q12", domain: "domain2", text: "How is access to production systems managed?",
-        options: [
-            { score: 0, text: "Shared credentials" },
-            { score: 1, text: "Individual accounts, no MFA" },
-            { score: 2, text: "Individual accounts + MFA" },
-            { score: 4, text: "SSO + MFA + role-based access" },
-            { score: 5, text: "Zero-trust + just-in-time access + audit logs" }
-        ]
-    },
-    {
-        id: "Q13", domain: "domain2", text: "How do you handle audit and compliance requirements?",
-        options: [
-            { score: 0, text: "Manual processes and documentation" },
-            { score: 1, text: "Partially automated documentation" },
-            { score: 3, text: "Automated compliance checks in pipeline" },
-            { score: 4, text: "Policy as code + automated audits" },
-            { score: 5, text: "Continuous compliance + automated evidence" }
-        ]
-    },
+        // Domain 2: Security & Compliance
+        {
+            id: "Q8", domain: "domain2", text: "What security scans run automatically in your pipeline?",
+            options: [
+                { score: 0, text: "None" },
+                { score: 1, text: "Manual security reviews only" },
+                { score: 2, text: "Dependency scanning only" },
+                { score: 3, text: "SAST + dependency scanning" },
+                { score: 4, text: "SAST + DAST + dependency + container scanning" },
+                { score: 5, text: "Full scan suite + secret detection + IaC scanning" }
+            ]
+        },
+        {
+            id: "Q9", domain: "domain2", text: "How do you handle security vulnerabilities?",
+            options: [
+                { score: 0, text: "No process" },
+                { score: 1, text: "Manual tracking when found" },
+                { score: 2, text: "Automated detection, manual remediation" },
+                { score: 3, text: "Automated detection + SLA tracking" },
+                { score: 4, text: "Automated detection + blocking + SLA" },
+                { score: 5, text: "Automated detection + auto-remediation + SLA" }
+            ]
+        },
+        {
+            id: "Q10", domain: "domain2", text: "How are secrets and credentials managed?",
+            options: [
+                { score: 0, text: "Hardcoded in code/configs" },
+                { score: 1, text: "Environment variables" },
+                { score: 2, text: "Encrypted config files" },
+                { score: 4, text: "Secrets management tool (Vault, etc.)" },
+                { score: 5, text: "Centralized secrets + rotation + audit" }
+            ]
+        },
+        {
+            id: "Q11", domain: "domain2", text: "Do you track your software dependencies and supply chain?",
+            options: [
+                { score: 0, text: "No tracking" },
+                { score: 1, text: "Manual dependency list" },
+                { score: 3, text: "Automated dependency scanning" },
+                { score: 4, text: "SBOM generation + license compliance" },
+                { score: 5, text: "SBOM + provenance + signing + SLSA" }
+            ]
+        },
+        {
+            id: "Q12", domain: "domain2", text: "How is access to production systems managed?",
+            options: [
+                { score: 0, text: "Shared credentials" },
+                { score: 1, text: "Individual accounts, no MFA" },
+                { score: 2, text: "Individual accounts + MFA" },
+                { score: 4, text: "SSO + MFA + role-based access" },
+                { score: 5, text: "Zero-trust + just-in-time access + audit logs" }
+            ]
+        },
+        {
+            id: "Q13", domain: "domain2", text: "How do you handle audit and compliance requirements?",
+            options: [
+                { score: 0, text: "Manual processes and documentation" },
+                { score: 1, text: "Partially automated documentation" },
+                { score: 3, text: "Automated compliance checks in pipeline" },
+                { score: 4, text: "Policy as code + automated audits" },
+                { score: 5, text: "Continuous compliance + automated evidence" }
+            ]
+        },
 
-    // Domain 3: CI/CD & Deployment
-    {
-        id: "Q14", domain: "domain3", text: "How automated is your build process?",
-        options: [
-            { score: 0, text: "Manual builds" },
-            { score: 1, text: "Semi-automated, triggered manually" },
-            { score: 2, text: "Automated on commit to main branch" },
-            { score: 3, text: "Automated on every commit/PR" },
-            { score: 4, text: "Automated + parallel execution" },
-            { score: 5, text: "Automated + parallel + optimized (<15 min)" }
-        ]
-    },
-    {
-        id: "Q15", domain: "domain3", text: "How often do you deploy to production?",
-        options: [
-            { score: 0, text: "Monthly or less" },
-            { score: 1, text: "Every 2-4 weeks" },
-            { score: 2, text: "Weekly" },
-            { score: 3, text: "Multiple times per week" },
-            { score: 4, text: "Daily" },
-            { score: 5, text: "On-demand/continuous (multiple per day)" }
-        ]
-    },
-    {
-        id: "Q16", domain: "domain3", text: "How automated is your deployment process?",
-        options: [
-            { score: 0, text: "Manual deployments" },
-            { score: 1, text: "Scripted but manual trigger" },
-            { score: 2, text: "Automated to staging, manual to prod" },
-            { score: 3, text: "Automated to all environments" },
-            { score: 4, text: "Automated + approval gates" },
-            { score: 5, text: "Fully automated + GitOps + rollback" }
-        ]
-    },
-    {
-        id: "Q17", domain: "domain3", text: "How is your infrastructure managed?",
-        options: [
-            { score: 0, text: "Manual/ClickOps" },
-            { score: 1, text: "Documentation only" },
-            { score: 2, text: "Scripts for some infrastructure" },
-            { score: 3, text: "IaC for most infrastructure" },
-            { score: 4, text: "IaC for all infrastructure + version control" },
-            { score: 5, text: "IaC + automated testing + drift detection" }
-        ]
-    },
-    {
-        id: "Q18", domain: "domain3", text: "Can you deploy without user-facing downtime?",
-        options: [
-            { score: 0, text: "Always requires downtime" },
-            { score: 1, text: "Usually requires maintenance window" },
-            { score: 2, text: "Sometimes zero-downtime" },
-            { score: 3, text: "Usually zero-downtime (blue-green/canary)" },
-            { score: 5, text: "Always zero-downtime + automated verification" }
-        ]
-    },
-    {
-        id: "Q19", domain: "domain3", text: "How quickly can you rollback a bad deployment?",
-        options: [
-            { score: 0, text: ">1 hour, manual process" },
-            { score: 1, text: "30-60 minutes, semi-automated" },
-            { score: 2, text: "10-30 minutes, mostly automated" },
-            { score: 4, text: "<10 minutes, automated rollback" },
-            { score: 5, text: "Instant automated rollback on failure detection" }
-        ]
-    },
-    {
-        id: "Q20", domain: "domain3", text: "How do you control feature releases?",
-        options: [
-            { score: 0, text: "Features tied to deployments" },
-            { score: 1, text: "Manual configuration changes" },
-            { score: 2, text: "Basic feature flags" },
-            { score: 3, text: "Feature flag system with targeting" },
-            { score: 4, text: "Advanced feature flags + A/B testing" },
-            { score: 5, text: "Progressive rollout + automated metrics" }
-        ]
-    }
-];
+        // Domain 3: CI/CD & Deployment
+        {
+            id: "Q14", domain: "domain3", text: "How automated is your build process?",
+            options: [
+                { score: 0, text: "Manual builds" },
+                { score: 1, text: "Semi-automated, triggered manually" },
+                { score: 2, text: "Automated on commit to main branch" },
+                { score: 3, text: "Automated on every commit/PR" },
+                { score: 4, text: "Automated + parallel execution" },
+                { score: 5, text: "Automated + parallel + optimized (<15 min)" }
+            ]
+        },
+        {
+            id: "Q15", domain: "domain3", text: "How often do you deploy to production?",
+            options: [
+                { score: 0, text: "Monthly or less" },
+                { score: 1, text: "Every 2-4 weeks" },
+                { score: 2, text: "Weekly" },
+                { score: 3, text: "Multiple times per week" },
+                { score: 4, text: "Daily" },
+                { score: 5, text: "On-demand/continuous (multiple per day)" }
+            ]
+        },
+        {
+            id: "Q16", domain: "domain3", text: "How automated is your deployment process?",
+            options: [
+                { score: 0, text: "Manual deployments" },
+                { score: 1, text: "Scripted but manual trigger" },
+                { score: 2, text: "Automated to staging, manual to prod" },
+                { score: 3, text: "Automated to all environments" },
+                { score: 4, text: "Automated + approval gates" },
+                { score: 5, text: "Fully automated + GitOps + rollback" }
+            ]
+        },
+        {
+            id: "Q17", domain: "domain3", text: "How is your infrastructure managed?",
+            options: [
+                { score: 0, text: "Manual/ClickOps" },
+                { score: 1, text: "Documentation only" },
+                { score: 2, text: "Scripts for some infrastructure" },
+                { score: 3, text: "IaC for most infrastructure" },
+                { score: 4, text: "IaC for all infrastructure + version control" },
+                { score: 5, text: "IaC + automated testing + drift detection" }
+            ]
+        },
+        {
+            id: "Q18", domain: "domain3", text: "Can you deploy without user-facing downtime?",
+            options: [
+                { score: 0, text: "Always requires downtime" },
+                { score: 1, text: "Usually requires maintenance window" },
+                { score: 2, text: "Sometimes zero-downtime" },
+                { score: 3, text: "Usually zero-downtime (blue-green/canary)" },
+                { score: 5, text: "Always zero-downtime + automated verification" }
+            ]
+        },
+        {
+            id: "Q19", domain: "domain3", text: "How quickly can you rollback a bad deployment?",
+            options: [
+                { score: 0, text: ">1 hour, manual process" },
+                { score: 1, text: "30-60 minutes, semi-automated" },
+                { score: 2, text: "10-30 minutes, mostly automated" },
+                { score: 4, text: "<10 minutes, automated rollback" },
+                { score: 5, text: "Instant automated rollback on failure detection" }
+            ]
+        },
+        {
+            id: "Q20", domain: "domain3", text: "How do you control feature releases?",
+            options: [
+                { score: 0, text: "Features tied to deployments" },
+                { score: 1, text: "Manual configuration changes" },
+                { score: 2, text: "Basic feature flags" },
+                { score: 3, text: "Feature flag system with targeting" },
+                { score: 4, text: "Advanced feature flags + A/B testing" },
+                { score: 5, text: "Progressive rollout + automated metrics" }
+            ]
+        }
+    ];
 
-// --- TEMPLATES ---
-const TPL_SUMMARY = `
+    // --- TEMPLATES ---
+    const TPL_SUMMARY = `
 <div class="dmm-widget">
     {{#hasHistory}}
         <div class="dmm-summary-card">
@@ -327,7 +332,7 @@ const TPL_SUMMARY = `
 </div>
 `;
 
-const TPL_FORM = `
+    const TPL_FORM = `
 <div class="dmm-widget">
     <div class="dmm-form-header">
         <h3>New Assessment</h3>
@@ -362,7 +367,7 @@ const TPL_FORM = `
 </div>
 `;
 
-const TPL_RESULTS = `
+    const TPL_RESULTS = `
 <div class="dmm-widget">
     <div class="dmm-summary-card">
         <h3>Assessment Complete</h3>
@@ -391,280 +396,409 @@ const TPL_RESULTS = `
 </div>
 `;
 
-// --- LOGIC ---
+    // --- LOGIC ---
 
-// Helper to inject styles
-function injectStyles() {
-    if (!document.getElementById("dmm-widget-styles")) {
-        var style = document.createElement('style');
-        style.id = "dmm-widget-styles";
-        style.innerHTML = WIDGET_STYLES;
-        document.head.appendChild(style);
-    }
-}
-
-// Entry Point
-spiraAppManager.registerEvent_windowLoad(initDmmWidget);
-// Also re-render if dashboard updates (e.g. filter change)
-spiraAppManager.registerEvent_dashboardUpdated(initDmmWidget);
-
-function initDmmWidget() {
-    injectStyles();
-    loadDmmHistory();
-}
-
-// 1. Load Data
-function loadDmmHistory() {
-    const productId = spiraAppManager.projectId;
-    // We use Product Storage to scopes results to the current product
-    spiraAppManager.storageGetProduct(
-        APP_GUID,
-        "DMM_App",
-        DMM_STORAGE_KEY,
-        productId,
-        function (data) { // Success
-            let history = [];
-            if (data && data !== "") {
-                try {
-                    history = JSON.parse(data);
-                } catch (e) { console.error("DMM: Error parsing history", e); }
-            }
-            renderSummary(history);
-        },
-        function (err) { // Failure (likely key not found yet)
-            console.log("DMM: No history found or error", err);
-            renderSummary([]);
+    // Helper to inject styles
+    function injectStyles() {
+        if (!document.getElementById("dmm-widget-styles")) {
+            var style = document.createElement('style');
+            style.id = "dmm-widget-styles";
+            style.innerHTML = WIDGET_STYLES;
+            document.head.appendChild(style);
         }
-    );
-}
+    }
 
-// 2. Render Summary
-function renderSummary(history) {
-    const elementId = APP_GUID + "_content";
-    const container = document.getElementById(elementId);
-    if (!container) return; // Widget not on page?
+    // Entry Point
+    spiraAppManager.registerEvent_windowLoad(initDmmWidget);
+    // Also re-render if dashboard updates (e.g. filter change)
+    spiraAppManager.registerEvent_dashboardUpdated(initDmmWidget);
 
-    let viewData = { hasHistory: false };
+    function initDmmWidget() {
+        injectStyles();
+        loadDmmHistory();
+    }
 
-    if (history && history.length > 0) {
-        // Sort by date desc
-        history.sort((a, b) => new Date(b.date) - new Date(a.date));
-        const latest = history[0];
+    // PERSISTENT DEBUG: Write to localStorage so logs survive logout
+    function dmmLog(msg, data) {
+        const logKey = 'dmm_debug_log';
+        let log = localStorage.getItem(logKey) || '';
+        const timestamp = new Date().toISOString();
+        const entry = `[${timestamp}] ${msg}: ${JSON.stringify(data)}\n`;
+        localStorage.setItem(logKey, log + entry);
+        console.log("DMM DEBUG:", msg, data);
+    }
 
-        viewData = {
-            hasHistory: true,
-            latestScore: latest.overallScore,
-            latestLevel: latest.maturityLevel,
-            latestLevelInt: latest.maturityLevelInt,
-            latestDate: spiraAppManager.formatDate(latest.date),
-            historyCount: history.length
+    // Clear old logs on fresh load
+    localStorage.setItem('dmm_debug_log', '--- DMM Debug Session Started ---\n');
+
+    // 1. Load Data
+    function loadDmmHistory() {
+        const productId = spiraAppManager.projectId;
+        const expectedElementId = APP_GUID + "_content";
+
+        dmmLog("loadDmmHistory called", {
+            APP_GUID: APP_GUID,
+            productId: productId,
+            expectedElementId: expectedElementId
+        });
+
+        // DOM SCAN: Find ALL elements that might be our container
+        const allElements = document.querySelectorAll('*');
+        const matchingElements = [];
+        allElements.forEach(el => {
+            if (el.id && (el.id.includes(APP_GUID) || el.id.includes('content'))) {
+                matchingElements.push({ id: el.id, tagName: el.tagName });
+            }
+        });
+        dmmLog("DOM SCAN - Elements with GUID or 'content'", {
+            count: matchingElements.length,
+            elements: matchingElements.slice(0, 10) // First 10 only
+        });
+
+        // Try to find container with expected ID
+        let container = document.getElementById(expectedElementId);
+
+        // If not found, try alternative formats
+        if (!container) {
+            const alternatives = [
+                APP_GUID.toLowerCase() + "_content",
+                APP_GUID.replace(/-/g, "") + "_content",
+                "spiraapp_" + APP_GUID + "_content"
+            ];
+            for (const altId of alternatives) {
+                container = document.getElementById(altId);
+                if (container) {
+                    dmmLog("Found container with alternative ID", { altId: altId });
+                    break;
+                }
+            }
+        }
+
+        dmmLog("Container lookup result", {
+            found: !!container,
+            usedId: container ? container.id : "NOT FOUND"
+        });
+
+        // Store the correct element ID for later use
+        if (container) {
+            window.DMM_CONTAINER_ID = container.id;
+        }
+
+        dmmLog("Calling storageGetProduct", { timestamp: Date.now() });
+
+        // Use 6-param signature (keeps session alive even on error)
+        // Note: API may use pluginName as key - handle error gracefully
+        spiraAppManager.storageGetProduct(
+            APP_GUID,
+            APP_NAME,
+            DMM_STORAGE_KEY,
+            productId,
+            function (data) { // Success
+                dmmLog("storageGetProduct SUCCESS", { data: data });
+                let history = [];
+                if (data && data !== "") {
+                    try {
+                        history = JSON.parse(data);
+                        dmmLog("Parsed history", { count: history.length });
+                    } catch (e) {
+                        dmmLog("Error parsing history", { error: e.message });
+                    }
+                }
+                renderSummary(history);
+            },
+            function (err) { // Failure - expected on first run OR due to key mismatch
+                dmmLog("storageGetProduct FAILED (expected on first run)", {
+                    message: err?.message,
+                    type: err?.exceptionType
+                });
+                // Render empty state regardless of error
+                renderSummary([]);
+            }
+        );
+    }
+
+    // 2. Render Summary
+    function renderSummary(history) {
+        // Use discovered container ID if available, otherwise try expected format
+        const elementId = window.DMM_CONTAINER_ID || (APP_GUID + "_content");
+        dmmLog("renderSummary called", {
+            historyLength: history ? history.length : 0,
+            elementId: elementId,
+            usingDiscoveredId: !!window.DMM_CONTAINER_ID
+        });
+
+        let container = document.getElementById(elementId);
+
+        // If still not found, do one more scan for any element with our GUID
+        if (!container) {
+            dmmLog("Container still not found, scanning for any GUID element", {});
+            const allWithGuid = document.querySelectorAll('[id*="' + APP_GUID + '"]');
+            if (allWithGuid.length > 0) {
+                container = allWithGuid[0];
+                dmmLog("Found fallback container", { id: container.id });
+            }
+        }
+
+        dmmLog("Container lookup final", {
+            found: !!container,
+            containerHTML: container ? container.innerHTML.substring(0, 100) : "NOT FOUND"
+        });
+
+        if (!container) {
+            dmmLog("ERROR: Container not found, cannot render!", {
+                elementId: elementId,
+                hint: "Widget may not be added to dashboard. Check localStorage log for DOM SCAN results."
+            });
+            return; // Widget not on page?
+        }
+
+        let viewData = { hasHistory: false };
+
+        if (history && history.length > 0) {
+            // Sort by date desc
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const latest = history[0];
+
+            viewData = {
+                hasHistory: true,
+                latestScore: latest.overallScore,
+                latestLevel: latest.maturityLevel,
+                latestLevelInt: latest.maturityLevelInt,
+                latestDate: spiraAppManager.formatDate(latest.date),
+                historyCount: history.length
+            };
+        }
+
+        dmmLog("Rendering template", { viewData: viewData });
+        container.innerHTML = Mustache.render(TPL_SUMMARY, viewData);
+        dmmLog("Template rendered", { newHTML: container.innerHTML.substring(0, 100) });
+
+        // Bind Events
+        const btnStart = document.getElementById("btn-start-dmm");
+        dmmLog("Button lookup", { buttonFound: !!btnStart });
+        if (btnStart) {
+            btnStart.addEventListener("click", function () {
+                renderAssessmentForm();
+            });
+        }
+    }
+
+    // 3. Render Form
+    function renderAssessmentForm() {
+        const elementId = APP_GUID + "_content";
+        const container = document.getElementById(elementId);
+
+        // Process questions for Mustache
+        // We need to group by Domain
+        const domainMap = {
+            "domain1": { title: "Domain 1: Source Control & Development", questions: [] },
+            "domain2": { title: "Domain 2: Security & Compliance", questions: [] },
+            "domain3": { title: "Domain 3: CI/CD & Deployment", questions: [] }
+        };
+
+        DMM_QUESTIONS.forEach(q => {
+            // Map simplified keys for template
+            domainMap[q.domain].questions.push({
+                id: q.id,
+                text: q.text,
+                questionId: q.id, // for radio name
+                options: q.options
+            });
+        });
+
+        const domains = Object.values(domainMap);
+
+        container.innerHTML = Mustache.render(TPL_FORM, { domains: domains });
+
+        // Bind Form Events
+        const btnCancel = document.getElementById("btn-cancel-dmm");
+        if (btnCancel) {
+            btnCancel.addEventListener("click", function () {
+                initDmmWidget(); // Reload summary
+            });
+        }
+
+        const btnSubmit = document.getElementById("btn-submit-dmm");
+        if (btnSubmit) {
+            btnSubmit.addEventListener("click", handleSubmit);
+        }
+    }
+
+    // 4. Handle Submit & Scoring
+    function handleSubmit() {
+        // Collect responses
+        const form = document.getElementById("dmm-form");
+        if (!form) return;
+
+        let responses = {};
+        let allAnswered = true;
+
+        // We know the IDs are Q1...Q20
+        DMM_QUESTIONS.forEach(q => {
+            const radios = form.querySelectorAll(`input[name="${q.id}"]`);
+            let val = null;
+            radios.forEach(r => {
+                if (r.checked) val = parseInt(r.value);
+            });
+
+            if (val === null) {
+                allAnswered = false;
+            } else {
+                responses[q.id] = {
+                    domain: q.domain,
+                    score: val
+                };
+            }
+        });
+
+        if (!allAnswered) {
+            spiraAppManager.displayErrorMessage("Please answer all questions before submitting.");
+            return;
+        }
+
+        // Calculate Scores (Logic from spec)
+        const results = calculateScores(responses);
+
+        // Save
+        saveAssessmentResults(results);
+    }
+
+    function calculateScores(responses) {
+        // 1. Domain Scores
+        // Domain Score = (Total Points / Max Possible) * 100
+        let domainTotals = {
+            domain1: { current: 0, max: 0 },
+            domain2: { current: 0, max: 0 },
+            domain3: { current: 0, max: 0 }
+        };
+
+        DMM_QUESTIONS.forEach(q => {
+            const r = responses[q.id];
+            if (r) {
+                domainTotals[r.domain].current += r.score;
+                domainTotals[r.domain].max += 5; // Max score per question is 5
+            }
+        });
+
+        const d1Score = (domainTotals.domain1.current / domainTotals.domain1.max) * 100;
+        const d2Score = (domainTotals.domain2.current / domainTotals.domain2.max) * 100;
+        const d3Score = (domainTotals.domain3.current / domainTotals.domain3.max) * 100;
+
+        // 2. Overall Score (Weighted)
+        // D1: 35%, D2: 30%, D3: 35%
+        const overall = (d1Score * DOMAIN_WEIGHTS.domain1) +
+            (d2Score * DOMAIN_WEIGHTS.domain2) +
+            (d3Score * DOMAIN_WEIGHTS.domain3);
+
+        // 3. Maturity Level
+        let level = 1;
+        let levelName = "Initial";
+        if (overall > 20) { level = 2; levelName = "Developing"; }
+        if (overall > 40) { level = 3; levelName = "Defined"; }
+        if (overall > 60) { level = 4; levelName = "Managed"; }
+        if (overall > 80) { level = 5; levelName = "Optimizing"; }
+
+        return {
+            date: new Date().toISOString(),
+            overallScore: Math.round(overall * 100) / 100, // 2 decimals
+            maturityLevel: levelName,
+            maturityLevelInt: level,
+            domain1Score: Math.round(d1Score),
+            domain2Score: Math.round(d2Score),
+            domain3Score: Math.round(d3Score),
+            responses: responses
         };
     }
 
-    container.innerHTML = Mustache.render(TPL_SUMMARY, viewData);
+    // 5. Save & Show Results
+    function saveAssessmentResults(resultObj) {
+        const productId = spiraAppManager.projectId;
 
-    // Bind Events
-    const btnStart = document.getElementById("btn-start-dmm");
-    if (btnStart) {
-        btnStart.addEventListener("click", function () {
-            renderAssessmentForm();
-        });
-    }
-}
+        dmmLog("saveAssessmentResults called", { productId: productId });
 
-// 3. Render Form
-function renderAssessmentForm() {
-    const elementId = APP_GUID + "_content";
-    const container = document.getElementById(elementId);
+        // Show saving feedback
+        const btnSubmit = document.getElementById("btn-submit-dmm");
+        if (btnSubmit) { btnSubmit.innerHTML = "Saving..."; btnSubmit.disabled = true; }
 
-    // Process questions for Mustache
-    // We need to group by Domain
-    const domainMap = {
-        "domain1": { title: "Domain 1: Source Control & Development", questions: [] },
-        "domain2": { title: "Domain 2: Security & Compliance", questions: [] },
-        "domain3": { title: "Domain 3: CI/CD & Deployment", questions: [] }
-    };
-
-    DMM_QUESTIONS.forEach(q => {
-        // Map simplified keys for template
-        domainMap[q.domain].questions.push({
-            id: q.id,
-            text: q.text,
-            questionId: q.id, // for radio name
-            options: q.options
-        });
-    });
-
-    const domains = Object.values(domainMap);
-
-    container.innerHTML = Mustache.render(TPL_FORM, { domains: domains });
-
-    // Bind Form Events
-    const btnCancel = document.getElementById("btn-cancel-dmm");
-    if (btnCancel) {
-        btnCancel.addEventListener("click", function () {
-            initDmmWidget(); // Reload summary
-        });
-    }
-
-    const btnSubmit = document.getElementById("btn-submit-dmm");
-    if (btnSubmit) {
-        btnSubmit.addEventListener("click", handleSubmit);
-    }
-}
-
-// 4. Handle Submit & Scoring
-function handleSubmit() {
-    // Collect responses
-    const form = document.getElementById("dmm-form");
-    if (!form) return;
-
-    let responses = {};
-    let allAnswered = true;
-
-    // We know the IDs are Q1...Q20
-    DMM_QUESTIONS.forEach(q => {
-        const radios = form.querySelectorAll(`input[name="${q.id}"]`);
-        let val = null;
-        radios.forEach(r => {
-            if (r.checked) val = parseInt(r.value);
-        });
-
-        if (val === null) {
-            allAnswered = false;
-        } else {
-            responses[q.id] = {
-                domain: q.domain,
-                score: val
-            };
-        }
-    });
-
-    if (!allAnswered) {
-        spiraAppManager.displayErrorMessage("Please answer all questions before submitting.");
-        return;
-    }
-
-    // Calculate Scores (Logic from spec)
-    const results = calculateScores(responses);
-
-    // Save
-    saveAssessmentResults(results);
-}
-
-function calculateScores(responses) {
-    // 1. Domain Scores
-    // Domain Score = (Total Points / Max Possible) * 100
-    let domainTotals = {
-        domain1: { current: 0, max: 0 },
-        domain2: { current: 0, max: 0 },
-        domain3: { current: 0, max: 0 }
-    };
-
-    DMM_QUESTIONS.forEach(q => {
-        const r = responses[q.id];
-        if (r) {
-            domainTotals[r.domain].current += r.score;
-            domainTotals[r.domain].max += 5; // Max score per question is 5
-        }
-    });
-
-    const d1Score = (domainTotals.domain1.current / domainTotals.domain1.max) * 100;
-    const d2Score = (domainTotals.domain2.current / domainTotals.domain2.max) * 100;
-    const d3Score = (domainTotals.domain3.current / domainTotals.domain3.max) * 100;
-
-    // 2. Overall Score (Weighted)
-    // D1: 35%, D2: 30%, D3: 35%
-    const overall = (d1Score * DOMAIN_WEIGHTS.domain1) +
-        (d2Score * DOMAIN_WEIGHTS.domain2) +
-        (d3Score * DOMAIN_WEIGHTS.domain3);
-
-    // 3. Maturity Level
-    let level = 1;
-    let levelName = "Initial";
-    if (overall > 20) { level = 2; levelName = "Developing"; }
-    if (overall > 40) { level = 3; levelName = "Defined"; }
-    if (overall > 60) { level = 4; levelName = "Managed"; }
-    if (overall > 80) { level = 5; levelName = "Optimizing"; }
-
-    return {
-        date: new Date().toISOString(),
-        overallScore: Math.round(overall * 100) / 100, // 2 decimals
-        maturityLevel: levelName,
-        maturityLevelInt: level,
-        domain1Score: Math.round(d1Score),
-        domain2Score: Math.round(d2Score),
-        domain3Score: Math.round(d3Score),
-        responses: responses
-    };
-}
-
-// 5. Save & Show Results
-function saveAssessmentResults(resultObj) {
-    const productId = spiraAppManager.projectId;
-
-    // Fetch existing first
-    spiraAppManager.storageGetProduct(
-        APP_GUID,
-        "DMM_App",
-        DMM_STORAGE_KEY,
-        productId,
-        function (data) {
-            let history = [];
-            if (data && data !== "") {
-                try { history = JSON.parse(data); } catch (e) { }
-            }
-            history.push(resultObj);
-
-            // Save back
-            spiraAppManager.storageUpdateProduct(
-                APP_GUID,
-                "DMM_App",
-                DMM_STORAGE_KEY,
-                JSON.stringify(history),
-                productId,
-                function () {
-                    // Success
-                    renderResults(resultObj);
-                },
-                function (err) {
-                    // If update fails, maybe insert? (shouldn't happen if we fetched ok, but if empty...)
-                    // Actually storageUpdate fails if key doesn't exist.
-                    // If data was empty, we might need insert.
-                    if (!data) {
-                        spiraAppManager.storageInsertProduct(
-                            APP_GUID, "DMM_App", DMM_STORAGE_KEY, JSON.stringify(history), productId, false,
-                            function () { renderResults(resultObj); },
-                            function (e) { spiraAppManager.displayErrorMessage("Failed to save: " + e); }
-                        );
-                    } else {
-                        spiraAppManager.displayErrorMessage("Failed to update storage: " + err);
-                    }
+        // Fetch existing first (6-param signature with APP_NAME)
+        spiraAppManager.storageGetProduct(
+            APP_GUID,
+            APP_NAME,
+            DMM_STORAGE_KEY,
+            productId,
+            function (data) {
+                dmmLog("Save - storageGetProduct SUCCESS", { data: data });
+                let history = [];
+                if (data && data !== "") {
+                    try { history = JSON.parse(data); } catch (e) { }
                 }
-            );
-        },
-        function () {
-            // Fetch failed, likely no key => Insert new
-            let history = [resultObj];
-            spiraAppManager.storageInsertProduct(
-                APP_GUID, "DMM_App", DMM_STORAGE_KEY, JSON.stringify(history), productId, false,
-                function () { renderResults(resultObj); },
-                function (e) { spiraAppManager.displayErrorMessage("Failed to save (new): " + e); }
-            );
-        }
-    );
-}
+                history.push(resultObj);
+                dmmLog("History now has entries", { count: history.length });
 
-function renderResults(result) {
-    const elementId = APP_GUID + "_content";
-    const container = document.getElementById(elementId);
-
-    container.innerHTML = Mustache.render(TPL_RESULTS, result);
-
-    const btnBack = document.getElementById("btn-back-dmm");
-    if (btnBack) {
-        btnBack.addEventListener("click", function () {
-            initDmmWidget();
-        });
+                // Save back (7-param signature with APP_NAME)
+                dmmLog("Calling storageUpdateProduct", {});
+                spiraAppManager.storageUpdateProduct(
+                    APP_GUID,
+                    APP_NAME,
+                    DMM_STORAGE_KEY,
+                    JSON.stringify(history),
+                    productId,
+                    function () {
+                        dmmLog("storageUpdateProduct SUCCESS", {});
+                        renderResults(resultObj);
+                    },
+                    function (err) {
+                        // If update fails, try insert
+                        dmmLog("storageUpdateProduct FAILED, trying insert", { error: err });
+                        // 8-param signature with APP_NAME
+                        spiraAppManager.storageInsertProduct(
+                            APP_GUID, APP_NAME, DMM_STORAGE_KEY, JSON.stringify(history), productId, false,
+                            function () {
+                                dmmLog("storageInsertProduct SUCCESS", {});
+                                renderResults(resultObj);
+                            },
+                            function (e) {
+                                dmmLog("storageInsertProduct FAILED", { error: e });
+                                spiraAppManager.displayErrorMessage("Failed to save (n): " + e);
+                                if (btnSubmit) { btnSubmit.innerHTML = "Submit Assessment"; btnSubmit.disabled = false; }
+                            }
+                        );
+                    }
+                );
+            },
+            function () {
+                // Fetch failed, likely no key => Insert new
+                dmmLog("Save - storageGetProduct FAILED, inserting new", {});
+                let history = [resultObj];
+                // 8-param signature with APP_NAME
+                spiraAppManager.storageInsertProduct(
+                    APP_GUID, APP_NAME, DMM_STORAGE_KEY, JSON.stringify(history), productId, false,
+                    function () {
+                        dmmLog("storageInsertProduct (new) SUCCESS", {});
+                        renderResults(resultObj);
+                    },
+                    function (e) {
+                        dmmLog("storageInsertProduct (new) FAILED", { error: e });
+                        spiraAppManager.displayErrorMessage("Failed to save (new): " + e);
+                        if (btnSubmit) { btnSubmit.innerHTML = "Submit Assessment"; btnSubmit.disabled = false; }
+                    }
+                );
+            }
+        );
     }
-}
+
+    function renderResults(result) {
+        const elementId = APP_GUID + "_content";
+        const container = document.getElementById(elementId);
+
+        container.innerHTML = Mustache.render(TPL_RESULTS, result);
+
+        const btnBack = document.getElementById("btn-back-dmm");
+        if (btnBack) {
+            btnBack.addEventListener("click", function () {
+                initDmmWidget();
+            });
+        }
+    }
+
+})(); // End IIFE
