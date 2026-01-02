@@ -6,7 +6,7 @@
     const DMM_STORAGE_KEY = "dmm_assessments_history";
     // Defined in manifest.yaml
     const APP_GUID = "4B8D9721-6A99-4786-903D-9346739A0673";
-    const APP_NAME = "DevOps Maturity Model Assessment"; // Must match manifest name
+    const APP_NAME = "DevOpsMaturityAssessment"; // Must match manifest name
     const DOMAIN_WEIGHTS = {
         "domain1": 0.35, // Source Control
         "domain2": 0.30, // Security
@@ -627,41 +627,76 @@
 
     // 4. Handle Submit & Scoring
     function handleSubmit() {
-        // Collect responses
-        const form = document.getElementById("dmm-form");
-        if (!form) return;
+        const btnSubmit = document.getElementById("btn-submit-dmm");
+        try {
+            dmmLog("handleSubmit called", {});
 
-        let responses = {};
-        let allAnswered = true;
+            // Visual feedback immediately
+            if (btnSubmit) {
+                btnSubmit.innerHTML = "Calculating...";
+                btnSubmit.disabled = true;
+            }
 
-        // We know the IDs are Q1...Q20
-        DMM_QUESTIONS.forEach(q => {
-            const radios = form.querySelectorAll(`input[name="${q.id}"]`);
-            let val = null;
-            radios.forEach(r => {
-                if (r.checked) val = parseInt(r.value);
+            // Collect responses
+            // FIX: Do not rely on <form> tag existence (Spira may strip it). 
+            // Query inputs directly from the widget container.
+
+            // Find container
+            const elementId = window.DMM_CONTAINER_ID || (APP_GUID + "_content");
+            let container = document.getElementById(elementId);
+
+            // Fallback: use button context if container ID lookup fails
+            if (!container && btnSubmit) {
+                container = btnSubmit.closest('.dmm-widget') || btnSubmit.closest('div'); // fallback to parent div
+            }
+
+            if (!container) {
+                dmmLog("Error: Widget container not found for input query", {});
+                spiraAppManager.displayErrorMessage("Error: Could not find assessment form context.");
+                if (btnSubmit) { btnSubmit.innerHTML = "Submit Assessment"; btnSubmit.disabled = false; }
+                return;
+            }
+
+            let responses = {};
+            let allAnswered = true;
+
+            // We know the IDs are Q1...Q20
+            DMM_QUESTIONS.forEach(q => {
+                // Scope query to container
+                const radios = container.querySelectorAll(`input[name="${q.id}"]`);
+                let val = null;
+                radios.forEach(r => {
+                    if (r.checked) val = parseInt(r.value);
+                });
+
+                if (val === null) {
+                    allAnswered = false;
+                } else {
+                    responses[q.id] = {
+                        domain: q.domain,
+                        score: val
+                    };
+                }
             });
 
-            if (val === null) {
-                allAnswered = false;
-            } else {
-                responses[q.id] = {
-                    domain: q.domain,
-                    score: val
-                };
+            if (!allAnswered) {
+                dmmLog("Validation failed: Not all questions answered", {});
+                spiraAppManager.displayErrorMessage("Please answer all questions before submitting.");
+                if (btnSubmit) { btnSubmit.innerHTML = "Submit Assessment"; btnSubmit.disabled = false; }
+                return;
             }
-        });
 
-        if (!allAnswered) {
-            spiraAppManager.displayErrorMessage("Please answer all questions before submitting.");
-            return;
+            // Calculate Scores (Logic from spec)
+            const results = calculateScores(responses);
+
+            // Save
+            saveAssessmentResults(results);
+
+        } catch (e) {
+            dmmLog("CRITICAL ERROR in handleSubmit", { name: e.name, message: e.message, stack: e.stack });
+            spiraAppManager.displayErrorMessage("Error submitting assessment: " + e.message);
+            if (btnSubmit) { btnSubmit.innerHTML = "Submit Assessment"; btnSubmit.disabled = false; }
         }
-
-        // Calculate Scores (Logic from spec)
-        const results = calculateScores(responses);
-
-        // Save
-        saveAssessmentResults(results);
     }
 
     function calculateScores(responses) {
