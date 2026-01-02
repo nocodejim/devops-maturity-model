@@ -585,7 +585,8 @@
 
     // 3. Render Form
     function renderAssessmentForm() {
-        const elementId = APP_GUID + "_content";
+        const elementId = window.DMM_CONTAINER_ID || (APP_GUID + "_content");
+        dmmLog("renderAssessmentForm called", { elementId: elementId });
         const container = document.getElementById(elementId);
 
         // Process questions for Mustache
@@ -788,7 +789,8 @@
     }
 
     function renderResults(result) {
-        const elementId = APP_GUID + "_content";
+        const elementId = window.DMM_CONTAINER_ID || (APP_GUID + "_content");
+        dmmLog("renderResults called", { elementId: elementId });
         const container = document.getElementById(elementId);
 
         container.innerHTML = Mustache.render(TPL_RESULTS, result);

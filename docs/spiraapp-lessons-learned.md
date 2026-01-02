@@ -16,15 +16,33 @@ Per the [official SpiraApps documentation](docs/SpiraApp_Information/SpiraApps-M
 - **storageUpdateProduct**: `(pluginGuid, pluginName, key, value, productId, successFunction, failureFunction)`
 - **storageInsertProduct**: `(pluginGuid, pluginName, key, value, productId, isSecure, successFunction, failureFunction)`
 
-- **Issue**: Omitting `pluginName` causes the API to misinterpret subsequent arguments (e.g., treating the Key as the ProductId), leading to 500 errors and security disconnects/logout.
-- **Solution**: Always include pluginName as the second argument.
-    - **Incorrect**: `storageGetProduct(GUID, "Key", productId, ...)`
-    - **Correct**: `storageGetProduct(GUID, "DMM_App", "Key", productId, ...)`
+### Critical: API Signature Behavior
+| Signature | Logout? | Behavior |
+|-----------|---------|----------|
+| 5-param (without pluginName) | YES | 500 error + session invalidation |
+| 6-param (with pluginName) | NO | Works, but API uses pluginName for debugging only |
 
-## 3. JavaScript Scoping
+- **Issue**: Omitting `pluginName` causes 500 errors and logout.
+- **Solution**: Always include pluginName as the second argument (can match manifest `name`).
+- **Note**: The "key not found" 500 error on first run is **expected** - just render empty state in error callback.
+
+## 3. Container Element ID
+### Case Sensitivity Issue (CRITICAL)
+- **Issue**: The widget container ID uses **lowercase** GUID, not the uppercase format from the manifest.
+- **Expected ID**: `4B8D9721-6A99-4786-903D-9346739A0673_content`
+- **Actual ID**: `4b8d9721-6a99-4786-903d-9346739a0673_content`
+- **Solution**: Use case-insensitive lookup OR store discovered ID in `window.DMM_CONTAINER_ID`:
+```javascript
+const alternatives = [
+    APP_GUID.toLowerCase() + "_content",
+    // ... other formats
+];
+```
+
+## 4. JavaScript Scoping
 ### "Identifier has already been declared"
-- **Issue**: Defining constants (`const APP_GUID = ...`) at the top level of `widget.js` causes a `SyntaxError` if the widget logic is loaded multiple times (e.g., refreshing the dashboard or navigating between pages without a full reload).
-- **Solution**: Wrap the entire widget logic in an **IIFE** (Immediately Invoked Function Expression) to create a private scope.
+- **Issue**: Defining constants at top level causes `SyntaxError` on dashboard refresh.
+- **Solution**: Wrap entire widget in an **IIFE**:
 ```javascript
 (function() {
     const APP_GUID = "...";
@@ -32,6 +50,13 @@ Per the [official SpiraApps documentation](docs/SpiraApp_Information/SpiraApps-M
 })();
 ```
 
-## 4. Debugging
-- **Console Logs**: SpiraApp errors often manifest as generic 500s in the console. Always check the `Network` tab response body for specific exception messages (e.g., `PluginRestException`).
-- **Feedback**: Since SpiraApps run client-side, visual feedback (like changing button text to "Saving...") is critical for async operations that don't trigger a page reload.
+## 5. Resolved Bug: renderAssessmentForm Null Error
+### Issue
+- **Error**: `Uncaught TypeError: Cannot set properties of null (setting 'innerHTML')` in `renderAssessmentForm()`
+- **Cause**: The function used `APP_GUID + "_content"` (uppercase), traversing a DOM where the container ID was actually lowercase.
+- **Fix**: Updated `renderAssessmentForm()` and `renderResults()` to use `window.DMM_CONTAINER_ID` (populated during `loadDmmHistory` scan), with the original ID construction as a fallback. Added logging to trace resolution.
+
+## 6. Debugging
+- **Console Logs**: Use `dmmLog()` helper that writes to both console and localStorage for persistent debugging
+- **localStorage**: Check `localStorage.getItem('dmm_debug_log')` after errors
+- **Network Tab**: Check response body for `PluginRestException` details
