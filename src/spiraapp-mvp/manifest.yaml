@@ -1,0 +1,19 @@
+guid: 4B8D9721-6A99-4786-903D-9346739A0673
+name: DevOpsMaturityAssessment
+caption: DevOps Maturity Model
+summary: Assess your team's DevOps maturity with this MVP tool.
+description: An internal tool for assessing team DevOps maturity and readiness, focusing on the highest-impact practices.
+productSummary: DevOps Maturity Assessment
+productDescription: Measure and track your DevOps capabilities across Source Control, Security, and CI/CD.
+author: Ball And Chain Consulting LLC
+url: https://github.com/nocodejim/devops-maturity-model
+license: MIT
+copyright: Copyright 2026
+version: 0.3
+
+dashboards:
+  - dashboardTypeId: 1
+    name: DevOps Maturity Model Assessment
+    isActive: true
+    description: Asses your team's DevOps Maturity Score
+    code: file://widget.js

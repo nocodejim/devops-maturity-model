@@ -1,0 +1,139 @@
+/* DevOps Maturity Model Widget Styles */
+.dmm-widget {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  padding: 10px;
+}
+
+/* Summary View */
+.dmm-summary-card {
+  text-align: center;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.dmm-score-large {
+  font-size: 3em;
+  font-weight: bold;
+  color: #007bff;
+  margin: 10px 0;
+}
+
+.dmm-level-badge {
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 15px;
+  background: #e9ecef;
+  color: #495057;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.dmm-level-1 { background-color: #ffebee; color: #c62828; }
+.dmm-level-2 { background-color: #fff3e0; color: #ef6c00; }
+.dmm-level-3 { background-color: #fffde7; color: #f9a825; }
+.dmm-level-4 { background-color: #e8f5e9; color: #2e7d32; }
+.dmm-level-5 { background-color: #e3f2fd; color: #1565c0; }
+
+.dmm-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.dmm-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Assessment Form */
+.dmm-form-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.dmm-domain-section {
+  margin-bottom: 25px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 15px;
+}
+
+.dmm-domain-title {
+  font-size: 1.2em;
+  color: #495057;
+  margin-bottom: 15px;
+  border-left: 4px solid #007bff;
+  padding-left: 10px;
+}
+
+.dmm-question-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+}
+
+.dmm-question-text {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.dmm-options label {
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.dmm-options input[type="radio"] {
+  margin-right: 10px;
+}
+
+/* Results View */
+.dmm-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.dmm-result-card {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.dmm-radar-chart-placeholder {
+  width: 100%;
+  height: 200px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #adb5bd;
+  margin-bottom: 20px;
+}
+
+.dmm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.dmm-btn-secondary {
+  background-color: #6c757d;
+}
+
+.dmm-btn-secondary:hover {
+  background-color: #5a6268;
+}
