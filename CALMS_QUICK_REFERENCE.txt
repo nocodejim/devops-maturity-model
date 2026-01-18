@@ -1,0 +1,219 @@
+================================================================================
+    CALMS FRAMEWORK QUICK REFERENCE - Testing Card
+================================================================================
+
+WHAT IS CALMS?
+  Culture (25%)        | Automation (25%)   | Lean (15%)
+  Measurement (20%)    | Sharing (15%)      | Total: 28 questions, 90 minutes
+
+================================================================================
+FILE LOCATIONS
+================================================================================
+
+Backend Seed Script:
+  /backend/app/scripts/seed_calms_framework.py
+
+SpiraApp JSON File:
+  /src/spiraapp-mvp/calms-framework.json
+
+Testing Guide:
+  /CALMS_FRAMEWORK_TESTING_GUIDE.md
+
+================================================================================
+QUICK START COMMANDS
+================================================================================
+
+1. BACKEND: Seed the database
+   $ docker-compose exec backend python -m app.scripts.seed_calms_framework
+
+2. SPIRAAPP: Upload JSON file
+   → Go to Product Admin → SpiraApp Settings
+   → Click "Upload Custom Framework"
+   → Select: calms-framework.json
+   → Click "Save Framework"
+
+3. TEST: Take the assessment
+   → Go to Dashboard widget
+   → Click "Start Assessment"
+   → Answer 5-10 questions
+   → Click "Calculate Scores"
+
+================================================================================
+DOMAIN BREAKDOWN
+================================================================================
+
+DOMAIN          WEIGHT  QUESTIONS  KEY AREAS
+─────────────────────────────────────────────────────────────────────────────
+Culture         25%     6          Q1-Q6   Collaboration, blameless culture
+Automation      25%     6          Q7-Q12  CI/CD, testing, IaC
+Lean            15%     5          Q13-Q17 Improvement, waste reduction
+Measurement     20%     6          Q18-Q23 Metrics, monitoring, data
+Sharing         15%     5          Q24-Q28 Knowledge, documentation
+─────────────────────────────────────────────────────────────────────────────
+TOTAL           100%    28 Qs      ~90 min duration
+
+================================================================================
+SCORING SCALE
+================================================================================
+
+0 = None/Unknown (immature)
+1 = Initial/Ad-hoc (chaotic)
+2 = Developing (working on it)
+3 = Defined (documented & repeatable)
+4 = Managed (optimized & monitored)
+5 = Optimizing (continuous improvement)
+
+Score Range: 0-100%
+Level 1: 0-20%   (Initial)
+Level 2: 21-40%  (Developing)
+Level 3: 41-60%  (Defined)
+Level 4: 61-80%  (Managed)
+Level 5: 81-100% (Optimizing)
+
+================================================================================
+SAMPLE QUESTIONS (one per domain)
+================================================================================
+
+Q1 (Culture):
+  When a production issue occurs, how is it handled?
+  Score 5: Cross-functional team swarms on problem together
+
+Q8 (Automation):
+  What percentage of your tests are automated?
+  Score 5: 90%+ - Nearly complete automation across all test types
+
+Q15 (Lean):
+  Are bottlenecks in your workflow identified and addressed?
+  Score 5: Continuous bottleneck identification and elimination
+
+Q21 (Measurement):
+  Are metrics visible and accessible to teams?
+  Score 5: Real-time metrics on TVs/monitors, embedded in workflow
+
+Q27 (Sharing):
+  Is dedicated time allocated for learning and development?
+  Score 5: Learning is core to culture, dedicated time protected
+
+================================================================================
+VALIDATION CHECKLIST
+================================================================================
+
+BACKEND
+  ☐ Seed script runs without errors
+  ☐ 5 domains created with correct weights
+  ☐ 28 questions created
+  ☐ API returns framework structure correctly
+
+SPIRAAPP
+  ☐ JSON file is valid
+  ☐ Framework validates in settings
+  ☐ All 28 questions appear in widget
+  ☐ Guidance text renders correctly
+  ☐ Scoring works correctly
+  ☐ Results save to history
+
+SCORING
+  ☐ Weights sum to 1.0 (0.25+0.25+0.15+0.20+0.15)
+  ☐ Domain calculations are weighted correctly
+  ☐ Overall score is weighted average
+  ☐ Maturity levels map correctly
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+JSON not valid?
+  $ python -m json.tool calms-framework.json
+
+Seed script fails?
+  $ docker-compose exec db psql -U devops_user -d devops_db
+  > SELECT version();
+
+Questions appear wrong?
+  Check browser console (F12) for JavaScript errors
+
+Scores not calculating?
+  Verify weights sum to 1.0 and all questions are answered
+
+================================================================================
+TESTING SCENARIOS
+================================================================================
+
+Happy Path:
+  ☐ Upload framework
+  ☐ Answer all 28 questions with scores 3-4
+  ☐ Verify results save
+
+Edge Cases:
+  ☐ Answer only 5 questions (behavior?)
+  ☐ All zeros (should be level 1, 0%)
+  ☐ All fives (should be level 5, 100%)
+  ☐ Switch frameworks (history preserved?)
+
+================================================================================
+EXPECTED OUTPUTS
+================================================================================
+
+Seed Script Success:
+  ✅ Successfully seeded CALMS DevOps Framework
+     - Framework: CALMS DevOps Framework
+     - Domains: 5 (Culture 25%, Automation 25%, Lean 15%, Measurement 20%, Sharing 15%)
+     - Questions: 28 total (6+6+5+6+5)
+     - Estimated completion time: 90 minutes
+
+SpiraApp Upload Success:
+  ✓ Framework name: CALMS DevOps Framework
+  ✓ Domains: 5
+  ✓ Questions: 28
+  ✓ Estimated duration: 90 minutes
+
+Assessment Results (example):
+  Culture: 72% (Managed)
+  Automation: 68% (Managed)
+  Lean: 65% (Defined)
+  Measurement: 75% (Managed)
+  Sharing: 60% (Defined)
+  ─────────────────────────
+  Overall: 69% (Managed - Level 4)
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+✓ Framework weights sum to 1.0 - verified
+✓ All 28 questions have guidance for all 5 levels
+✓ File size ~50 KB - well within SpiraApp limits
+✓ Uses standard 0-5 scoring scale
+✓ Compatible with existing DORA and DevOps MVP frameworks
+✓ Can coexist with other frameworks in same product
+
+================================================================================
+NEXT STEPS AFTER TESTING
+================================================================================
+
+If all tests pass:
+  1. Commit files to git
+  2. Add CALMS to framework list in README
+  3. Update SpiraApp deployment documentation
+  4. Consider creating example assessment results
+
+If issues found:
+  1. Document the issue
+  2. Fix the problem
+  3. Retest from validation checklist
+  4. Update this reference if needed
+
+================================================================================
+REFERENCE DOCUMENTS
+================================================================================
+
+Full Testing Guide: CALMS_FRAMEWORK_TESTING_GUIDE.md
+Architecture Docs: SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md
+Quick Lookup: SPIRAAPP_QUICK_REFERENCE.md
+Lessons Learned: docs/spiraapp-lessons-learned.md
+
+================================================================================
+Framework Version: 1.0
+Created: January 17, 2026
+Status: Ready for testing
+================================================================================
