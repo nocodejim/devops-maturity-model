@@ -9,7 +9,12 @@ author: Ball And Chain Consulting LLC
 url: https://github.com/nocodejim/devops-maturity-model
 license: MIT
 copyright: Copyright 2026
-version: 0.3
+version: 0.4
+
+pageContents:
+  - pageId: 21
+    name: productSettings
+    code: file://settings.js
 
 dashboards:
   - dashboardTypeId: 1
