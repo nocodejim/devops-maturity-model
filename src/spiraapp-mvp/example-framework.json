@@ -1,0 +1,63 @@
+{
+    "meta": {
+        "name": "Simple Test Framework",
+        "description": "A minimal 2-domain, 4-question framework for testing",
+        "version": "1.0"
+    },
+    "domains": [
+        {
+            "id": "testing",
+            "name": "Testing Practices",
+            "weight": 0.5,
+            "questions": [
+                {
+                    "id": "T1",
+                    "text": "What level of automated testing do you have?",
+                    "options": [
+                        { "score": 0, "text": "No automated tests" },
+                        { "score": 2, "text": "Some unit tests" },
+                        { "score": 4, "text": "Comprehensive unit + integration" },
+                        { "score": 5, "text": "Full test pyramid with E2E" }
+                    ]
+                },
+                {
+                    "id": "T2",
+                    "text": "How quickly do tests run?",
+                    "options": [
+                        { "score": 0, "text": ">30 minutes" },
+                        { "score": 2, "text": "10-30 minutes" },
+                        { "score": 4, "text": "5-10 minutes" },
+                        { "score": 5, "text": "<5 minutes" }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "deployment",
+            "name": "Deployment Automation",
+            "weight": 0.5,
+            "questions": [
+                {
+                    "id": "D1",
+                    "text": "How automated is your deployment?",
+                    "options": [
+                        { "score": 0, "text": "Fully manual" },
+                        { "score": 2, "text": "Scripted but manual trigger" },
+                        { "score": 4, "text": "Automated with gates" },
+                        { "score": 5, "text": "Fully automated GitOps" }
+                    ]
+                },
+                {
+                    "id": "D2",
+                    "text": "How often do you deploy?",
+                    "options": [
+                        { "score": 0, "text": "Monthly or less" },
+                        { "score": 2, "text": "Weekly" },
+                        { "score": 4, "text": "Daily" },
+                        { "score": 5, "text": "On-demand (multiple per day)" }
+                    ]
+                }
+            ]
+        }
+    ]
+}

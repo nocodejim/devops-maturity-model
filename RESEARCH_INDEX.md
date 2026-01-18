@@ -41,8 +41,6 @@ This directory contains comprehensive research and documentation on how the Spir
 
 **Best For**: Deep understanding of architecture, decision-making, technical planning
 
-**Read Time**: 45-60 minutes
-
 ---
 
 ### 2. Quick Reference Guide
@@ -66,8 +64,6 @@ This directory contains comprehensive research and documentation on how the Spir
 
 **Best For**: Quick answers, implementation tasks, troubleshooting
 
-**Read Time**: 10-15 minutes
-
 ---
 
 ### 3. Architecture Diagrams
@@ -90,8 +86,6 @@ This directory contains comprehensive research and documentation on how the Spir
 12. Network & Offline Considerations
 
 **Best For**: Visual learners, presentations, understanding relationships
-
-**Read Time**: 20-30 minutes
 
 ---
 
@@ -117,78 +111,65 @@ This directory contains comprehensive research and documentation on how the Spir
 
 **Best For**: Project managers, executives, getting started
 
-**Read Time**: 15-20 minutes
-
 ---
 
 ## Quick Navigation by Role
 
 ### For Product Managers
-1. **Start Here**: `RESEARCH_SUMMARY.txt` - Executive overview (5 min)
-2. **Then Read**: Implementation Roadmap section of `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` (10 min)
-3. **Reference**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Section 6-8 for approach comparison (10 min)
-
-**Time to Understand**: ~25 minutes
+1. **Start Here**: `RESEARCH_SUMMARY.txt` - Executive overview
+2. **Then Read**: Implementation Roadmap section of `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md`
+3. **Reference**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Section 6-8 for approach comparison
 
 ---
 
 ### For Software Architects
-1. **Start Here**: `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` Section 1-5 (20 min)
-2. **Then Read**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` all sections (30 min)
-3. **Deep Dive**: Implementation Approaches section (Section 8-13) (20 min)
-4. **Reference**: Scoring & Technical Considerations sections (10 min)
-
-**Time to Understand**: ~80 minutes
+1. **Start Here**: `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` Section 1-5
+2. **Then Read**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` all sections
+3. **Deep Dive**: Implementation Approaches section (Section 8-13)
+4. **Reference**: Scoring & Technical Considerations sections
 
 ---
 
 ### For Front-End Developers
-1. **Start Here**: `SPIRAAPP_QUICK_REFERENCE.md` sections: Current State, Key Data Files, Scoring Logic (10 min)
-2. **Then Read**: `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` Sections 1, 6, 7, 11 (20 min)
-3. **Reference**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Sections 1, 4, 5 (10 min)
-4. **Technical**: File References appendix for code locations (5 min)
-
-**Time to Understand**: ~45 minutes
+1. **Start Here**: `SPIRAAPP_QUICK_REFERENCE.md` sections: Current State, Key Data Files, Scoring Logic
+2. **Then Read**: `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` Sections 1, 6, 7, 11
+3. **Reference**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Sections 1, 4, 5
+4. **Technical**: File References appendix for code locations
 
 ---
 
 ### For Backend Developers
-1. **Start Here**: `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` Section 2, 5 (10 min)
-2. **Then Read**: `SPIRAAPP_QUICK_REFERENCE.md` Storage Mechanisms section (5 min)
-3. **Architecture**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Sections 2, 6-8 (15 min)
-4. **Integration**: Sections 8.2 and 8.3 of main research document (15 min)
-
-**Time to Understand**: ~45 minutes
+1. **Start Here**: `SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md` Section 2, 5
+2. **Then Read**: `SPIRAAPP_QUICK_REFERENCE.md` Storage Mechanisms section
+3. **Architecture**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Sections 2, 6-8
+4. **Integration**: Sections 8.2 and 8.3 of main research document
 
 ---
 
 ### For QA/Testers
-1. **Start Here**: `SPIRAAPP_QUICK_REFERENCE.md` - How to Create Framework, Debugging Guide (10 min)
-2. **Reference**: Error Handling Flow `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Section 9 (5 min)
-3. **Test Cases**: Implementation Approaches section (10 min)
-4. **Debugging**: Critical Code References in `RESEARCH_SUMMARY.txt` (10 min)
-
-**Time to Understand**: ~35 minutes
+1. **Start Here**: `SPIRAAPP_QUICK_REFERENCE.md` - How to Create Framework, Debugging Guide
+2. **Reference**: Error Handling Flow `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Section 9
+3. **Test Cases**: Implementation Approaches section
+4. **Debugging**: Critical Code References in `RESEARCH_SUMMARY.txt`
 
 ---
 
 ### For Product Admins/Users
-1. **Start Here**: `SPIRAAPP_QUICK_REFERENCE.md` - "How to Create a Custom Framework" (5 min)
-2. **Reference**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Section 3 - Settings Page Flow (5 min)
-3. **Troubleshooting**: Debugging Guide in quick reference (5 min)
-
-**Time to Understand**: ~15 minutes
+1. **Start Here**: `SPIRAAPP_QUICK_REFERENCE.md` - "How to Create a Custom Framework"
+2. **Reference**: `SPIRAAPP_ARCHITECTURE_DIAGRAMS.md` Section 3 - Settings Page Flow
+3. **Troubleshooting**: Debugging Guide in quick reference
 
 ---
 
 ## Key Findings Summary
 
 ### Current State
-- ✅ Custom framework upload: Partially implemented
-- ✅ Per-product storage: Working
-- ✅ Dynamic form rendering: Working
-- ✅ Custom scoring: Working (domain weights)
-- ❌ Backend integration: Not implemented
+- ❌ Custom framework upload: NOT IMPLEMENTED (settings.js doesn't exist)
+- ❌ Framework validation: NOT IMPLEMENTED
+- ✅ Per-product storage: Pattern established in widget.js
+- ✅ Dynamic form rendering: Works (with hardcoded DMM_QUESTIONS)
+- ✅ Scoring logic: Works (needs parameterization)
+- ❌ Backend integration: NOT IMPLEMENTED
 - ❌ Custom score ranges: Hardcoded to 0-5
 
 ### Architecture
@@ -210,17 +191,15 @@ This directory contains comprehensive research and documentation on how the Spir
 
 ---
 
-## Critical Code Locations
+## Critical Code Locations (widget.js - actual line numbers)
 
-All referenced with line numbers:
-
-- **Widget Initialization**: widget.js lines 416-429
-- **Custom Framework Loading**: widget.js lines 429-463
-- **Form Rendering**: widget.js lines 631-704
-- **Scoring Calculation**: widget.js lines 825-893
-- **Settings Page**: settings.js lines 167-211
-- **Framework Validation**: settings.js lines 362-419
-- **Storage API Calls**: widget.js lines 535-561, 922-970
+- **Widget Initialization**: widget.js lines 412-418
+- **Data Loading**: widget.js lines 435-518
+- **Form Rendering**: widget.js lines 587-626
+- **Scoring Calculation**: widget.js lines 702-747
+- **Storage API Calls**: widget.js lines 760-821
+- **Templates**: widget.js lines 307-397
+- **Settings Page**: settings.js - DOES NOT EXIST (needs to be created)
 
 See `RESEARCH_SUMMARY.txt` "Critical Code References" section for complete details.
 
@@ -228,25 +207,25 @@ See `RESEARCH_SUMMARY.txt` "Critical Code References" section for complete detai
 
 ## Implementation Roadmap
 
-### Phase 1: Validate Current MVP (Week 1)
-- Test custom framework upload
-- Verify scoring calculations
-- Test offline functionality
-- Verify framework switching
+### Phase 1: Build Custom Framework Foundation
+- Create settings.js with admin UI
+- Update manifest.yaml for settings page
+- Add framework loading to widget.js
+- Add fallback to DMM_QUESTIONS
 
-### Phase 2: Enhance Validation (Week 2-3)
+### Phase 2: Enhance Validation + Testing
 - Improve error messages
 - Add dry-run preview
 - Support custom score ranges
 - Add assessment export
 
-### Phase 3: Backend Integration (Week 4-5)
+### Phase 3: Backend Integration
+- Add manifest settings for backend URL/API key
 - Add product setting for framework selection
-- Fetch from backend API with fallback
+- Fetch from backend API via executeRest with fallback
 - Implement offline caching
-- Graceful error handling
 
-### Phase 4: Advanced Features (Week 6-8)
+### Phase 4: Advanced Features
 - Organization-level templates
 - Per-product customization
 - Assessment history export
@@ -268,9 +247,9 @@ See `RESEARCH_SUMMARY.txt` "Critical Code References" section for complete detai
 src/spiraapp-mvp/                                  ← SpiraApp source
 ├── manifest.yaml
 ├── widget.js
-├── settings.js
-├── assessment-template.json
-└── widget.css
+├── widget.css
+├── README.md
+└── [settings.js - NEEDS TO BE CREATED]
 
 backend/app/                                       ← Backend code
 ├── models.py
@@ -325,14 +304,16 @@ docs/SpiraApp_Information/                         ← API documentation
 - Single JS file per page (IIFE wrapped)
 
 ### Current Capabilities (What Works)
-- Custom JSON framework upload
-- Per-product storage & configuration
+- Per-product storage pattern (established in widget.js)
 - Dynamic form rendering with Mustache
-- Custom domain weights for scoring
+- Domain weights for scoring (hardcoded currently)
 - Assessment history persistence
 - Fully offline operation
+- IIFE-wrapped JavaScript pattern
 
 ### Gap Areas (What's Missing)
+- settings.js for custom framework upload
+- Custom framework loading in widget.js
 - Backend framework selection
 - Custom score ranges (hardcoded 0-5)
 - Framework versioning
@@ -365,8 +346,8 @@ A: Weighted domain scores averaged. See Section 7 and Scoring Algorithm in Quick
 **Q: What are the critical SpiraApp API gotchas?**
 A: 6 documented in lessons-learned.md, summarized in Quick Reference. Must include pluginName!
 
-**Q: How much effort to implement Approach B?**
-A: ~2 weeks for basic integration, ~4-5 weeks for production-ready. See Phase 3 of roadmap.
+**Q: What's needed to implement Approach B?**
+A: Manifest settings for API credentials, executeRest calls, fallback chain, caching. See Phase 3 of roadmap.
 
 **Q: Can this work offline?**
 A: Yes, completely. Approach A and C support offline. Approach B needs caching. See Network Considerations.
@@ -398,11 +379,11 @@ This research was conducted by:
    - Created comprehensive flow diagrams
    - Documented data models and relationships
 
-4. **Validation**
+4. **Validation** (Updated 2026-01-17)
    - Cross-referenced all findings
-   - Verified code locations and line numbers
+   - Corrected code locations and line numbers
    - Confirmed API signatures
-   - Checked for inconsistencies
+   - Fixed inaccuracies (settings.js noted as not existing)
 
 ---
 
@@ -423,6 +404,7 @@ For detailed answers to specific questions:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-01-17 | Initial complete research |
+| 1.1 | 2026-01-17 | Fixed accuracy: settings.js doesn't exist, corrected line numbers, removed time estimates |
 
 ---
 

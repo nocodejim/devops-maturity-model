@@ -4,74 +4,77 @@
 
 | Aspect | Status | Location |
 |--------|--------|----------|
-| **Hardcoded Questions** | ✅ Implemented | `widget.js` lines 92-308 (DMM_QUESTIONS) |
-| **Custom Framework Upload** | ✅ Implemented | `settings.js` lines 319-360 (processFile) |
-| **Framework Validation** | ✅ Implemented | `settings.js` lines 362-419 (validateFramework) |
-| **Storage Per-Product** | ✅ Implemented | `manifest.yaml` storage key: `custom_framework` |
-| **Dynamic Rendering** | ✅ Implemented | `widget.js` lines 642-660 (renderAssessmentForm) |
-| **Custom Scoring** | ✅ Implemented | `widget.js` lines 739-748 (getActiveDomainWeights) |
-| **Backend Integration** | ❌ Not implemented | Could use `spiraAppManager.executeApi()` |
+| **Hardcoded Questions** | ✅ Implemented | `widget.js` lines 88-304 (DMM_QUESTIONS) |
+| **Custom Framework Upload** | ❌ NOT IMPLEMENTED | `settings.js` does not exist |
+| **Framework Validation** | ❌ NOT IMPLEMENTED | `settings.js` does not exist |
+| **Storage Per-Product** | ✅ Pattern established | `widget.js` uses storageGetProduct/storageUpdateProduct |
+| **Dynamic Rendering** | ✅ Implemented | `widget.js` lines 587-612 (renderAssessmentForm) |
+| **Scoring Logic** | ✅ Implemented | `widget.js` lines 702-747 (calculateScores) |
+| **Backend Integration** | ❌ NOT IMPLEMENTED | Would use `spiraAppManager.executeRest()` |
 
 ---
 
 ## Architecture Overview
 
 ```
-SpiraApp Widget (widget.js)
-├─ Init: loadCustomFramework() → Check storage for custom_framework
-├─ If found: Use custom framework JSON
-├─ If not: Use hardcoded DMM_QUESTIONS
-├─ Render: Mustache templates with active questions
-├─ Scoring: Dynamic calculation based on domain weights
+SpiraApp Widget (widget.js) - IMPLEMENTED
+├─ Init: initDmmWidget() → loadDmmHistory()
+├─ Questions: Uses hardcoded DMM_QUESTIONS (no custom framework support yet)
+├─ Render: Mustache templates with questions grouped by domain
+├─ Scoring: Dynamic calculation based on DOMAIN_WEIGHTS
 └─ Storage: Save assessment history to dmm_assessments_history
 
-Settings Page (settings.js)
+Settings Page (settings.js) - NEEDS TO BE CREATED
 ├─ Display current framework status
 ├─ Upload JSON file
 ├─ Validate structure
 └─ Save to custom_framework storage key
+
+Widget Loading (FUTURE - needs implementation):
+├─ loadCustomFramework() → Check storage for custom_framework
+├─ If found: Use custom framework JSON
+├─ If not: Fall back to hardcoded DMM_QUESTIONS
 ```
 
 ---
 
 ## Key Data Files
 
-### 1. manifest.yaml (33 lines)
+### 1. manifest.yaml
 **Purpose**: SpiraApp configuration
-**Key Settings**:
+**Current Settings**:
 ```yaml
 guid: 4B8D9721-6A99-4786-903D-9346739A0673
 name: DevOpsMaturityAssessment
-storage:
-  - key: custom_framework  # Per-product custom assessment JSON
-  - key: (implicit) dmm_assessments_history  # Assessment results
-pageContents:
-  - pageId: 21  # Product admin settings page
-    code: file://settings.js
 dashboards:
   - dashboardTypeId: 1  # Product home page widget
     code: file://widget.js
+# NOTE: No settings page or storage keys declared yet
+# These need to be added for custom framework support
 ```
 
-### 2. widget.js (988 lines)
+### 2. widget.js (842 lines)
 **Purpose**: Main assessment logic
 **Components**:
-- Lines 11-15: Domain weights (hardcoded)
-- Lines 92-308: DMM_QUESTIONS array (20 questions, 3 domains)
-- Lines 429-463: `loadCustomFramework()` - fetch from storage
-- Lines 631-704: `renderAssessmentForm()` - render dynamic form
-- Lines 825-893: `calculateScores()` - score calculation with custom weights
-- Lines 896-970: `saveAssessmentResults()` - persist to storage
+- Lines 10-14: Domain weights (hardcoded DOMAIN_WEIGHTS)
+- Lines 88-304: DMM_QUESTIONS array (20 questions, 3 domains)
+- Lines 307-397: Templates (TPL_SUMMARY, TPL_FORM, TPL_RESULTS)
+- Lines 412-418: Event registration (windowLoad, dashboardUpdated)
+- Lines 435-518: `loadDmmHistory()` - fetch assessment history from storage
+- Lines 587-626: `renderAssessmentForm()` - render form with hardcoded questions
+- Lines 702-747: `calculateScores()` - score calculation
+- Lines 750-821: `saveAssessmentResults()` - persist to storage
+- NOTE: `loadCustomFramework()` does NOT exist yet - needs to be added
 
-### 3. settings.js (603 lines)
-**Purpose**: Product admin settings UI
-**Components**:
-- Lines 319-360: `processFile()` - file upload handler
-- Lines 362-419: `validateFramework()` - JSON schema validation
-- Lines 483-536: `saveFramework()` - persist custom framework
-- Lines 587-601: `downloadTemplate()` - download JSON template
+### 3. settings.js - DOES NOT EXIST (needs to be created)
+**Purpose**: Product admin settings UI for custom framework upload
+**Required Components**:
+- `processFile()` - file upload handler
+- `validateFramework()` - JSON schema validation
+- `saveFramework()` - persist custom framework to storage
+- `renderCurrentStatus()` - show current framework info
 
-### 4. assessment-template.json (60 lines)
+### 4. Custom Framework JSON Structure
 **Purpose**: Template for custom frameworks
 **Structure**:
 ```json
@@ -346,25 +349,26 @@ POST /api/assessments/{id}/responses     # Submit responses
 
 ## Next Steps
 
-### Immediate (Week 1)
-1. [ ] Test custom framework upload with sample JSON
-2. [ ] Verify scoring works with different domain weights
-3. [ ] Test assessment history saving & retrieval
-4. [ ] Document creation process for admins
+### Phase 1: Build Custom Framework Foundation
+1. [ ] Create settings.js with admin UI
+2. [ ] Update manifest.yaml for settings page
+3. [ ] Add framework loading to widget.js
+4. [ ] Add fallback to DMM_QUESTIONS
+5. [ ] Test end-to-end
 
-### Short Term (2-4 weeks)
-1. [ ] Add UI for creating frameworks without JSON editing
-2. [ ] Add assessment export (CSV/PDF)
-3. [ ] Add comparison dashboard across projects
-4. [ ] Improve error messages & logging
-
-### Medium Term (1-3 months)
-1. [ ] Implement backend framework selection (Approach B)
-2. [ ] Add framework versioning & rollback
+### Phase 2: Enhance Validation
+1. [ ] Improve error messages & logging
+2. [ ] Add dry-run preview before saving
 3. [ ] Support custom score ranges (0-3, 0-4, 0-10)
+4. [ ] Add assessment export (CSV/PDF)
+
+### Phase 3: Backend Integration
+1. [ ] Add manifest settings for backend URL/API key
+2. [ ] Implement backend framework selection via executeRest
+3. [ ] Add framework versioning & rollback
 4. [ ] Add offline caching for backend frameworks
 
-### Long Term (3+ months)
+### Phase 4: Advanced Features
 1. [ ] Organization-level framework templates
 2. [ ] Per-product customization (override questions)
 3. [ ] Benchmarking against industry standards

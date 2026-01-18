@@ -4,9 +4,16 @@
 
     // --- CONSTANTS & CONFIG ---
     const DMM_STORAGE_KEY = "dmm_assessments_history";
+    const CUSTOM_FRAMEWORK_KEY = "custom_framework";
     // Defined in manifest.yaml
     const APP_GUID = "4B8D9721-6A99-4786-903D-9346739A0673";
     const APP_NAME = "DevOpsMaturityAssessment"; // Must match manifest name
+
+    // Active framework state (loaded from custom or default)
+    let activeQuestions = null;
+    let activeDomainWeights = null;
+    let activeFrameworkMeta = null;
+
     const DOMAIN_WEIGHTS = {
         "domain1": 0.35, // Source Control
         "domain2": 0.30, // Security
@@ -408,6 +415,124 @@
         }
     }
 
+    // Load custom framework from storage, fallback to default DMM_QUESTIONS
+    function loadCustomFramework(callback) {
+        const productId = spiraAppManager.projectId;
+        dmmLog("loadCustomFramework called", { productId: productId });
+
+        // Use 6-param signature (include pluginName!)
+        spiraAppManager.storageGetProduct(
+            APP_GUID,
+            APP_NAME,
+            CUSTOM_FRAMEWORK_KEY,
+            productId,
+            function (data) {
+                dmmLog("loadCustomFramework SUCCESS", { hasData: !!data, dataLength: data ? data.length : 0 });
+
+                if (data && data !== "" && data.trim() !== "") {
+                    try {
+                        const framework = JSON.parse(data);
+                        dmmLog("Parsed custom framework", {
+                            name: framework.meta ? framework.meta.name : "unknown",
+                            domainsCount: framework.domains ? framework.domains.length : 0
+                        });
+
+                        // Validate and extract questions from custom framework
+                        if (framework.domains && Array.isArray(framework.domains)) {
+                            activeQuestions = [];
+                            activeDomainWeights = {};
+                            activeFrameworkMeta = framework.meta || { name: "Custom Framework" };
+
+                            framework.domains.forEach(function(domain) {
+                                // Build domain weight map
+                                activeDomainWeights[domain.id] = domain.weight || 0;
+
+                                // Flatten questions with domain reference
+                                if (domain.questions && Array.isArray(domain.questions)) {
+                                    domain.questions.forEach(function(q) {
+                                        activeQuestions.push({
+                                            id: q.id,
+                                            domain: domain.id,
+                                            domainName: domain.name,
+                                            text: q.text,
+                                            options: q.options || []
+                                        });
+                                    });
+                                }
+                            });
+
+                            dmmLog("Custom framework loaded", {
+                                questionsCount: activeQuestions.length,
+                                domains: Object.keys(activeDomainWeights)
+                            });
+
+                            callback();
+                            return;
+                        }
+                    } catch (e) {
+                        dmmLog("Error parsing custom framework, using default", { error: e.message });
+                    }
+                }
+
+                // Fallback to default
+                useDefaultFramework();
+                callback();
+            },
+            function (err) {
+                // Expected on first run or if no custom framework
+                dmmLog("loadCustomFramework FAILED (using default)", { error: err });
+                useDefaultFramework();
+                callback();
+            }
+        );
+    }
+
+    // Set up default framework from hardcoded DMM_QUESTIONS
+    function useDefaultFramework() {
+        dmmLog("Using default DMM framework", {});
+        activeQuestions = DMM_QUESTIONS;
+        activeDomainWeights = DOMAIN_WEIGHTS;
+        activeFrameworkMeta = {
+            name: "DevOps Maturity Model",
+            description: "Default 20-question assessment",
+            version: "1.0"
+        };
+    }
+
+    // Get domain info for template rendering
+    function getDomainInfo() {
+        // Build domain structure from active questions
+        const domainMap = {};
+
+        activeQuestions.forEach(function(q) {
+            if (!domainMap[q.domain]) {
+                domainMap[q.domain] = {
+                    id: q.domain,
+                    title: q.domainName || getDomainTitle(q.domain),
+                    questions: []
+                };
+            }
+            domainMap[q.domain].questions.push({
+                id: q.id,
+                text: q.text,
+                questionId: q.id,
+                options: q.options
+            });
+        });
+
+        return Object.values(domainMap);
+    }
+
+    // Get default domain title for legacy domains
+    function getDomainTitle(domainId) {
+        const defaultTitles = {
+            "domain1": "Domain 1: Source Control & Development",
+            "domain2": "Domain 2: Security & Compliance",
+            "domain3": "Domain 3: CI/CD & Deployment"
+        };
+        return defaultTitles[domainId] || domainId;
+    }
+
     // Entry Point
     spiraAppManager.registerEvent_windowLoad(initDmmWidget);
     // Also re-render if dashboard updates (e.g. filter change)
@@ -415,7 +540,14 @@
 
     function initDmmWidget() {
         injectStyles();
-        loadDmmHistory();
+        // Load custom framework first, then load history
+        loadCustomFramework(function() {
+            dmmLog("Framework loaded, proceeding to loadDmmHistory", {
+                frameworkName: activeFrameworkMeta ? activeFrameworkMeta.name : "unknown",
+                questionCount: activeQuestions ? activeQuestions.length : 0
+            });
+            loadDmmHistory();
+        });
     }
 
     // PERSISTENT DEBUG: Write to localStorage so logs survive logout
@@ -586,28 +718,20 @@
     // 3. Render Form
     function renderAssessmentForm() {
         const elementId = window.DMM_CONTAINER_ID || (APP_GUID + "_content");
-        dmmLog("renderAssessmentForm called", { elementId: elementId });
+        dmmLog("renderAssessmentForm called", {
+            elementId: elementId,
+            frameworkName: activeFrameworkMeta ? activeFrameworkMeta.name : "unknown",
+            questionCount: activeQuestions ? activeQuestions.length : 0
+        });
         const container = document.getElementById(elementId);
 
-        // Process questions for Mustache
-        // We need to group by Domain
-        const domainMap = {
-            "domain1": { title: "Domain 1: Source Control & Development", questions: [] },
-            "domain2": { title: "Domain 2: Security & Compliance", questions: [] },
-            "domain3": { title: "Domain 3: CI/CD & Deployment", questions: [] }
-        };
+        // Use dynamic domain info from active framework
+        const domains = getDomainInfo();
 
-        DMM_QUESTIONS.forEach(q => {
-            // Map simplified keys for template
-            domainMap[q.domain].questions.push({
-                id: q.id,
-                text: q.text,
-                questionId: q.id, // for radio name
-                options: q.options
-            });
+        dmmLog("Rendering form with domains", {
+            domainCount: domains.length,
+            domains: domains.map(d => ({ id: d.id, questionCount: d.questions.length }))
         });
-
-        const domains = Object.values(domainMap);
 
         container.innerHTML = Mustache.render(TPL_FORM, { domains: domains });
 
@@ -660,8 +784,8 @@
             let responses = {};
             let allAnswered = true;
 
-            // We know the IDs are Q1...Q20
-            DMM_QUESTIONS.forEach(q => {
+            // Use active questions from loaded framework
+            activeQuestions.forEach(q => {
                 // Scope query to container
                 const radios = container.querySelectorAll(`input[name="${q.id}"]`);
                 let val = null;
@@ -700,31 +824,47 @@
     }
 
     function calculateScores(responses) {
-        // 1. Domain Scores
+        // 1. Domain Scores - dynamically build from active questions
         // Domain Score = (Total Points / Max Possible) * 100
-        let domainTotals = {
-            domain1: { current: 0, max: 0 },
-            domain2: { current: 0, max: 0 },
-            domain3: { current: 0, max: 0 }
-        };
+        let domainTotals = {};
 
-        DMM_QUESTIONS.forEach(q => {
-            const r = responses[q.id];
-            if (r) {
-                domainTotals[r.domain].current += r.score;
-                domainTotals[r.domain].max += 5; // Max score per question is 5
+        // Initialize domain totals from active questions
+        activeQuestions.forEach(q => {
+            if (!domainTotals[q.domain]) {
+                domainTotals[q.domain] = { current: 0, max: 0 };
             }
         });
 
-        const d1Score = (domainTotals.domain1.current / domainTotals.domain1.max) * 100;
-        const d2Score = (domainTotals.domain2.current / domainTotals.domain2.max) * 100;
-        const d3Score = (domainTotals.domain3.current / domainTotals.domain3.max) * 100;
+        // Tally scores
+        activeQuestions.forEach(q => {
+            const r = responses[q.id];
+            if (r) {
+                domainTotals[r.domain].current += r.score;
+                // Find max score from options (typically 5, but may vary)
+                const maxScore = q.options.reduce((max, opt) => Math.max(max, opt.score), 0);
+                domainTotals[r.domain].max += maxScore || 5;
+            }
+        });
 
-        // 2. Overall Score (Weighted)
-        // D1: 35%, D2: 30%, D3: 35%
-        const overall = (d1Score * DOMAIN_WEIGHTS.domain1) +
-            (d2Score * DOMAIN_WEIGHTS.domain2) +
-            (d3Score * DOMAIN_WEIGHTS.domain3);
+        // Calculate domain percentages
+        const domainScores = {};
+        Object.keys(domainTotals).forEach(domainId => {
+            const dt = domainTotals[domainId];
+            domainScores[domainId] = dt.max > 0 ? (dt.current / dt.max) * 100 : 0;
+        });
+
+        // 2. Overall Score (Weighted using active domain weights)
+        let overall = 0;
+        Object.keys(domainScores).forEach(domainId => {
+            const weight = activeDomainWeights[domainId] || 0;
+            overall += domainScores[domainId] * weight;
+        });
+
+        dmmLog("Score calculation", {
+            domainScores: domainScores,
+            weights: activeDomainWeights,
+            overall: overall
+        });
 
         // 3. Maturity Level
         let level = 1;
@@ -734,16 +874,28 @@
         if (overall > 60) { level = 4; levelName = "Managed"; }
         if (overall > 80) { level = 5; levelName = "Optimizing"; }
 
-        return {
+        // Build result with dynamic domain scores
+        const result = {
             date: new Date().toISOString(),
             overallScore: Math.round(overall * 100) / 100, // 2 decimals
             maturityLevel: levelName,
             maturityLevelInt: level,
-            domain1Score: Math.round(d1Score),
-            domain2Score: Math.round(d2Score),
-            domain3Score: Math.round(d3Score),
+            frameworkName: activeFrameworkMeta ? activeFrameworkMeta.name : "Unknown",
+            domainScores: {},
             responses: responses
         };
+
+        // Add individual domain scores (for both legacy template and new dynamic)
+        Object.keys(domainScores).forEach(domainId => {
+            result.domainScores[domainId] = Math.round(domainScores[domainId]);
+        });
+
+        // For backwards compatibility with legacy template (domain1Score, domain2Score, domain3Score)
+        if (domainScores.domain1 !== undefined) result.domain1Score = Math.round(domainScores.domain1);
+        if (domainScores.domain2 !== undefined) result.domain2Score = Math.round(domainScores.domain2);
+        if (domainScores.domain3 !== undefined) result.domain3Score = Math.round(domainScores.domain3);
+
+        return result;
     }
 
     // 5. Save & Show Results

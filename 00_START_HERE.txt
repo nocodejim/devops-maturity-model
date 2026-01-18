@@ -41,12 +41,13 @@ QUICK FACTS:
 ================================================================================
 
 Current State:
-✅ Custom framework upload works (partially implemented)
-✅ Per-product storage works
-✅ Dynamic form rendering works
-✅ Custom scoring works (domain weights)
-❌ Backend integration not implemented
-❌ Limited to 0-5 score scale
+❌ Custom framework upload: NOT IMPLEMENTED (settings.js doesn't exist)
+❌ Framework validation: NOT IMPLEMENTED
+✅ Per-product storage: Pattern established in widget.js
+✅ Dynamic form rendering: Works (with hardcoded questions)
+✅ Scoring logic: Works (needs parameterization for custom scales)
+❌ Backend integration: NOT IMPLEMENTED
+❌ Score scale: Hardcoded to 0-5
 
 Best Approach:
 → Approach C (Hybrid) recommended
@@ -55,29 +56,29 @@ Best Approach:
   ├─ Implements fallback chain (resilient)
   └─ No breaking changes (backward compatible)
 
-Implementation Effort:
-• Phase 1 (Week 1): Validate MVP
-• Phase 2 (Weeks 2-3): Enhance validation
-• Phase 3 (Weeks 4-5): Backend integration
-• Phase 4 (Weeks 6-8): Advanced features
+Implementation Phases:
+• Phase 1: Build settings.js + custom framework support
+• Phase 2: Enhance validation + testing
+• Phase 3: Backend integration via executeRest
+• Phase 4: Advanced features + polish
 
 GETTING STARTED:
 ================================================================================
 
-Step 1: Understand What We Have (15 minutes)
+Step 1: Understand What We Have
    → Open: RESEARCH_SUMMARY.txt
    → Read: Executive summary + key findings
-   
-Step 2: Choose Your Path (2 minutes)
+
+Step 2: Choose Your Path
    → Open: RESEARCH_INDEX.md
    → Find your role's reading guide
-   
-Step 3: Deep Dive (45-90 minutes depending on role)
+
+Step 3: Deep Dive
    → Follow role-specific reading guide
    → Use Quick Reference for lookups
    → Reference diagrams as needed
 
-Step 4: Make Decisions (30-60 minutes)
+Step 4: Make Decisions
    → Review Section 16 of main research (Recommendations)
    → Study Section 8 (Implementation Approaches A/B/C)
    → Reference Section 13 (Implementation Roadmap)
@@ -86,46 +87,40 @@ RECOMMENDED READING ORDER BY ROLE:
 ================================================================================
 
 PROJECT MANAGER / EXECUTIVE:
-1. This file (this one)
-2. RESEARCH_SUMMARY.txt (15 minutes)
-3. RESEARCH_INDEX.md Section: Key Findings (5 minutes)
-4. Section 16 of main research: Recommendations (10 minutes)
-Total: ~30 minutes
+1. This file
+2. RESEARCH_SUMMARY.txt
+3. RESEARCH_INDEX.md Section: Key Findings
+4. Section 16 of main research: Recommendations
 
 ARCHITECT / TECHNICAL LEAD:
-1. RESEARCH_INDEX.md (5 minutes)
-2. SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md Sections 1-5 (20 minutes)
-3. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md all diagrams (30 minutes)
-4. Section 8-13 of main research (30 minutes)
-5. Review Section 16: Recommendations (15 minutes)
-Total: ~90 minutes
+1. RESEARCH_INDEX.md
+2. SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md Sections 1-5
+3. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md all diagrams
+4. Section 8-13 of main research
+5. Review Section 16: Recommendations
 
 FRONTEND DEVELOPER:
-1. SPIRAAPP_QUICK_REFERENCE.md (10 minutes)
-2. Section 1, 6, 7 of main research (20 minutes)
-3. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md Sections 1, 4, 5 (15 minutes)
-4. Critical Code References from RESEARCH_SUMMARY.txt (10 minutes)
-Total: ~55 minutes
+1. SPIRAAPP_QUICK_REFERENCE.md
+2. Section 1, 6, 7 of main research
+3. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md Sections 1, 4, 5
+4. Critical Code References from RESEARCH_SUMMARY.txt
 
 BACKEND DEVELOPER:
-1. SPIRAAPP_QUICK_REFERENCE.md (5 minutes)
-2. Section 2, 5 of main research (15 minutes)
-3. Section 8.2-8.3 (Backend Integration approaches) (15 minutes)
-4. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md Sections 6-8 (15 minutes)
-Total: ~50 minutes
+1. SPIRAAPP_QUICK_REFERENCE.md
+2. Section 2, 5 of main research
+3. Section 8.2-8.3 (Backend Integration approaches)
+4. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md Sections 6-8
 
 QA / TESTER:
-1. SPIRAAPP_QUICK_REFERENCE.md (10 minutes)
-2. How to Create Framework section (5 minutes)
-3. Debugging Guide (10 minutes)
-4. Error Handling Flow diagram (5 minutes)
-Total: ~30 minutes
+1. SPIRAAPP_QUICK_REFERENCE.md
+2. How to Create Framework section
+3. Debugging Guide
+4. Error Handling Flow diagram
 
 PRODUCT ADMIN:
-1. SPIRAAPP_QUICK_REFERENCE.md: "How to Create a Custom Framework" (5 min)
-2. Settings Page Flow diagram (5 minutes)
-3. Debugging Guide if needed (5 minutes)
-Total: ~15 minutes
+1. SPIRAAPP_QUICK_REFERENCE.md: "How to Create a Custom Framework"
+2. Settings Page Flow diagram
+3. Debugging Guide if needed
 
 FILE LOCATIONS:
 ================================================================================
@@ -151,17 +146,17 @@ A: Yes. Three approaches documented:
    • B: Backend-driven (centralized, needs integration)
    • C: Hybrid (recommended, best of both)
 
-Q: How long to implement?
-A: 
-   • Validate current (1 week)
-   • Enhance validation (2-3 weeks)
-   • Backend integration (2-3 weeks)
-   • Advanced features (2-3 weeks)
+Q: What are the implementation phases?
+A:
+   • Phase 1: Build settings.js + custom framework support
+   • Phase 2: Enhance validation + testing
+   • Phase 3: Backend integration via executeRest
+   • Phase 4: Advanced features + polish
 
 Q: What's involved?
-A: 
-   • Approach A: Already mostly working
-   • Approach B: Add backend API calls + settings page
+A:
+   • Approach A: Build settings.js, add framework loading to widget.js
+   • Approach B: Add backend API calls via executeRest + settings page
    • Approach C: Combine A & B with fallback logic
 
 Q: Will this work offline?
@@ -184,11 +179,11 @@ CRITICAL INSIGHTS:
    • No external API calls possible (security sandboxed)
    • Storage is per-product key/value in SpiraApp
 
-2. Current MVP (Approach A) is PARTIALLY IMPLEMENTED
-   • Upload works (settings.js)
-   • Validation works (settings.js lines 362-419)
-   • Widget loading works (widget.js lines 429-463)
-   • Just needs completion & testing
+2. Current MVP (Approach A) is NOT YET IMPLEMENTED
+   • settings.js does NOT exist - needs to be built
+   • widget.js has hardcoded questions (DMM_QUESTIONS)
+   • Storage API patterns are established and can be reused
+   • Scoring logic works but needs parameterization
 
 3. Framework Structure is WELL DESIGNED
    • Flexible domains (any number, weighted)
@@ -273,7 +268,7 @@ Q: Is this production-ready?
 A: This is research. Implementation follows. Use Section 13 (Roadmap) for planning.
 
 Q: Can we implement this now?
-A: Approach A can be completed in week 1. See Phase 1 of roadmap.
+A: Yes. Start with Phase 1: Build settings.js + add framework loading to widget.js.
 
 CONTACT & SUPPORT:
 ================================================================================
@@ -301,11 +296,11 @@ WHAT'S NEXT:
 
 After reading this:
 
-1. IMMEDIATE: Open RESEARCH_INDEX.md
-2. SAME HOUR: Follow your role's reading guide
-3. TODAY: Review recommendations
-4. THIS WEEK: Discuss approach (A, B, or C)
-5. NEXT WEEK: Begin Phase 1 implementation
+1. Open RESEARCH_INDEX.md
+2. Follow your role's reading guide
+3. Review recommendations
+4. Decide on approach (A, B, or C)
+5. Begin Phase 1 implementation
 
 The research is complete. The path forward is clear. Let's build it!
 
