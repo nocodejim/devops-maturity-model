@@ -1,0 +1,461 @@
+================================================================================
+SpiraApp MVP: Configurable Project-Specific Assessments - RESEARCH COMPLETE
+================================================================================
+
+DELIVERABLES CREATED:
+================================================================================
+
+1. SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md (Main Document)
+   ├─ 18 comprehensive sections
+   ├─ 1,100+ lines of detailed analysis
+   ├─ Complete architecture documentation
+   ├─ Implementation approaches (A, B, C)
+   ├─ Technical considerations & risks
+   └─ Recommendations & roadmap
+
+2. SPIRAAPP_QUICK_REFERENCE.md (Fast Lookup)
+   ├─ Current state summary table
+   ├─ Key file locations
+   ├─ Critical lessons learned
+   ├─ JSON schema reference
+   ├─ Debugging guide
+   ├─ Scoring logic explanation
+   └─ Next steps checklist
+
+3. SPIRAAPP_ARCHITECTURE_DIAGRAMS.md (Visual Reference)
+   ├─ 10 detailed flow diagrams
+   ├─ Current assessment flow
+   ├─ Storage architecture
+   ├─ Configuration flow
+   ├─ Data models
+   ├─ Scoring process
+   ├─ Approach comparisons
+   ├─ Multi-tenant organization
+   ├─ State machine lifecycle
+   ├─ Error handling flows
+   └─ Offline considerations
+
+================================================================================
+KEY FINDINGS
+================================================================================
+
+CURRENT STATE:
+✅ Custom framework upload: Partially implemented
+✅ Framework validation: Working (settings.js lines 362-419)
+✅ Per-product storage: Working via SpiraApp storage API
+✅ Dynamic form rendering: Working (widget.js lines 642-660)
+✅ Custom scoring: Mostly working (domain weights supported)
+⚠️  Limited to 0-5 score scale (hardcoded)
+❌ Backend integration: Not implemented
+
+ARCHITECTURE:
+• SpiraApp is PURE CLIENT-SIDE (JavaScript IIFE in Spira dashboard)
+• No external API calls possible (security sandboxed)
+• Storage: Per-product key/value pairs via spiraAppManager API
+• No external imports/dependencies allowed
+• Fully offline-capable in current MVP form
+
+ASSESSMENT FRAMEWORK STRUCTURE:
+Framework
+├─ meta (name, description, version)
+└─ domains [0..N]
+   ├─ id, name, weight, order
+   └─ questions [0..M]
+      ├─ id, text, guidance, order
+      └─ options [0..L] (auto-generated if not provided)
+
+CURRENT QUESTION SETS:
+1. DevOps Maturity MVP: 20 questions, 3 domains
+2. DORA Metrics: 25 questions, 5 domains
+3. CALMS Framework: Available but not detailed
+4. Backend also supports custom seeding via seed scripts
+
+================================================================================
+STORAGE MECHANISMS
+================================================================================
+
+SpiraApp Storage Keys (Per Product):
+├─ custom_framework: Custom assessment JSON (one per product)
+└─ dmm_assessments_history: Array of past assessment results
+
+API Signature (CRITICAL):
+spiraAppManager.storageGetProduct(
+  appGuid,        // "4B8D9721-6A99-4786-903D-9346739A0673"
+  appName,        // "DevOpsMaturityAssessment" (must include!)
+  key,            // "custom_framework"
+  productId,      // from spiraAppManager.projectId
+  successCallback,
+  errorCallback
+)
+
+GOTCHAS (From lessons-learned.md):
+1. Must include pluginName parameter (omitting causes logout)
+2. Container ID is LOWERCASE (case-sensitivity fix needed)
+3. IIFE wrapping prevents variable collision
+4. "Key not found" 500 error on first run is expected
+
+================================================================================
+IMPLEMENTATION APPROACHES
+================================================================================
+
+APPROACH A: Local Custom Framework (Current MVP)
+├─ Product admin uploads JSON file
+├─ Validated before saving to storage
+├─ Works entirely offline
+├─ Per-product configuration
+├─ Manual upload required per product
+✅ Pros: Works, offline, simple
+❌ Cons: Manual, no sharing, no versioning
+
+APPROACH B: Backend-Driven Framework Selection
+├─ Admin selects from dropdown
+├─ Fetches framework from backend API
+├─ Centralized framework library
+├─ Easy to add new frameworks
+├─ Requires internet connection
+✅ Pros: Centralized, scalable, multi-org support
+❌ Cons: Complex, backend dependency, needs fallback
+
+APPROACH C: Hybrid (RECOMMENDED)
+├─ Supports both local upload AND backend selection
+├─ Fallback chain: custom → backend → default
+├─ Works offline with cached frameworks
+├─ Admin can use either mode
+├─ Maximum flexibility
+✅ Pros: Flexible, offline-capable, no breaking changes
+❌ Cons: More complex implementation
+
+COMPARISON:
+┌──────────┬──────────┬───────────┬─────────┐
+│ Feature  │ Approach │ Approach  │Approach │
+│          │    A     │     B     │    C    │
+├──────────┼──────────┼───────────┼─────────┤
+│ Offline  │    ✅    │     ❌    │   ✅    │
+│ Sharing  │    ❌    │     ✅    │   ✅    │
+│ Centralized │ ❌    │     ✅    │   ✅    │
+│ Complex  │    ❌    │     ✅    │   ⚠️    │
+│ Multi-org│    ⚠️    │     ✅    │   ✅    │
+└──────────┴──────────┴───────────┴─────────┘
+
+================================================================================
+SCORING ALGORITHM
+================================================================================
+
+Process:
+1. Collect responses: question_id → score (0-5)
+2. Per domain: sum_score / (question_count × 5) × 100 = domain%
+3. Overall: Σ(domain% × domain_weight)
+4. Map to level:
+   - 0-20%:   Level 1 (Initial)
+   - 21-40%:  Level 2 (Developing)
+   - 41-60%:  Level 3 (Defined)
+   - 61-80%:  Level 4 (Managed)
+   - 81-100%: Level 5 (Optimizing)
+
+Currently Hardcoded:
+✅ Score range: 0-5 per question
+✅ Domain weights: Customizable per framework
+❌ Threshold levels: Fixed (could be made custom)
+❌ Score range: Fixed at 0-5 (could support 0-3, 0-4, 0-10)
+
+Extensibility Needed:
+• Add scoreRange to meta: support variable scales
+• Add levelThresholds to meta: support custom levels
+• Add levelNames to meta: custom maturity names
+
+================================================================================
+VALIDATION SCHEMA
+================================================================================
+
+Current Validation (settings.js lines 362-419):
+✅ meta.name (required, non-empty string)
+✅ domains (required, non-empty array)
+✅ domain.id (required, string)
+✅ domain.name (required, string)
+✅ domain.weight (required, number)
+✅ domain.questions (required, non-empty array)
+✅ question.id (required, string)
+✅ question.text (required, string)
+⚠️  Domain weights sum ~1.0 (warns if off by >0.01)
+
+Missing Validation:
+❌ scoreRange type checking
+❌ levelThresholds array validation
+❌ Duplicate question IDs check
+❌ Score consistency in guidance text
+
+================================================================================
+PROJECT-SPECIFIC SCENARIOS
+================================================================================
+
+SCENARIO 1: Multi-Product, Different Assessments
+├─ Organization with 3 products
+├─ Each product uses different assessment
+├─ Uses: Approach A (local custom framework)
+├─ Each product admin uploads their own JSON
+└─ Result: Per-product isolation
+
+SCENARIO 2: Multi-Organization, Centralized Library
+├─ Multiple organizations in system
+├─ Centralized framework definitions
+├─ Admin manages org-level templates
+├─ Products inherit or customize
+├─ Uses: Approach B (backend-driven)
+└─ Result: Enterprise-scale framework management
+
+SCENARIO 3: Hybrid Multi-Tenant
+├─ Central framework library + local overrides
+├─ Organization templates + product customization
+├─ Fallback chain for flexibility
+├─ Uses: Approach C (hybrid)
+└─ Result: Maximum flexibility + standardization
+
+================================================================================
+FILE STRUCTURE
+================================================================================
+
+Core SpiraApp Files:
+/home/jim/projects/devops-maturity-model/
+├── src/spiraapp-mvp/
+│   ├── manifest.yaml (33 lines) - Config
+│   ├── widget.js (988 lines) - Main logic
+│   ├── settings.js (603 lines) - Admin UI
+│   ├── assessment-template.json (60 lines) - Schema
+│   ├── widget.css (embedded in widget.js)
+│   └── settings.css
+│
+└── docs/
+    ├── spiraapp-lessons-learned.md
+    └── SpiraApp_Information/
+        ├── SpiraApps-Overview.md
+        ├── SpiraApps-Manifest.md
+        ├── SpiraApps-Reference.md
+        ├── SpiraApps-Manager.md
+        └── SpiraRestAPI-v7.0-OpenAPI.json
+
+Backend Framework Definitions:
+├── backend/app/
+│   ├── models.py (Framework, FrameworkDomain, Gate, Question)
+│   ├── api/frameworks.py (REST endpoints)
+│   ├── api/assessments.py (Assessment endpoints)
+│   └── scripts/
+│       ├── seed_frameworks.py (MVP: 5 domains)
+│       ├── seed_dora_framework.py (DORA: 25 questions)
+│       └── seed_calms_framework.py (CALMS framework)
+│
+└── backend/app/core/
+    └── gates.py (GATES_DEFINITION: hardcoded questions)
+
+================================================================================
+IMPLEMENTATION ROADMAP
+================================================================================
+
+PHASE 1: Validate Current MVP (Week 1)
+✓ Test custom framework upload
+✓ Verify scoring calculations
+✓ Test offline functionality
+✓ Verify framework switching
+
+PHASE 2: Enhance Validation (Week 2-3)
+□ Improve error messages
+□ Add dry-run preview
+□ Support custom score ranges (0-3, 0-4, 0-10)
+□ Add assessment export
+
+PHASE 3: Backend Integration (Week 4-5)
+□ Add product setting: "Select Framework"
+□ Fetch from /api/frameworks/structure
+□ Implement fallback chain
+□ Add offline caching
+
+PHASE 4: Advanced Features (Week 6-8)
+□ Organization-level templates
+□ Per-product customization
+□ Assessment history export
+□ Comparison dashboard
+□ Framework versioning
+
+================================================================================
+CRITICAL CODE REFERENCES
+================================================================================
+
+Widget Initialization:
+├─ Line 416: spiraAppManager.registerEvent_windowLoad(initDmmWidget)
+├─ Line 420: initDmmWidget() function
+├─ Line 423: loadCustomFramework() called
+└─ Line 429: loadCustomFramework() implementation
+
+Custom Framework Loading:
+├─ Line 429: loadCustomFramework() - fetch from storage
+├─ Line 442: activeFramework = JSON.parse(data)
+├─ Line 456: Error handling (expected on first run)
+└─ Line 476: Clear logs on fresh load
+
+Form Rendering:
+├─ Line 631: renderAssessmentForm() - main entry point
+├─ Line 642: if (activeFramework && activeFramework.domains) - custom check
+├─ Line 645: Build from custom domains
+├─ Line 662: else - build from DMM_QUESTIONS
+└─ Line 686: Render with Mustache template
+
+Scoring:
+├─ Line 825: calculateScores(responses) - main scoring function
+├─ Line 836: Initialize domainTotals
+├─ Line 844: Tally scores per domain
+├─ Line 856: Calculate domain percentages
+├─ Line 860: Apply domain weights
+└─ Line 869: Map to maturity levels
+
+Storage:
+├─ Line 535: storageGetProduct() to fetch history
+├─ Line 922: storageUpdateProduct() to update
+├─ Line 936: storageInsertProduct() fallback
+└─ Line 956: Insert new assessment
+
+Settings (settings.js):
+├─ Line 217: storageGetProduct() to load current
+├─ Line 244: renderCurrentStatus() display
+├─ Line 319: processFile() - handle upload
+├─ Line 336: JSON.parse() - parse file
+├─ Line 339: validateFramework() - validate
+├─ Line 483: saveFramework() - persist
+└─ Line 501: Try update, fallback to insert
+
+Validation (settings.js):
+├─ Line 362: validateFramework() function
+├─ Line 366: Check meta.name
+├─ Line 375: Check domains array
+├─ Line 381: Check domain properties
+├─ Line 389: Check domain.weight and sum
+├─ Line 394: Check questions in domain
+└─ Line 398: Check question properties
+
+Templates:
+├─ Line 311: TPL_SUMMARY - summary view
+├─ Line 339: TPL_FORM - assessment form
+├─ Line 374: TPL_RESULTS - results view
+
+================================================================================
+RISKS & MITIGATIONS
+================================================================================
+
+Risk: Custom JSON is malformed
+├─ Impact: Assessment breaks
+└─ Mitigation: Strict validation, better error messages
+
+Risk: Framework file is large
+├─ Impact: Storage quota exceeded
+└─ Mitigation: Compress, archive old, set limit
+
+Risk: Backend API unavailable
+├─ Impact: Widget cannot load framework
+└─ Mitigation: Fallback chain, client-side caching
+
+Risk: Weights don't sum to 1.0
+├─ Impact: Scoring incorrect
+└─ Mitigation: Warn user, auto-normalize option
+
+Risk: Product admin breaks framework
+├─ Impact: All assessments fail
+└─ Mitigation: Version control, rollback
+
+Risk: User confusion (which framework?)
+├─ Impact: Wrong assessment
+└─ Mitigation: Show prominently, add description
+
+================================================================================
+RECOMMENDED NEXT STEPS
+================================================================================
+
+SHORT TERM (This Sprint):
+1. Complete Approach A implementation:
+   ✓ Framework upload already works
+   □ Add import/export functionality
+   □ Add framework preview/editing
+   
+2. Enhance documentation:
+   □ Create admin guide for creating frameworks
+   □ Document JSON schema clearly
+   □ Add example frameworks (mobile, finance, etc.)
+
+3. Improve error handling:
+   □ Better error messages for invalid JSON
+   □ Add dry-run before saving
+   □ Improve logging/debugging
+
+MEDIUM TERM (Next Quarter):
+1. Implement Approach C (hybrid):
+   □ Keep local upload working
+   □ Add backend framework selection
+   □ Implement fallback chain
+   
+2. Backend-driven features:
+   □ Framework management UI
+   □ Version control for frameworks
+   □ Framework sharing across products
+
+3. Enhanced reporting:
+   □ Export assessment results
+   □ Trend analysis
+   □ Comparison across assessments
+
+LONG TERM (Next 6 Months):
+1. Multi-tenant enhancements:
+   □ Organization-level templates
+   □ Per-product customization
+   □ Role-based access control
+
+2. Advanced analytics:
+   □ Benchmarking
+   □ Recommendations
+   □ Industry standards comparison
+
+3. Integration:
+   □ External tool integrations
+   □ Mobile app
+   □ API for third-party tools
+
+================================================================================
+DOCUMENT LOCATIONS
+================================================================================
+
+Comprehensive Research:
+📄 SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md
+   └─ 18 sections, 1,100+ lines, complete analysis
+
+Quick Reference:
+📄 SPIRAAPP_QUICK_REFERENCE.md
+   └─ Tables, checklists, debugging guide
+
+Architecture Diagrams:
+📄 SPIRAAPP_ARCHITECTURE_DIAGRAMS.md
+   └─ 10 detailed flow diagrams
+
+This Summary:
+📄 RESEARCH_SUMMARY.txt (this file)
+   └─ Quick overview, key findings, next steps
+
+Original Documentation:
+📁 docs/spiraapp-lessons-learned.md
+📁 docs/SpiraApp_Information/ (complete SpiraApp docs)
+
+================================================================================
+CONTACT & SUPPORT
+================================================================================
+
+For questions about this research:
+• Review SPIRAAPP_CONFIGURABLE_ASSESSMENTS_RESEARCH.md (main document)
+• Check SPIRAAPP_QUICK_REFERENCE.md for quick answers
+• See SPIRAAPP_ARCHITECTURE_DIAGRAMS.md for visual explanations
+• Consult docs/spiraapp-lessons-learned.md for API gotchas
+
+For SpiraApp API documentation:
+• docs/SpiraApp_Information/SpiraApps-Manager.md
+• docs/SpiraApp_Information/SpiraApps-Overview.md
+• docs/SpiraApp_Information/SpiraApps-Reference.md
+
+================================================================================
+RESEARCH COMPLETED: 2026-01-17
+DOCUMENTS CREATED: 3 comprehensive files + this summary
+TOTAL DOCUMENTATION: 2,500+ lines
+================================================================================
