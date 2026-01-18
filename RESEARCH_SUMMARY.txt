@@ -40,13 +40,13 @@ KEY FINDINGS
 ================================================================================
 
 CURRENT STATE:
-✅ Custom framework upload: Partially implemented
-✅ Framework validation: Working (settings.js lines 362-419)
-✅ Per-product storage: Working via SpiraApp storage API
-✅ Dynamic form rendering: Working (widget.js lines 642-660)
-✅ Custom scoring: Mostly working (domain weights supported)
-⚠️  Limited to 0-5 score scale (hardcoded)
-❌ Backend integration: Not implemented
+❌ Custom framework upload: NOT IMPLEMENTED (settings.js doesn't exist)
+❌ Framework validation: NOT IMPLEMENTED
+✅ Per-product storage: Pattern established in widget.js
+✅ Dynamic form rendering: Works (with hardcoded DMM_QUESTIONS)
+✅ Scoring logic: Works (needs parameterization for custom scales)
+⚠️  Score scale: Hardcoded to 0-5
+❌ Backend integration: NOT IMPLEMENTED
 
 ARCHITECTURE:
 • SpiraApp is PURE CLIENT-SIDE (JavaScript IIFE in Spira dashboard)
@@ -54,6 +54,19 @@ ARCHITECTURE:
 • Storage: Per-product key/value pairs via spiraAppManager API
 • No external imports/dependencies allowed
 • Fully offline-capable in current MVP form
+
+BACKEND INTEGRATION CONSTRAINT:
+• SpiraApps CANNOT make direct API calls (sandboxed)
+• Must use spiraAppManager.executeRest() (server-proxied)
+• Requires manifest settings for API credentials:
+  settings:
+    - id: backendUrl
+      caption: Backend API URL
+      type: String
+    - id: apiKey
+      caption: API Key
+      type: String
+      isSecure: true
 
 ASSESSMENT FRAMEWORK STRUCTURE:
 Framework
@@ -93,19 +106,23 @@ GOTCHAS (From lessons-learned.md):
 2. Container ID is LOWERCASE (case-sensitivity fix needed)
 3. IIFE wrapping prevents variable collision
 4. "Key not found" 500 error on first run is expected
+5. Manifest version: decimal only (1.0, not 1.0.0)
+6. Manifest name: NO SPACES (use camelCase)
+7. Use window.DMM_CONTAINER_ID pattern for container discovery
 
 ================================================================================
 IMPLEMENTATION APPROACHES
 ================================================================================
 
-APPROACH A: Local Custom Framework (Current MVP)
-├─ Product admin uploads JSON file
+APPROACH A: Local Custom Framework (NOT YET IMPLEMENTED)
+├─ Product admin uploads JSON file via settings.js
 ├─ Validated before saving to storage
 ├─ Works entirely offline
 ├─ Per-product configuration
 ├─ Manual upload required per product
-✅ Pros: Works, offline, simple
+✅ Pros: Offline, simple, per-product isolation
 ❌ Cons: Manual, no sharing, no versioning
+⚠️  Status: settings.js needs to be created
 
 APPROACH B: Backend-Driven Framework Selection
 ├─ Admin selects from dropdown
@@ -217,12 +234,11 @@ FILE STRUCTURE
 Core SpiraApp Files:
 /home/jim/projects/devops-maturity-model/
 ├── src/spiraapp-mvp/
-│   ├── manifest.yaml (33 lines) - Config
-│   ├── widget.js (988 lines) - Main logic
-│   ├── settings.js (603 lines) - Admin UI
-│   ├── assessment-template.json (60 lines) - Schema
-│   ├── widget.css (embedded in widget.js)
-│   └── settings.css
+│   ├── manifest.yaml - Config
+│   ├── widget.js - Main logic (842 lines)
+│   ├── widget.css - Styles
+│   ├── README.md - Documentation
+│   └── [settings.js - NEEDS TO BE CREATED]
 │
 └── docs/
     ├── spiraapp-lessons-learned.md
@@ -250,25 +266,29 @@ Backend Framework Definitions:
 IMPLEMENTATION ROADMAP
 ================================================================================
 
-PHASE 1: Validate Current MVP (Week 1)
-✓ Test custom framework upload
-✓ Verify scoring calculations
-✓ Test offline functionality
-✓ Verify framework switching
+PHASE 1: Build Custom Framework Foundation
+□ Create settings.js with admin UI
+□ Update manifest.yaml to declare settings page
+□ Implement framework upload + validation
+□ Add custom_framework storage key handling
+□ Modify widget.js to load custom framework
+□ Add fallback to DMM_QUESTIONS if no custom framework
+□ Test end-to-end
 
-PHASE 2: Enhance Validation (Week 2-3)
+PHASE 2: Enhance Validation + Testing
 □ Improve error messages
 □ Add dry-run preview
 □ Support custom score ranges (0-3, 0-4, 0-10)
 □ Add assessment export
 
-PHASE 3: Backend Integration (Week 4-5)
+PHASE 3: Backend Integration
+□ Add manifest settings for backend URL/API key
 □ Add product setting: "Select Framework"
-□ Fetch from /api/frameworks/structure
+□ Fetch from /api/frameworks/structure via executeRest
 □ Implement fallback chain
 □ Add offline caching
 
-PHASE 4: Advanced Features (Week 6-8)
+PHASE 4: Advanced Features
 □ Organization-level templates
 □ Per-product customization
 □ Assessment history export
@@ -276,64 +296,46 @@ PHASE 4: Advanced Features (Week 6-8)
 □ Framework versioning
 
 ================================================================================
-CRITICAL CODE REFERENCES
+CRITICAL CODE REFERENCES (widget.js - actual line numbers)
 ================================================================================
 
 Widget Initialization:
-├─ Line 416: spiraAppManager.registerEvent_windowLoad(initDmmWidget)
-├─ Line 420: initDmmWidget() function
-├─ Line 423: loadCustomFramework() called
-└─ Line 429: loadCustomFramework() implementation
+├─ Line 412: spiraAppManager.registerEvent_windowLoad(initDmmWidget)
+├─ Line 414: spiraAppManager.registerEvent_dashboardUpdated(initDmmWidget)
+├─ Line 416: initDmmWidget() function
+└─ Line 432: Clear debug logs on fresh load
 
-Custom Framework Loading:
-├─ Line 429: loadCustomFramework() - fetch from storage
-├─ Line 442: activeFramework = JSON.parse(data)
-├─ Line 456: Error handling (expected on first run)
-└─ Line 476: Clear logs on fresh load
+Data Loading:
+├─ Line 435: loadDmmHistory() - fetch assessment history
+├─ Line 491: storageGetProduct() call with 6-param signature
+└─ Line 509-516: Error handling (expected on first run)
 
 Form Rendering:
-├─ Line 631: renderAssessmentForm() - main entry point
-├─ Line 642: if (activeFramework && activeFramework.domains) - custom check
-├─ Line 645: Build from custom domains
-├─ Line 662: else - build from DMM_QUESTIONS
-└─ Line 686: Render with Mustache template
+├─ Line 587: renderAssessmentForm() - main entry point
+├─ Line 594-608: Domain grouping from DMM_QUESTIONS (hardcoded)
+└─ Line 612: Render with Mustache template
 
 Scoring:
-├─ Line 825: calculateScores(responses) - main scoring function
-├─ Line 836: Initialize domainTotals
-├─ Line 844: Tally scores per domain
-├─ Line 856: Calculate domain percentages
-├─ Line 860: Apply domain weights
-└─ Line 869: Map to maturity levels
+├─ Line 702: calculateScores(responses) - main scoring function
+├─ Line 705-709: Initialize domainTotals
+├─ Line 711-717: Tally scores per domain
+├─ Line 719-721: Calculate domain percentages
+├─ Line 725-727: Apply domain weights
+└─ Line 730-735: Map to maturity levels
 
 Storage:
-├─ Line 535: storageGetProduct() to fetch history
-├─ Line 922: storageUpdateProduct() to update
-├─ Line 936: storageInsertProduct() fallback
-└─ Line 956: Insert new assessment
-
-Settings (settings.js):
-├─ Line 217: storageGetProduct() to load current
-├─ Line 244: renderCurrentStatus() display
-├─ Line 319: processFile() - handle upload
-├─ Line 336: JSON.parse() - parse file
-├─ Line 339: validateFramework() - validate
-├─ Line 483: saveFramework() - persist
-└─ Line 501: Try update, fallback to insert
-
-Validation (settings.js):
-├─ Line 362: validateFramework() function
-├─ Line 366: Check meta.name
-├─ Line 375: Check domains array
-├─ Line 381: Check domain properties
-├─ Line 389: Check domain.weight and sum
-├─ Line 394: Check questions in domain
-└─ Line 398: Check question properties
+├─ Line 760: storageGetProduct() to fetch existing
+├─ Line 776: storageUpdateProduct() to update
+├─ Line 790: storageInsertProduct() fallback
+└─ Line 807-821: Insert new on first save
 
 Templates:
-├─ Line 311: TPL_SUMMARY - summary view
-├─ Line 339: TPL_FORM - assessment form
-├─ Line 374: TPL_RESULTS - results view
+├─ Line 307: TPL_SUMMARY - summary view
+├─ Line 335: TPL_FORM - assessment form
+├─ Line 370: TPL_RESULTS - results view
+
+Settings (settings.js):
+└─ DOES NOT EXIST - needs to be created
 
 ================================================================================
 RISKS & MITIGATIONS
@@ -367,12 +369,13 @@ Risk: User confusion (which framework?)
 RECOMMENDED NEXT STEPS
 ================================================================================
 
-SHORT TERM (This Sprint):
-1. Complete Approach A implementation:
-   ✓ Framework upload already works
-   □ Add import/export functionality
-   □ Add framework preview/editing
-   
+IMMEDIATE PRIORITY:
+1. Build Approach A foundation:
+   □ Create settings.js with admin UI
+   □ Update manifest.yaml for settings page
+   □ Add framework loading to widget.js
+   □ Add fallback to DMM_QUESTIONS
+
 2. Enhance documentation:
    □ Create admin guide for creating frameworks
    □ Document JSON schema clearly
@@ -383,12 +386,12 @@ SHORT TERM (This Sprint):
    □ Add dry-run before saving
    □ Improve logging/debugging
 
-MEDIUM TERM (Next Quarter):
+SUBSEQUENT PRIORITIES:
 1. Implement Approach C (hybrid):
    □ Keep local upload working
-   □ Add backend framework selection
+   □ Add backend framework selection via executeRest
    □ Implement fallback chain
-   
+
 2. Backend-driven features:
    □ Framework management UI
    □ Version control for frameworks
@@ -399,7 +402,7 @@ MEDIUM TERM (Next Quarter):
    □ Trend analysis
    □ Comparison across assessments
 
-LONG TERM (Next 6 Months):
+FUTURE ENHANCEMENTS:
 1. Multi-tenant enhancements:
    □ Organization-level templates
    □ Per-product customization
