@@ -4,7 +4,10 @@ from datetime import datetime
 from typing import List
 from uuid import UUID
 
+from io import BytesIO
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app import schemas
@@ -299,3 +302,54 @@ async def get_assessment_report(
     report = scoring.generate_report(db, assessment, gate_responses, domain_scores)
 
     return report
+
+
+@router.get("/{assessment_id}/report/pdf")
+async def download_pdf_report(
+    assessment_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Download assessment report as PDF"""
+    from app.utils.pdf_generator import PDFReportGenerator
+
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found")
+
+    if assessment.assessor_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    if assessment.status != AssessmentStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Assessment must be completed to generate PDF report",
+        )
+
+    # Get gate responses and domain scores
+    gate_responses = db.query(GateResponse).filter(GateResponse.assessment_id == assessment_id).all()
+    domain_scores = db.query(DomainScore).filter(DomainScore.assessment_id == assessment_id).all()
+
+    # Generate report data
+    report = scoring.generate_report(db, assessment, gate_responses, domain_scores)
+
+    # Convert Pydantic model to dict for PDF generator
+    report_dict = report.model_dump()
+
+    # Generate PDF
+    pdf_generator = PDFReportGenerator()
+    pdf_bytes = pdf_generator.generate(report_dict)
+
+    # Create safe filename
+    safe_team_name = "".join(c for c in assessment.team_name if c.isalnum() or c in (' ', '-', '_')).strip()
+    safe_team_name = safe_team_name.replace(' ', '-')
+    filename = f"assessment-{safe_team_name}-{assessment_id}.pdf"
+
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
