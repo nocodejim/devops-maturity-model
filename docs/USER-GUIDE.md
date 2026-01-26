@@ -286,6 +286,29 @@ Your progress is automatically saved as you answer questions. You can:
 
 ## Understanding Your Results
 
+### Downloading Your Report
+
+After completing an assessment, you can download a professional PDF report to share with stakeholders:
+
+1. **Navigate to Results Page**
+   - Click on a completed assessment from your dashboard
+   - Or complete an assessment and view results
+
+2. **Download PDF Report**
+   - Click the green "Download PDF" button in the results header
+   - The PDF will be generated and automatically downloaded
+   - File is named `assessment-{team-name}.pdf`
+
+3. **PDF Report Contents**
+   - Executive summary with overall score and maturity level
+   - Domain breakdown table with scores and progress indicators
+   - Gate performance details
+   - Top strengths section
+   - Areas for improvement section
+   - Prioritized recommendations
+
+**Note:** PDF reports can only be generated for completed assessments. The download button will show a loading spinner while the report is being generated.
+
 ### Assessment Report Components
 
 **Overall Maturity Score**
@@ -865,7 +888,7 @@ A: Modern versions of Chrome, Firefox, Edge, and Safari are supported. For best 
 A: Yes, all assessment data is stored securely and is only accessible to authorized users.
 
 **Q: Can I export my assessment results?**
-A: Assessment reports can be viewed in the web interface. Contact your administrator about export options if needed.
+A: Yes! Click the "Download PDF" button on any completed assessment's results page to download a professional PDF report suitable for sharing with stakeholders.
 
 ### Improvement Questions
 
@@ -927,7 +950,12 @@ Use your assessment results to understand how your team performs on these key me
 
 ## Version History
 
-**Version 1.2.1** (Current)
+**Version 1.3.0** (Current)
+- Added PDF report generation and download functionality
+- Professional PDF reports with executive summary, domain breakdown, and recommendations
+- Download button on Results page for completed assessments
+
+**Version 1.2.1**
 - Updated port configurations for corporate environment compatibility
 - Enhanced CORS configuration for network access
 - Improved documentation and user guidance
