@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { assessmentApi } from '@/services/api'
+import { RadarChart } from '@/components/RadarChart'
 
 const MATURITY_LEVELS = {
   1: { name: 'Initial', description: 'Ad-hoc, manual processes', color: 'red' },
@@ -148,6 +149,19 @@ export function ResultsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Radar Chart */}
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <RadarChart
+            title="Domain Score Overview"
+            data={report.domain_breakdown.map(d => ({
+              domain: d.domain.length > 25 ? d.domain.substring(0, 22) + '...' : d.domain,
+              score: d.score,
+              fullMark: 100,
+            }))}
+            height={400}
+          />
         </div>
 
         {/* Domain Breakdown */}
