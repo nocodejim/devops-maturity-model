@@ -36,6 +36,8 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    # Entrypoint handles: wait for DB, run migrations, init DB (seed user/frameworks)
+    # CMD is passed as arguments to the entrypoint
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:

@@ -162,6 +162,35 @@ export const assessmentApi = {
     return response.data
   },
 
+  downloadPdfReport: async (id: string, teamName: string): Promise<void> => {
+    console.log('[API] Downloading PDF report for assessment:', id)
+    try {
+      const response = await api.get(`/assessments/${id}/report/pdf`, {
+        responseType: 'blob',
+      })
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+
+      // Create safe filename
+      const safeTeamName = teamName.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '-')
+      link.setAttribute('download', `assessment-${safeTeamName}.pdf`)
+
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      console.log('[API] PDF download successful')
+    } catch (error) {
+      console.error('[API] PDF download failed:', error)
+      throw error
+    }
+  },
+
   delete: async (id: string): Promise<void> => {
     await api.delete(`/assessments/${id}`)
   },

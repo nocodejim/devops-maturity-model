@@ -20,17 +20,29 @@ def seed_calms_framework():
     Seed CALMS DevOps Framework - Lightweight organizational readiness assessment
 
     Structure:
-    - 5 Domains with weighted importance
+    - 5 Domains with weighted importance (Culture, Automation, Lean, Measurement, Sharing)
     - 1 Gate per domain (to satisfy system requirements)
-    - 28 Questions total (5-6 per domain)
+    - 28 Questions total (6 Culture, 6 Automation, 5 Lean, 6 Measurement, 5 Sharing)
     - 90-minute completion time
+    - Domain weights: Culture 25%, Automation 25%, Lean 15%, Measurement 20%, Sharing 15%
+
+    Based on Jez Humble's CALMS Model:
+    - Culture: Collaborative mindset, blameless culture, shared ownership
+    - Automation: CI/CD, infrastructure as code, testing automation
+    - Lean: Continuous improvement, waste reduction, experimentation
+    - Measurement: Metrics collection, observability, data-driven decisions
+    - Sharing: Knowledge management, documentation, cross-team collaboration
+
+    This assessment evaluates organizational DevOps readiness across all five pillars.
+    Each question uses a 0-5 maturity scale (None/Unknown → Optimizing).
     """
     db = SessionLocal()
     try:
         # Check if CALMS Framework already exists
         existing = db.query(Framework).filter(Framework.name == "CALMS DevOps Framework").first()
         if existing:
-            print("CALMS Framework already exists. Delete it first to recreate.")
+            print("⚠️  CALMS Framework already exists. Skipping seeding.")
+            print("    To recreate: DELETE from frameworks WHERE name = 'CALMS DevOps Framework'")
             return
 
         # Create Framework

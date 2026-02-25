@@ -1,148 +1,240 @@
 # DevOps Maturity Assessment Platform
 
-Internal tool for assessing team DevOps maturity and readiness, focusing on the highest-impact practices that directly affect software delivery quality and velocity.
+A comprehensive suite for assessing team DevOps maturity and readiness. This repository contains **two distinct applications** serving different use cases:
 
-## Overview
+| Application | Purpose | Deployment |
+|-------------|---------|------------|
+| **Standalone Platform** | Full-featured consulting/scoring tool | Docker containers |
+| **SpiraApp Widget** | Embedded assessment widget for Spira ALM | SpiraApp package |
 
-This MVP focuses on **20 highest-impact questions** covering three core domains:
-1. **Source Control & Development Practices** (7 questions) - 35% weight
-2. **Security & Compliance** (6 questions) - 30% weight
-3. **CI/CD & Deployment** (7 questions) - 35% weight
+## Quick Navigation
+
+- [Standalone Platform](#standalone-platform) - Full-stack web application
+- [SpiraApp Widget](#spiraapp-widget) - Embedded Spira dashboard widget
+- [Assessment Frameworks](#assessment-frameworks) - Available frameworks
+- [Documentation](#documentation) - Guides and references
+
+---
+
+## Standalone Platform
+
+A full-stack web application for comprehensive DevOps maturity assessments, ideal for consulting engagements and detailed organizational assessments.
 
 ### Features
 
-- Fast assessment completion (~15-20 minutes)
-- Clear scoring and maturity levels (1-5)
-- Actionable recommendations
-- Track progress over time
-- Simple internal authentication
+- **Multiple Assessment Frameworks**: MVP (40 questions), CALMS (28 questions), DORA (25 questions)
+- **User Management**: Role-based access (admin/assessor/viewer)
+- **Organization Tracking**: Group assessments by organization
+- **Detailed Analytics**: Domain breakdown, strengths/gaps analysis, recommendations
+- **Assessment History**: Track progress over time
+- **API Access**: RESTful API with OpenAPI documentation
 
-## Technology Stack
+### Technology Stack
 
 **Backend:**
 - Python 3.11+ with FastAPI
 - PostgreSQL 15+
-- SQLAlchemy ORM
+- SQLAlchemy ORM with Alembic migrations
 - JWT Authentication
-- Poetry for dependency management
 
 **Frontend:**
 - React 18 + TypeScript
 - Vite build tool
 - Tailwind CSS
 - React Query for data fetching
-- React Hook Form + Zod validation
-- Recharts for visualizations
 
 **Infrastructure:**
 - Docker + Docker Compose
-- Containerized development environment
+- Production-ready images on Docker Hub
 
-## Quick Start
-
-### Deployment with Docker Hub Images
-
-**Want to deploy the application without the source code?**
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for instructions on running the application using pre-built Docker images from Docker Hub.
-
-### Development Setup
+### Quick Start
 
 #### Prerequisites
-
 - Docker Desktop (with WSL2 support on Windows)
 - Git
 
 #### Setup & Run
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd devops-maturity-model
-   ```
-
-2. **Start all services**
-   ```bash
-   docker-compose up -d
-   ```
-
-   This will start:
-   - PostgreSQL database on port 8682
-   - Backend API on port 8680
-   - Frontend app on port 8673
-
-3. **Access the application**
-   - Frontend: http://localhost:8673
-   - Backend API: http://localhost:8680
-   - API Docs: http://localhost:8680/docs
-
-4. **Initialize the database** (first time only)
-   ```bash
-   # Run migrations inside the backend container
-   docker-compose exec backend alembic upgrade head
-
-   # Create an admin user (optional - for development)
-   docker-compose exec backend python -c "
-from app.database import SessionLocal
-from app.models import User, UserRole
-from app.core.security import get_password_hash
-
-db = SessionLocal()
-existing = db.query(User).filter(User.email == 'admin@example.com').first()
-if not existing:
-    admin = User(
-        email='admin@example.com',
-        full_name='Admin User',
-        hashed_password=get_password_hash('admin123'),
-        role=UserRole.ADMIN
-    )
-    db.add(admin)
-    db.commit()
-    print('Admin user created: admin@example.com / admin123')
-else:
-    print('Admin user already exists')
-db.close()
-"
-   ```
-   **Note**: You may see a bcrypt warning - this is harmless and can be ignored.
-   
-### Stop Services
-
 ```bash
-docker-compose down
+# Clone the repository
+git clone <repository-url>
+cd devops-maturity-model
+
+# Start all services
+docker-compose up -d
 ```
 
-To remove all data (including database):
+This starts:
+- PostgreSQL database on port 8682
+- Backend API on port 8680
+- Frontend app on port 8673
+
+#### Access the Application
+
+- **Frontend**: http://localhost:8673
+- **Backend API**: http://localhost:8680
+- **API Docs**: http://localhost:8680/docs
+
+#### First-Time Setup
+
+The database initializes automatically on first startup. A default admin user is created:
+- **Email**: admin@example.com
+- **Password**: admin123
+
+#### Stop Services
+
 ```bash
+# Stop containers
+docker-compose down
+
+# Stop and remove data
 docker-compose down -v
 ```
+
+### Deployment with Docker Hub Images
+
+For production deployment without source code, see **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+---
+
+## SpiraApp Widget
+
+A lightweight client-side widget that runs inside **SpiraPlan**, **SpiraTeam**, or **SpiraTest**. Provides quick DevOps maturity assessments without leaving the ALM environment.
+
+### Features
+
+- **Embedded Experience**: Runs as a Product Dashboard widget
+- **No External Dependencies**: Pure client-side, uses Spira's storage
+- **Default Assessment**: 20 questions across 3 domains
+- **Custom Frameworks**: Upload JSON frameworks (CALMS, custom assessments)
+- **Assessment History**: Per-product tracking
+
+### Quick Start
+
+#### Build the SpiraApp
+
+```bash
+./build_spiraapp.sh
+```
+
+This creates a `.spiraapp` package in the `dist/` folder.
+
+#### Install in Spira
+
+1. **System Admin**: Upload `.spiraapp` file in System Admin > SpiraApps
+2. **Enable**: Toggle the power button to enable system-wide
+3. **Product Admin**: Enable for specific products in Product Admin > SpiraApps
+4. **Dashboard**: Add the widget via "Add/Remove Items" on Product Home
+
+### SpiraApp Source Files
+
+```
+src/spiraapp-mvp/
+├── manifest.yaml          # SpiraApp configuration
+├── widget.js              # Main application code
+├── widget.css             # Widget styles
+├── settings.js            # Settings page code
+├── calms-framework.json   # CALMS assessment (28 questions)
+└── example-framework.json # Template for custom frameworks
+```
+
+---
+
+## Assessment Frameworks
+
+### Available Frameworks
+
+| Framework | Questions | Domains | Best For |
+|-----------|-----------|---------|----------|
+| **DevOps MVP** | 40 | 5 | Comprehensive technical assessment |
+| **CALMS** | 28 | 5 | Organizational readiness |
+| **DORA Metrics** | 25 | 5 | Software delivery performance |
+| **SpiraApp Default** | 20 | 3 | Quick embedded assessment |
+
+### Scoring System
+
+All frameworks use a 0-5 scoring scale:
+
+| Score | Level | Description |
+|-------|-------|-------------|
+| 0 | None | Practice not implemented |
+| 1 | Initial | Ad-hoc, inconsistent |
+| 2 | Developing | Basic implementation |
+| 3 | Defined | Standardized, documented |
+| 4 | Managed | Comprehensive automation |
+| 5 | Optimizing | Industry-leading practices |
+
+### Maturity Levels
+
+| Level | Score Range | Description |
+|-------|-------------|-------------|
+| Level 1: Initial | 0-20% | Ad-hoc, manual processes |
+| Level 2: Developing | 21-40% | Some repeatable processes |
+| Level 3: Defined | 41-60% | Standardized processes |
+| Level 4: Managed | 61-80% | Measured and controlled |
+| Level 5: Optimizing | 81-100% | Continuous improvement |
+
+---
 
 ## Project Structure
 
 ```
 devops-maturity-model/
-├── backend/              # FastAPI backend
+├── backend/                    # FastAPI backend
 │   ├── app/
-│   │   ├── api/         # API endpoints
-│   │   ├── core/        # Business logic (security, scoring)
-│   │   ├── models.py    # Database models
-│   │   ├── schemas.py   # Pydantic schemas
-│   │   └── main.py      # FastAPI app
-│   ├── alembic/         # Database migrations
-│   ├── tests/           # Backend tests
+│   │   ├── api/               # API endpoints
+│   │   ├── core/              # Business logic (security, scoring)
+│   │   ├── scripts/           # Seed scripts for frameworks
+│   │   ├── models.py          # Database models
+│   │   └── schemas.py         # Pydantic schemas
+│   ├── alembic/               # Database migrations
 │   └── Dockerfile
-├── frontend/            # React frontend
+├── frontend/                   # React frontend
 │   ├── src/
-│   │   ├── components/  # React components
-│   │   ├── pages/       # Page components
-│   │   ├── services/    # API client
-│   │   └── types/       # TypeScript types
+│   │   ├── components/        # React components
+│   │   ├── pages/             # Page components
+│   │   ├── services/          # API client
+│   │   └── types/             # TypeScript types
 │   └── Dockerfile
-├── docs/                # Project documentation
-│   ├── progress-tracker.md
-│   └── lessons-learned.md
-├── docker-compose.yml   # Docker services configuration
-└── README.md
+├── src/spiraapp-mvp/          # SpiraApp widget source
+│   ├── manifest.yaml          # SpiraApp manifest
+│   ├── widget.js              # Widget application
+│   └── calms-framework.json   # CALMS framework
+├── docs/                       # Documentation
+│   ├── USER-GUIDE.md          # Standalone platform guide
+│   ├── USER-GUIDE-SPIRAAPP.md # SpiraApp widget guide
+│   ├── SpiraApp_Information/  # SpiraApp development docs
+│   ├── progress-tracker.md    # Development progress
+│   └── lessons-learned.md     # Known issues and solutions
+├── docker-compose.yml          # Development configuration
+├── docker-compose.deploy.yml   # Production configuration
+├── build_spiraapp.sh          # SpiraApp build script
+└── DEPLOYMENT.md              # Production deployment guide
 ```
+
+---
+
+## Documentation
+
+### User Guides
+
+- **[Standalone Platform User Guide](docs/USER-GUIDE.md)** - Complete guide for the web application
+- **[SpiraApp Widget User Guide](docs/USER-GUIDE-SPIRAAPP.md)** - Guide for the embedded widget
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
+
+### Technical Documentation
+
+- **[API Documentation](http://localhost:8680/docs)** - Interactive Swagger UI (when running)
+- **[Progress Tracker](docs/progress-tracker.md)** - Development status and milestones
+- **[Lessons Learned](docs/lessons-learned.md)** - Known issues and solutions
+
+### SpiraApp Development
+
+- **[SpiraApps Overview](docs/SpiraApp_Information/SpiraApps-Overview.md)** - How SpiraApps work
+- **[SpiraApps Tutorial](docs/SpiraApp_Information/SpiraApps-Tutorial.md)** - Building SpiraApps
+- **[SpiraApps Manifest](docs/SpiraApp_Information/SpiraApps-Manifest.md)** - Manifest reference
+
+---
 
 ## Development
 
@@ -161,11 +253,8 @@ alembic revision --autogenerate -m "description"
 # Apply migrations
 alembic upgrade head
 
-# Format code
-black .
-
-# Lint code
-ruff check .
+# Seed a framework
+python -m app.scripts.seed_calms_framework
 ```
 
 ### Frontend Development
@@ -174,14 +263,20 @@ ruff check .
 # Enter frontend container
 docker-compose exec frontend sh
 
-# Install new dependency
-npm install <package-name>
+# Type check
+npm run build
 
 # Run linter
 npm run lint
+```
 
-# Format code
-npm run format
+### SpiraApp Development
+
+```bash
+# Build SpiraApp package
+./build_spiraapp.sh
+
+# Output: dist/DevOpsMaturityAssessment.spiraapp
 ```
 
 ### View Logs
@@ -193,50 +288,46 @@ docker-compose logs -f
 # Specific service
 docker-compose logs -f backend
 docker-compose logs -f frontend
-docker-compose logs -f postgres
 ```
 
-## API Documentation
+---
 
-Once the backend is running, visit:
-- **Swagger UI**: http://localhost:8680/docs
-- **ReDoc**: http://localhost:8680/redoc
+## API Reference
 
 ### Key Endpoints
 
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user
-- `GET /api/assessments/` - List assessments
-- `POST /api/assessments/` - Create assessment
-- `POST /api/assessments/{id}/responses` - Save responses
-- `POST /api/assessments/{id}/submit` - Submit for scoring
-- `GET /api/assessments/{id}/report` - Get report
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/login` | POST | User authentication |
+| `/api/auth/me` | GET | Current user info |
+| `/api/frameworks/` | GET | List assessment frameworks |
+| `/api/frameworks/{id}/structure` | GET | Framework with all questions |
+| `/api/assessments/` | GET/POST | List/create assessments |
+| `/api/assessments/{id}/responses` | POST | Save question responses |
+| `/api/assessments/{id}/submit` | POST | Submit for scoring |
+| `/api/assessments/{id}/report` | GET | Get assessment report |
 
-## Scoring System
+Full API documentation available at http://localhost:8680/docs when running.
 
-### Maturity Levels
+---
 
-1. **Level 1: Initial** (0-20%) - Ad-hoc, manual processes
-2. **Level 2: Developing** (21-40%) - Some automation, inconsistent
-3. **Level 3: Defined** (41-60%) - Standardized, documented
-4. **Level 4: Managed** (61-80%) - Metrics-driven, comprehensive automation
-5. **Level 5: Optimizing** (81-100%) - Industry-leading, continuous improvement
+## Environment Variables
 
-### Calculation
+### Backend
 
-- Each question scored 0-5 points
-- Domain score = (total points / max possible) × 100
-- Overall score = weighted average of domain scores
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | (see docker-compose) |
+| `SECRET_KEY` | JWT secret key | (generated) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | 30 |
 
-## Documentation
+### Frontend
 
-- **User Guide**: `docs/USER-GUIDE.md` - Complete guide for users taking assessments
-- **Deployment Guide**: `DEPLOYMENT.md` - Deploy using Docker Hub images
-- **Spec Document**: `devops-maturity-spec-MVP.md`
-- **Progress Tracker**: `docs/progress-tracker.md`
-- **Lessons Learned**: `docs/lessons-learned.md`
-- **Backend README**: `backend/README.md`
-- **Frontend README**: `frontend/README.md`
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API URL | http://localhost:8680 |
+
+---
 
 ## Troubleshooting
 
@@ -253,7 +344,7 @@ docker-compose restart postgres
 docker-compose logs postgres
 ```
 
-### Backend Won't Start
+### Backend Issues
 
 ```bash
 # Rebuild backend container
@@ -264,56 +355,44 @@ docker-compose up -d backend
 docker-compose logs backend
 ```
 
-### Frontend Hot Reload Not Working
+### Frontend Issues
 
 ```bash
-# Restart frontend container
-docker-compose restart frontend
-
-# If issue persists, rebuild
+# Rebuild frontend container
 docker-compose build frontend
 docker-compose up -d frontend
+
+# Check logs
+docker-compose logs frontend
 ```
 
-## Environment Variables
+### SpiraApp Issues
 
-### Backend (.env)
-- `DATABASE_URL` - PostgreSQL connection string
-- `SECRET_KEY` - JWT secret key
-- `ACCESS_TOKEN_EXPIRE_MINUTES` - Token expiration
+See the [SpiraApp User Guide troubleshooting section](docs/USER-GUIDE-SPIRAAPP.md#troubleshooting).
 
-### Frontend (.env)
-- `VITE_API_URL` - Backend API URL
+---
 
-See `.env.example` files in backend/ and frontend/ directories.
+## Network Access
 
-## Development Roadmap
+For accessing from other devices on your network:
 
-See `docs/progress-tracker.md` for detailed development status.
+| Service | Local | Network |
+|---------|-------|---------|
+| Frontend | http://localhost:8673 | http://YOUR-IP:8673 |
+| Backend | http://localhost:8680 | http://YOUR-IP:8680 |
+| Database | localhost:8682 | YOUR-IP:8682 |
 
-### Current Phase: Phase 1 - Foundation
-- [x] Project structure setup
-- [x] Docker configuration
-- [x] Backend API skeleton
-- [x] Frontend structure
-- [ ] Database migrations
-- [ ] Authentication implementation
-- [ ] Basic CRUD operations
-
-### Next: Phase 2 - Core Assessment
-- Assessment form implementation
-- Scoring engine
-- Response persistence
-
-### Future: Phase 3-4
-- Results visualization
-- PDF reports
-- Analytics
-- Polish & deployment
+---
 
 ## Contributing
 
-This is an internal tool. For questions or issues, contact the platform team.
+This is an internal tool. For questions or issues:
+
+1. Check the [Lessons Learned](docs/lessons-learned.md) document
+2. Review existing [documentation](#documentation)
+3. Contact the platform team
+
+---
 
 ## License
 

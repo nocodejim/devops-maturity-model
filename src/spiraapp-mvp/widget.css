@@ -1,139 +1,422 @@
-/* DevOps Maturity Model Widget Styles */
+/* DevOps Maturity Model Widget - Design System v1.0 */
+
+/* === BASE === */
 .dmm-widget {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  padding: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #1F2937;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Summary View */
-.dmm-summary-card {
-  text-align: center;
-  padding: 20px;
-  background: #f9f9f9;
+.dmm-widget * { box-sizing: border-box; }
+
+/* === CARDS === */
+.dmm-card {
+  background: #fff;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 24px;
+  text-align: center;
 }
 
-.dmm-score-large {
-  font-size: 3em;
-  font-weight: bold;
-  color: #007bff;
-  margin: 10px 0;
+/* === TYPOGRAPHY === */
+.dmm-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 8px 0 4px;
+  color: #111827;
 }
 
+.dmm-meta {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0 0 16px;
+}
+
+.dmm-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6B7280;
+  margin: 20px 0 12px;
+  text-align: left;
+}
+
+/* === GAUGE === */
+.dmm-gauge-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+}
+
+.dmm-gauge-container svg text {
+  font-family: inherit;
+}
+
+/* === LEVEL BADGES === */
 .dmm-level-badge {
   display: inline-block;
-  padding: 5px 15px;
-  border-radius: 15px;
-  background: #e9ecef;
-  color: #495057;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.dmm-level-1 { background-color: #ffebee; color: #c62828; }
-.dmm-level-2 { background-color: #fff3e0; color: #ef6c00; }
-.dmm-level-3 { background-color: #fffde7; color: #f9a825; }
-.dmm-level-4 { background-color: #e8f5e9; color: #2e7d32; }
-.dmm-level-5 { background-color: #e3f2fd; color: #1565c0; }
-
-.dmm-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.dmm-btn:hover {
-  background-color: #0056b3;
-}
-
-/* Assessment Form */
-.dmm-form-container {
-  max-height: 500px;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-
-.dmm-domain-section {
-  margin-bottom: 25px;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 15px;
-}
-
-.dmm-domain-title {
-  font-size: 1.2em;
-  color: #495057;
-  margin-bottom: 15px;
-  border-left: 4px solid #007bff;
-  padding-left: 10px;
-}
-
-.dmm-question-card {
-  background: white;
-  border: 1px solid #e9ecef;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 6px;
-}
-
-.dmm-question-text {
+  padding: 3px 14px;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.dmm-options label {
-  display: block;
-  margin-bottom: 8px;
-  cursor: pointer;
+.dmm-level-1 { background: #FEF2F2; color: #DC2626; }
+.dmm-level-2 { background: #FFF7ED; color: #EA580C; }
+.dmm-level-3 { background: #FEFCE8; color: #CA8A04; }
+.dmm-level-4 { background: #F0FDF4; color: #16A34A; }
+.dmm-level-5 { background: #EFF6FF; color: #2563EB; }
+
+.dmm-badge-sm {
+  padding: 2px 10px;
+  font-size: 11px;
 }
 
-.dmm-options input[type="radio"] {
-  margin-right: 10px;
-}
-
-/* Results View */
-.dmm-results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.dmm-result-card {
-  background: white;
-  padding: 15px;
+/* === BUTTONS === */
+.dmm-btn {
+  display: inline-block;
+  padding: 8px 20px;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  background: #2563EB;
+  color: #fff;
+  text-decoration: none;
 }
 
-.dmm-radar-chart-placeholder {
-  width: 100%;
-  height: 200px;
-  background: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #adb5bd;
-  margin-bottom: 20px;
+.dmm-btn:hover { background: #1D4ED8; }
+.dmm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dmm-btn-secondary { background: #6B7280; }
+.dmm-btn-secondary:hover { background: #4B5563; }
+
+.dmm-btn-outline {
+  background: transparent;
+  color: #6B7280;
+  border: 1px solid #D1D5DB;
 }
+.dmm-btn-outline:hover { background: #F9FAFB; }
+
+.dmm-btn-publish { background: #059669; }
+.dmm-btn-publish:hover { background: #047857; }
+.dmm-btn-published { background: #6B7280; }
+.dmm-btn-published:hover { background: #6B7280; }
 
 .dmm-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* === EMPTY STATE === */
+.dmm-empty { padding: 32px 24px; }
+
+.dmm-empty-icon {
+  display: block;
+  margin: 0 auto 8px;
+}
+
+/* === PROGRESS BAR === */
+.dmm-progress {
+  position: relative;
+  background: #F3F4F6;
+  border-radius: 6px;
+  height: 24px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+
+.dmm-progress-bar {
+  height: 100%;
+  background: #2563EB;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.dmm-progress-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  pointer-events: none;
+}
+
+/* === TABS === */
+.dmm-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #F3F4F6;
+}
+
+.dmm-tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  color: #6B7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.dmm-tab:hover { color: #2563EB; }
+
+.dmm-tab.active {
+  color: #2563EB;
+  border-bottom-color: #2563EB;
+  font-weight: 600;
+}
+
+.dmm-tab.completed {
+  color: #16A34A;
+}
+
+/* === FORM HEADER === */
+.dmm-form-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.dmm-form-header .dmm-title { margin-top: 0; }
+
+/* === DOMAIN PAGES === */
+.dmm-domain-page { display: none; }
+.dmm-domain-page.active { display: block; }
+
+/* === QUESTION CARDS === */
+.dmm-question-card {
+  background: #FAFAFA;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.dmm-question-card:hover {
+  border-color: #D1D5DB;
+}
+
+.dmm-question-card.answered {
+  border-left: 3px solid #2563EB;
+}
+
+.dmm-question-text {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.dmm-guidance {
+  font-size: 12px;
+  color: #6B7280;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  background: #F3F4F6;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+
+/* === RADIO OPTIONS === */
+.dmm-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dmm-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border: 1px solid transparent;
+}
+
+.dmm-option:hover {
+  background: #F3F4F6;
+}
+
+.dmm-option.selected,
+.dmm-option:has(input:checked) {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.dmm-option input[type="radio"] {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: #2563EB;
+}
+
+.dmm-option-text {
+  flex: 1;
+  font-size: 13px;
+  color: #374151;
+}
+
+.dmm-option-score {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  min-width: 16px;
+  text-align: right;
+}
+
+/* === NAVIGATION === */
+.dmm-nav {
+  display: flex;
+  gap: 8px;
   justify-content: center;
   margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #F3F4F6;
 }
 
-.dmm-btn-secondary {
-  background-color: #6c757d;
+/* === DOMAIN BARS === */
+.dmm-domain-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  text-align: left;
 }
 
-.dmm-btn-secondary:hover {
-  background-color: #5a6268;
+.dmm-domain-bar-label {
+  flex: 0 0 140px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dmm-domain-bar-track {
+  flex: 1;
+  height: 10px;
+  background: #F3F4F6;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dmm-domain-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.dmm-domain-bar-score {
+  flex: 0 0 40px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* === RADAR CHART === */
+.dmm-radar-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.dmm-radar-container svg text {
+  font-family: inherit;
+}
+
+/* === TREND LINE === */
+.dmm-trend-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+
+.dmm-trend-container svg text {
+  font-family: inherit;
+}
+
+/* === HISTORY LIST === */
+.dmm-history-list {
+  text-align: left;
+}
+
+.dmm-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.dmm-history-item:last-child { border-bottom: none; }
+
+.dmm-history-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dmm-history-score {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  min-width: 48px;
+}
+
+.dmm-history-right {
+  text-align: right;
+}
+
+.dmm-history-framework {
+  display: block;
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.dmm-history-date {
+  display: block;
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 400px) {
+  .dmm-domain-bar-label {
+    flex: 0 0 80px;
+    font-size: 11px;
+  }
+  .dmm-tabs { gap: 2px; }
+  .dmm-tab { padding: 4px 8px; font-size: 11px; }
+  .dmm-card { padding: 16px; }
 }

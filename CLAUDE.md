@@ -25,6 +25,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Critical Rules - NON-NEGOTIABLE
+- **NO TIME ESTIMATES**: NEVER include time estimates in plans, roadmaps, or documentation
+  - ❌ FORBIDDEN: "Week 1-2", "Phase 1 (3 weeks)", "This will take about..."
+  - ✅ CORRECT: List phases/steps without durations - let the human decide timing
 - **DOCKER**: NEVER run commands that affect host system
   - ❌ FORBIDDEN: `docker system prune`, `docker volume prune`, `docker network prune`
   - ❌ FORBIDDEN: Any Docker command with `--all` or `-a` flag outside this project
