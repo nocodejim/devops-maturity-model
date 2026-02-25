@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Maturity Assessment - Demo</title>
+<link rel="stylesheet" href="widget.css">
+<style>
+/* Demo chrome */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #F3F4F6;
+    color: #1F2937;
+}
+.demo-header {
+    background: #1E293B;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.demo-header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+}
+.demo-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.demo-controls label {
+    font-size: 12px;
+    color: #94A3B8;
+}
+.demo-controls select, .demo-controls button {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid #475569;
+    background: #334155;
+    color: #E2E8F0;
+    cursor: pointer;
+}
+.demo-controls button:hover { background: #475569; }
+.demo-controls .btn-danger { border-color: #DC2626; color: #FCA5A5; }
+.demo-controls .btn-danger:hover { background: #7F1D1D; }
+
+.demo-body {
+    max-width: 600px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+.demo-widget-frame {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+.demo-widget-titlebar {
+    background: #F8FAFC;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.demo-widget-titlebar h2 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    color: #475569;
+}
+.demo-widget-titlebar .badge {
+    font-size: 10px;
+    background: #DBEAFE;
+    color: #2563EB;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.demo-widget-content {
+    padding: 16px;
+    min-height: 200px;
+}
+
+/* Toast */
+.demo-toast-container {
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.demo-toast {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    max-width: 360px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: toastIn 0.2s ease;
+}
+.demo-toast.success { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+.demo-toast.error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.demo-toast.warning { background: #FEFCE8; color: #854D0E; border: 1px solid #FEF08A; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.demo-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: #9CA3AF;
+}
+</style>
+</head>
+<body>
+
+<div class="demo-header">
+    <h1>SpiraApp Demo: DevOps Maturity Assessment</h1>
+    <div class="demo-controls">
+        <label for="fw-select">Framework:</label>
+        <select id="fw-select">
+            <option value="builtin">Built-in (3 domains, 20 Qs)</option>
+            <option value="calms">CALMS (5 domains, 28 Qs)</option>
+            <option value="example">Example (2 domains, 4 Qs)</option>
+        </select>
+        <button id="btn-reset" class="btn-danger">Reset All</button>
+    </div>
+</div>
+
+<div class="demo-toast-container" id="toast-container"></div>
+
+<div class="demo-body">
+    <div class="demo-widget-frame">
+        <div class="demo-widget-titlebar">
+            <h2>DevOps Maturity Model Assessment</h2>
+            <span class="badge">DEMO</span>
+        </div>
+        <div class="demo-widget-content" id="widget-root">
+            <p style="text-align:center;color:#9CA3AF;">Loading widget...</p>
+        </div>
+    </div>
+</div>
+
+<div class="demo-footer">
+    DevOps Maturity Assessment SpiraApp v1.0 &mdash; Demo Mode (localStorage-backed)
+</div>
+
+<!-- Mustache.js (required by widget) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.2.0/mustache.min.js"></script>
+
+<script>
+// ===== MOCK SPIRA RUNTIME =====
+
+// Storage backend using localStorage with prefix
+var MOCK_STORAGE_PREFIX = 'spira_mock_';
+
+function mockStorageKey(guid, name, key, productId) {
+    return MOCK_STORAGE_PREFIX + key;
+}
+
+// Globals that the widget expects
+var APP_GUID = '4B8D9721-6A99-4786-903D-9346739A0673';
+var WIDGET_ELEMENT = document.getElementById('widget-root');
+
+// Toast system
+function showToast(message, type) {
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
+    toast.className = 'demo-toast ' + (type || 'success');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function () {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 3000);
+}
+
+// Mock spiraAppManager
+var spiraAppManager = {
+    projectId: 1,
+    userId: 1,
+    pageId: 1,
+
+    formatDate: function (iso) {
+        var d = new Date(iso);
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    },
+
+    displayErrorMessage: function (msg) { showToast(msg, 'error'); },
+    displaySuccessMessage: function (msg) { showToast(msg, 'success'); },
+    displayWarningMessage: function (msg) { showToast(msg, 'warning'); },
+    displayConfirmation: function (msg, onConfirm) {
+        if (confirm(msg)) onConfirm();
+    },
+    hideMessage: function () {},
+
+    canCreateArtifactType: function () { return true; },
+
+    // executeApi mock - simulates document creation
+    executeApi: function (pluginName, apiVersion, method, url, body, success, failure) {
+        setTimeout(function () {
+            if (method === 'POST' && url.indexOf('/documents/') >= 0) {
+                var doc = JSON.parse(body);
+                showToast('DEMO: Document "' + doc.FilenameOrUrl + '" created (simulated)', 'success');
+                success({ AttachmentId: Math.floor(Math.random() * 10000), FilenameOrUrl: doc.FilenameOrUrl });
+            } else {
+                showToast('DEMO: API call ' + method + ' ' + url + ' (simulated)', 'warning');
+                success({});
+            }
+        }, 300);
+    },
+
+    // Event registration - store callbacks and fire on DOMContentLoaded
+    _windowLoadCallbacks: [],
+    _dashboardUpdatedCallbacks: [],
+
+    registerEvent_windowLoad: function (fn) {
+        this._windowLoadCallbacks.push(fn);
+    },
+    registerEvent_dashboardUpdated: function (fn) {
+        this._dashboardUpdatedCallbacks.push(fn);
+    },
+
+    // Storage - localStorage backed
+    storageGetProduct: function (guid, name, key, productId, success, failure) {
+        var storeKey = mockStorageKey(guid, name, key, productId);
+        var data = localStorage.getItem(storeKey);
+        if (data !== null) {
+            setTimeout(function () { success(data); }, 50);
+        } else {
+            setTimeout(function () { failure({ message: 'Key not found' }); }, 50);
+        }
+    },
+
+    storageUpdateProduct: function (guid, name, key, value, productId, success, failure) {
+        var storeKey = mockStorageKey(guid, name, key, productId);
+        if (localStorage.getItem(storeKey) !== null) {
+            localStorage.setItem(storeKey, value);
+            setTimeout(function () { success(); }, 50);
+        } else {
+            setTimeout(function () { failure({ message: 'Key not found for update' }); }, 50);
+        }
+    },
+
+    storageInsertProduct: function (guid, name, key, value, productId, isSecure, success, failure) {
+        var storeKey = mockStorageKey(guid, name, key, productId);
+        localStorage.setItem(storeKey, value);
+        setTimeout(function () { success(); }, 50);
+    }
+};
+
+// ===== FRAMEWORK LOADING =====
+
+var frameworkCache = {};
+
+function loadFrameworkFile(filename, callback) {
+    if (frameworkCache[filename]) {
+        callback(frameworkCache[filename]);
+        return;
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', filename, true);
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            try {
+                var fw = JSON.parse(xhr.responseText);
+                frameworkCache[filename] = fw;
+                callback(fw);
+            } catch (e) {
+                showToast('Failed to parse ' + filename + ': ' + e.message, 'error');
+                callback(null);
+            }
+        } else {
+            showToast('Failed to load ' + filename + ' (HTTP ' + xhr.status + ')', 'error');
+            callback(null);
+        }
+    };
+    xhr.onerror = function () {
+        showToast('Network error loading ' + filename + '. Run a local server: python -m http.server', 'error');
+        callback(null);
+    };
+    xhr.send();
+}
+
+function switchFramework(value) {
+    var storeKey = mockStorageKey(APP_GUID, '', 'custom_framework', 1);
+
+    if (value === 'builtin') {
+        // Remove custom framework from storage
+        localStorage.removeItem(storeKey);
+        reinitWidget();
+    } else {
+        var filename = value === 'calms' ? 'calms-framework.json' : 'example-framework.json';
+        loadFrameworkFile(filename, function (fw) {
+            if (fw) {
+                localStorage.setItem(storeKey, JSON.stringify(fw));
+                showToast('Switched to ' + fw.meta.name, 'success');
+                reinitWidget();
+            }
+        });
+    }
+}
+
+function resetAll() {
+    // Clear all mock storage
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.indexOf(MOCK_STORAGE_PREFIX) === 0) {
+            keysToRemove.push(key);
+        }
+    }
+    keysToRemove.forEach(function (k) { localStorage.removeItem(k); });
+
+    document.getElementById('fw-select').value = 'builtin';
+    showToast('All data cleared', 'success');
+    reinitWidget();
+}
+
+function reinitWidget() {
+    // Re-fire windowLoad callbacks
+    spiraAppManager._windowLoadCallbacks.forEach(function (fn) { fn(); });
+}
+
+// ===== DEMO CONTROLS =====
+
+document.getElementById('fw-select').addEventListener('change', function () {
+    switchFramework(this.value);
+});
+
+document.getElementById('btn-reset').addEventListener('click', function () {
+    if (confirm('Reset all demo data?')) resetAll();
+});
+
+// Detect current framework on load
+(function () {
+    var storeKey = mockStorageKey(APP_GUID, '', 'custom_framework', 1);
+    var stored = localStorage.getItem(storeKey);
+    if (stored) {
+        try {
+            var fw = JSON.parse(stored);
+            var name = fw.meta.name.toLowerCase();
+            if (name.indexOf('calms') >= 0) document.getElementById('fw-select').value = 'calms';
+            else if (name.indexOf('simple') >= 0 || name.indexOf('test') >= 0) document.getElementById('fw-select').value = 'example';
+        } catch (e) {}
+    }
+})();
+</script>
+
+<!-- Load the actual widget -->
+<script src="widget.js"></script>
+
+<script>
+// Fire window load callbacks after widget.js has registered them
+setTimeout(function () {
+    spiraAppManager._windowLoadCallbacks.forEach(function (fn) { fn(); });
+}, 100);
+</script>
+
+</body>
+</html>
