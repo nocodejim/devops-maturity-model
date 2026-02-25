@@ -31,8 +31,12 @@ class Settings(BaseSettings):
 
     # Application
     PROJECT_NAME: str = "DevOps Maturity Assessment"
-    VERSION: str = "1.2.1"
+    VERSION: str = "2.0.0"
     DEBUG: bool = True
+
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"  # "json" for production, "console" for dev
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
