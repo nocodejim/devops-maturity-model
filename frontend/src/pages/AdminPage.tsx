@@ -1,14 +1,13 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminApi, organizationApi } from '@/services/api'
+import { Layout } from '@/components/Layout'
 import { UserRole } from '@/types'
 import type { User, UserCreate, UserAdminUpdate, Organization } from '@/types'
 
 export function AdminPage() {
-  const navigate = useNavigate()
-  const { user: currentUser, logout } = useAuth()
+  const { user: currentUser } = useAuth()
   const queryClient = useQueryClient()
 
   const [search, setSearch] = useState('')
@@ -159,36 +158,15 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Manage users, roles, and system configuration
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={logout}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage users, roles, and system configuration
+          </p>
+        </div>
         {/* User Management Section */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -547,6 +525,6 @@ export function AdminPage() {
           </div>
         </div>
       )}
-    </div>
+    </Layout>
   )
 }

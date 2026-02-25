@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { assessmentApi, analyticsApi, frameworkApi } from '@/services/api'
-import { UserRole } from '@/types'
+import { Layout } from '@/components/Layout'
 import type { Assessment } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   const [showNewAssessment, setShowNewAssessment] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
@@ -95,36 +95,13 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">DevOps Maturity Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {user?.role === UserRole.ADMIN && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="px-4 py-2 text-sm text-purple-700 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors font-medium"
-                >
-                  Admin
-                </button>
-              )}
-              <button
-                onClick={logout}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
+        </div>
         {/* Analytics Cards */}
         {analytics && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -293,6 +270,6 @@ export function DashboardPage() {
           </div>
         </div>
       </main>
-    </div>
+    </Layout>
   )
 }
