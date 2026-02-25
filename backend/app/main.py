@@ -13,7 +13,7 @@ from app.core.logging_config import (
     setup_logging,
 )
 from app.database import get_db
-from app.api import admin, auth, assessments, analytics, organizations, gates, frameworks
+from app.api import admin, admin_frameworks, auth, assessments, analytics, organizations, gates, frameworks
 
 # Initialize structured logging before anything else
 setup_logging(log_level=settings.LOG_LEVEL, log_format=settings.LOG_FORMAT)
@@ -44,6 +44,7 @@ app.include_router(frameworks.router, prefix="/api/frameworks", tags=["Framework
 app.include_router(assessments.router, prefix="/api/assessments", tags=["Assessments"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(admin_frameworks.router, prefix="/api/admin/frameworks", tags=["Admin - Frameworks"])
 
 
 @app.on_event("startup")

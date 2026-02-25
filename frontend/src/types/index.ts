@@ -171,6 +171,44 @@ export interface AnalyticsSummary {
   average_maturity_level: number
 }
 
+// Framework Admin types
+export interface FrameworkAdminResponse extends Framework {
+  domain_count: number
+  question_count: number
+  assessment_count: number
+}
+
+export interface FrameworkCreate {
+  name: string
+  description?: string
+  version: string
+}
+
+export interface FrameworkUpdate {
+  name?: string
+  description?: string
+  version?: string
+}
+
+export interface FrameworkDomainCreate {
+  name: string
+  description?: string
+  weight: number
+  order: number
+}
+
+export interface FrameworkGateCreate {
+  name: string
+  description?: string
+  order: number
+}
+
+export interface FrameworkQuestionCreate {
+  text: string
+  guidance?: string
+  order: number
+}
+
 // Admin types
 export interface UserCreate {
   email: string

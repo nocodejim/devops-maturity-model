@@ -30,16 +30,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   Dashboard
                 </Link>
                 {user?.role === UserRole.ADMIN && (
-                  <Link
-                    to="/admin"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive('/admin')
-                        ? 'bg-purple-50 text-purple-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    Admin
-                  </Link>
+                  <>
+                    <Link
+                      to="/admin"
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive('/admin')
+                          ? 'bg-purple-50 text-purple-700'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Users
+                    </Link>
+                    <Link
+                      to="/admin/frameworks"
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive('/admin/frameworks')
+                          ? 'bg-purple-50 text-purple-700'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Frameworks
+                    </Link>
+                  </>
                 )}
               </div>
             </div>

@@ -13,7 +13,16 @@ import type {
   AnalyticsSummary,
   Organization,
   Framework,
+  FrameworkAdminResponse,
+  FrameworkCreate,
+  FrameworkUpdate,
   FrameworkStructure,
+  FrameworkDomainCreate,
+  FrameworkGateCreate,
+  FrameworkQuestionCreate,
+  FrameworkDomain,
+  FrameworkGate,
+  FrameworkQuestion,
 } from '@/types'
 
 // Detect backend URL based on current host
@@ -247,6 +256,93 @@ export const adminApi = {
     console.log('[AdminAPI] Resetting password for user:', id)
     const response = await api.post<User>(`/admin/users/${id}/reset-password`, {
       new_password: newPassword,
+    })
+    return response.data
+  },
+}
+
+// Admin Framework API
+export const adminFrameworkApi = {
+  list: async (): Promise<FrameworkAdminResponse[]> => {
+    console.log('[AdminFrameworkAPI] Listing frameworks')
+    const response = await api.get<FrameworkAdminResponse[]>('/admin/frameworks/')
+    return response.data
+  },
+
+  create: async (data: FrameworkCreate): Promise<Framework> => {
+    console.log('[AdminFrameworkAPI] Creating framework:', data.name)
+    const response = await api.post<Framework>('/admin/frameworks/', data)
+    return response.data
+  },
+
+  update: async (id: string, data: FrameworkUpdate): Promise<Framework> => {
+    const response = await api.put<Framework>(`/admin/frameworks/${id}`, data)
+    return response.data
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/admin/frameworks/${id}`)
+  },
+
+  // Domain CRUD
+  createDomain: async (frameworkId: string, data: FrameworkDomainCreate): Promise<FrameworkDomain> => {
+    const response = await api.post<FrameworkDomain>(`/admin/frameworks/${frameworkId}/domains`, data)
+    return response.data
+  },
+
+  updateDomain: async (frameworkId: string, domainId: string, data: Partial<FrameworkDomainCreate>): Promise<FrameworkDomain> => {
+    const response = await api.put<FrameworkDomain>(`/admin/frameworks/${frameworkId}/domains/${domainId}`, data)
+    return response.data
+  },
+
+  deleteDomain: async (frameworkId: string, domainId: string): Promise<void> => {
+    await api.delete(`/admin/frameworks/${frameworkId}/domains/${domainId}`)
+  },
+
+  // Gate CRUD
+  createGate: async (frameworkId: string, domainId: string, data: FrameworkGateCreate): Promise<FrameworkGate> => {
+    const response = await api.post<FrameworkGate>(`/admin/frameworks/${frameworkId}/domains/${domainId}/gates`, data)
+    return response.data
+  },
+
+  updateGate: async (frameworkId: string, domainId: string, gateId: string, data: Partial<FrameworkGateCreate>): Promise<FrameworkGate> => {
+    const response = await api.put<FrameworkGate>(`/admin/frameworks/${frameworkId}/domains/${domainId}/gates/${gateId}`, data)
+    return response.data
+  },
+
+  deleteGate: async (frameworkId: string, domainId: string, gateId: string): Promise<void> => {
+    await api.delete(`/admin/frameworks/${frameworkId}/domains/${domainId}/gates/${gateId}`)
+  },
+
+  // Question CRUD
+  createQuestion: async (frameworkId: string, domainId: string, gateId: string, data: FrameworkQuestionCreate): Promise<FrameworkQuestion> => {
+    const response = await api.post<FrameworkQuestion>(`/admin/frameworks/${frameworkId}/domains/${domainId}/gates/${gateId}/questions`, data)
+    return response.data
+  },
+
+  updateQuestion: async (frameworkId: string, domainId: string, gateId: string, questionId: string, data: Partial<FrameworkQuestionCreate>): Promise<FrameworkQuestion> => {
+    const response = await api.put<FrameworkQuestion>(`/admin/frameworks/${frameworkId}/domains/${domainId}/gates/${gateId}/questions/${questionId}`, data)
+    return response.data
+  },
+
+  deleteQuestion: async (frameworkId: string, domainId: string, gateId: string, questionId: string): Promise<void> => {
+    await api.delete(`/admin/frameworks/${frameworkId}/domains/${domainId}/gates/${gateId}/questions/${questionId}`)
+  },
+
+  // Export
+  exportFramework: async (id: string, format: 'json' | 'yaml' = 'json'): Promise<{ content: any; filename: string }> => {
+    console.log('[AdminFrameworkAPI] Exporting framework:', id, format)
+    const response = await api.get(`/admin/frameworks/${id}/export?format=${format}`)
+    return response.data
+  },
+
+  // Import
+  importFramework: async (file: File): Promise<Framework> => {
+    console.log('[AdminFrameworkAPI] Importing framework from file:', file.name)
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post<Framework>('/admin/frameworks/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
   },

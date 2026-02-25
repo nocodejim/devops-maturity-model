@@ -130,6 +130,18 @@ class FrameworkBase(BaseModel):
     description: Optional[str] = None
     version: str = "1.0"
 
+class FrameworkCreate(FrameworkBase):
+    """Schema for creating a framework"""
+    pass
+
+
+class FrameworkUpdate(BaseModel):
+    """Schema for updating a framework"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    version: Optional[str] = None
+
+
 class FrameworkResponse(FrameworkBase):
     id: UUID
     created_at: datetime
@@ -137,6 +149,55 @@ class FrameworkResponse(FrameworkBase):
 
     class Config:
         from_attributes = True
+
+
+class FrameworkAdminResponse(FrameworkResponse):
+    """Extended framework response with counts for admin views"""
+    domain_count: int = 0
+    question_count: int = 0
+    assessment_count: int = 0
+
+
+# Framework Domain create/update schemas
+class FrameworkDomainCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    weight: float = 1.0
+    order: int = 0
+
+
+class FrameworkDomainUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    weight: Optional[float] = None
+    order: Optional[int] = None
+
+
+# Framework Gate create/update schemas
+class FrameworkGateCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    order: int = 0
+
+
+class FrameworkGateUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    order: Optional[int] = None
+
+
+# Framework Question create/update schemas
+class FrameworkQuestionCreate(BaseModel):
+    text: str
+    guidance: Optional[str] = None
+    order: int = 0
+
+
+class FrameworkQuestionUpdate(BaseModel):
+    text: Optional[str] = None
+    guidance: Optional[str] = None
+    order: Optional[int] = None
+
 
 class FrameworkQuestionResponse(BaseModel):
     id: UUID
