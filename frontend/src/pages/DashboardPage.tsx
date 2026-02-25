@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { assessmentApi, analyticsApi, frameworkApi } from '@/services/api'
+import { UserRole } from '@/types'
 import type { Assessment } from '@/types'
 
 export function DashboardPage() {
@@ -103,12 +104,22 @@ export function DashboardPage() {
               <h1 className="text-2xl font-bold text-gray-900">DevOps Maturity Dashboard</h1>
               <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
             </div>
-            <button
-              onClick={logout}
-              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center gap-2">
+              {user?.role === UserRole.ADMIN && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="px-4 py-2 text-sm text-purple-700 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors font-medium"
+                >
+                  Admin
+                </button>
+              )}
+              <button
+                onClick={logout}
+                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>

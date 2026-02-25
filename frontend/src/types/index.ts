@@ -170,3 +170,25 @@ export interface AnalyticsSummary {
   average_score: number
   average_maturity_level: number
 }
+
+// Admin types
+export interface UserCreate {
+  email: string
+  full_name: string
+  password: string
+  role?: UserRole
+  organization_id?: string
+}
+
+export interface UserAdminUpdate {
+  full_name?: string
+  email?: string
+  role?: UserRole
+  organization_id?: string
+  is_active?: boolean
+}
+
+export interface UserListResponse {
+  users: User[]
+  total: number
+}

@@ -7,6 +7,9 @@ import type {
   GateResponseCreate,
   TokenResponse,
   User,
+  UserCreate,
+  UserAdminUpdate,
+  UserListResponse,
   AnalyticsSummary,
   Organization,
   Framework,
@@ -200,6 +203,51 @@ export const assessmentApi = {
 export const analyticsApi = {
   getSummary: async (): Promise<AnalyticsSummary> => {
     const response = await api.get<AnalyticsSummary>('/analytics/summary')
+    return response.data
+  },
+}
+
+// Admin API
+export const adminApi = {
+  listUsers: async (skip = 0, limit = 50, search?: string): Promise<UserListResponse> => {
+    console.log('[AdminAPI] Listing users, skip:', skip, 'limit:', limit, 'search:', search)
+    const params = new URLSearchParams()
+    params.append('skip', String(skip))
+    params.append('limit', String(limit))
+    if (search) params.append('search', search)
+    const response = await api.get<UserListResponse>(`/admin/users?${params}`)
+    console.log('[AdminAPI] Got users:', response.data.total)
+    return response.data
+  },
+
+  getUser: async (id: string): Promise<User> => {
+    const response = await api.get<User>(`/admin/users/${id}`)
+    return response.data
+  },
+
+  createUser: async (data: UserCreate): Promise<User> => {
+    console.log('[AdminAPI] Creating user:', data.email)
+    const response = await api.post<User>('/admin/users', data)
+    console.log('[AdminAPI] User created:', response.data.id)
+    return response.data
+  },
+
+  updateUser: async (id: string, data: UserAdminUpdate): Promise<User> => {
+    console.log('[AdminAPI] Updating user:', id, data)
+    const response = await api.put<User>(`/admin/users/${id}`, data)
+    return response.data
+  },
+
+  deleteUser: async (id: string): Promise<void> => {
+    console.log('[AdminAPI] Deactivating user:', id)
+    await api.delete(`/admin/users/${id}`)
+  },
+
+  resetPassword: async (id: string, newPassword: string): Promise<User> => {
+    console.log('[AdminAPI] Resetting password for user:', id)
+    const response = await api.post<User>(`/admin/users/${id}/reset-password`, {
+      new_password: newPassword,
+    })
     return response.data
   },
 }

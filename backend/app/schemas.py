@@ -66,6 +66,29 @@ class UserUpdate(BaseModel):
     organization_id: Optional[UUID] = None
 
 
+class UserAdminUpdate(BaseModel):
+    """Schema for admin updating a user (includes is_active and email)"""
+
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[UserRole] = None
+    organization_id: Optional[UUID] = None
+    is_active: Optional[bool] = None
+
+
+class PasswordReset(BaseModel):
+    """Schema for resetting a user password"""
+
+    new_password: str = Field(..., min_length=6)
+
+
+class UserListResponse(BaseModel):
+    """Paginated list of users"""
+
+    users: List["UserResponse"]
+    total: int
+
+
 class UserResponse(UserBase):
     """Schema for user response"""
 

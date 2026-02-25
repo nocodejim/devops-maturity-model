@@ -3,7 +3,9 @@ import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
+import { AdminPage } from './pages/AdminPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { AdminRoute } from './components/AdminRoute'
 import { AuthProvider } from './contexts/AuthContext'
 
 export function AppRoutes() {
@@ -33,6 +35,14 @@ export function AppRoutes() {
             <ProtectedRoute>
               <ResultsPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
           }
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
