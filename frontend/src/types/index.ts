@@ -230,3 +230,20 @@ export interface UserListResponse {
   users: User[]
   total: number
 }
+
+// Backup types
+export interface BackupInfo {
+  filename: string
+  size_bytes: number
+  created_at: string
+}
+
+export interface BackupResult {
+  filename: string
+  size_bytes: number
+  message: string
+}
+
+export interface RestoreResult {
+  message: string
+}

@@ -2,6 +2,9 @@ import axios from 'axios'
 import type {
   Assessment,
   AssessmentReport,
+  BackupInfo,
+  BackupResult,
+  RestoreResult,
   LoginRequest,
   GateResponse,
   GateResponseCreate,
@@ -345,6 +348,52 @@ export const adminFrameworkApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
+  },
+}
+
+// Admin Backup API
+export const adminBackupApi = {
+  list: async (): Promise<BackupInfo[]> => {
+    console.log('[AdminBackupAPI] Listing backups')
+    const response = await api.get<BackupInfo[]>('/admin/backups/')
+    return response.data
+  },
+
+  create: async (): Promise<BackupResult> => {
+    console.log('[AdminBackupAPI] Creating backup')
+    const response = await api.post<BackupResult>('/admin/backups/')
+    console.log('[AdminBackupAPI] Backup created:', response.data.filename)
+    return response.data
+  },
+
+  download: async (filename: string): Promise<void> => {
+    console.log('[AdminBackupAPI] Downloading backup:', filename)
+    const response = await api.get(`/admin/backups/${filename}/download`, {
+      responseType: 'blob',
+    })
+    const blob = new Blob([response.data], { type: 'application/octet-stream' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+
+  restore: async (file: File): Promise<RestoreResult> => {
+    console.log('[AdminBackupAPI] Restoring from file:', file.name)
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post<RestoreResult>('/admin/backups/restore', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    console.log('[AdminBackupAPI] Restore complete:', response.data.message)
+    return response.data
+  },
+
+  delete: async (filename: string): Promise<void> => {
+    console.log('[AdminBackupAPI] Deleting backup:', filename)
+    await api.delete(`/admin/backups/${filename}`)
   },
 }
 

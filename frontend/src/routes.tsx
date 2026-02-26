@@ -5,6 +5,7 @@ import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
 import { AdminPage } from './pages/AdminPage'
 import { AdminFrameworksPage } from './pages/AdminFrameworksPage'
+import { AdminBackupsPage } from './pages/AdminBackupsPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminRoute } from './components/AdminRoute'
 import { AuthProvider } from './contexts/AuthContext'
@@ -51,6 +52,14 @@ export function AppRoutes() {
           element={
             <AdminRoute>
               <AdminFrameworksPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/backups"
+          element={
+            <AdminRoute>
+              <AdminBackupsPage />
             </AdminRoute>
           }
         />
