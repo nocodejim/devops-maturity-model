@@ -1,4 +1,4 @@
-"""PDF Report Generator for DevOps Maturity Assessments"""
+"""PDF Report Generator for DevOps Maturity Assessments and Team Insights"""
 
 import math
 from datetime import datetime
@@ -672,4 +672,247 @@ class PDFReportGenerator:
         elements.append(Spacer(1, 12))
 
         return elements
+
+
+class InsightsPDFGenerator:
+    """Generates PDF reports for team insights and perception gap analysis."""
+
+    COLORS = PDFReportGenerator.COLORS
+
+    def __init__(self):
+        self.styles = getSampleStyleSheet()
+        self._setup_styles()
+
+    def _setup_styles(self):
+        self.styles.add(ParagraphStyle(
+            name='InsightTitle',
+            parent=self.styles['Heading1'],
+            fontSize=24,
+            textColor=self.COLORS['primary'],
+            spaceAfter=4,
+            alignment=TA_CENTER,
+            leading=30,
+        ))
+        self.styles.add(ParagraphStyle(
+            name='InsightSubtitle',
+            parent=self.styles['Normal'],
+            fontSize=12,
+            textColor=self.COLORS['muted'],
+            alignment=TA_CENTER,
+            spaceAfter=4,
+        ))
+        self.styles.add(ParagraphStyle(
+            name='InsightSection',
+            parent=self.styles['Heading2'],
+            fontSize=14,
+            textColor=self.COLORS['primary'],
+            spaceBefore=16,
+            spaceAfter=8,
+        ))
+        self.styles.add(ParagraphStyle(
+            name='InsightBody',
+            parent=self.styles['Normal'],
+            fontSize=9,
+            textColor=colors.black,
+            leading=13,
+        ))
+        self.styles.add(ParagraphStyle(
+            name='InsightSmall',
+            parent=self.styles['Normal'],
+            fontSize=7,
+            textColor=self.COLORS['muted'],
+            alignment=TA_CENTER,
+        ))
+
+    def generate(self, insights_data: Dict[str, Any]) -> bytes:
+        """Generate PDF from insights data."""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=0.75 * inch,
+            leftMargin=0.75 * inch,
+            topMargin=0.6 * inch,
+            bottomMargin=0.65 * inch,
+        )
+
+        story = []
+
+        # Header
+        project_name = insights_data.get('project_name', 'Unknown Project')
+        story.append(Paragraph('Team Insights Report', self.styles['InsightTitle']))
+        story.append(Paragraph(project_name, self.styles['InsightSubtitle']))
+        story.append(Paragraph(
+            datetime.utcnow().strftime('%B %d, %Y'),
+            self.styles['InsightSmall'],
+        ))
+        story.append(Spacer(1, 8))
+        story.append(HRFlowable(
+            width="100%", thickness=2, color=self.COLORS['primary'],
+            spaceAfter=8, spaceBefore=0
+        ))
+
+        # Summary
+        total = insights_data.get('total_assessments', 0)
+        respondents = insights_data.get('total_respondents', 0)
+        gaps = insights_data.get('perception_gaps', [])
+        praise = insights_data.get('areas_of_praise', [])
+        needs = insights_data.get('universal_needs', [])
+
+        summary_data = [[
+            [Paragraph(f'<b>{total}</b>', ParagraphStyle('SumN1', parent=self.styles['Normal'], fontSize=20, alignment=TA_CENTER, textColor=self.COLORS['primary'])),
+             Paragraph('Assessments', ParagraphStyle('SumL1', parent=self.styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=self.COLORS['muted']))],
+            [Paragraph(f'<b>{respondents}</b>', ParagraphStyle('SumN2', parent=self.styles['Normal'], fontSize=20, alignment=TA_CENTER, textColor=self.COLORS['primary'])),
+             Paragraph('Respondents', ParagraphStyle('SumL2', parent=self.styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=self.COLORS['muted']))],
+            [Paragraph(f'<b>{len(gaps)}</b>', ParagraphStyle('SumN3', parent=self.styles['Normal'], fontSize=20, alignment=TA_CENTER, textColor=colors.HexColor('#dc2626'))),
+             Paragraph('Perception Gaps', ParagraphStyle('SumL3', parent=self.styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=self.COLORS['muted']))],
+            [Paragraph(f'<b>{len(praise)}</b>', ParagraphStyle('SumN4', parent=self.styles['Normal'], fontSize=20, alignment=TA_CENTER, textColor=colors.HexColor('#16a34a'))),
+             Paragraph('Areas of Praise', ParagraphStyle('SumL4', parent=self.styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=self.COLORS['muted']))],
+        ]]
+        sum_table = Table(summary_data, colWidths=[1.625 * inch] * 4)
+        sum_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOX', (0, 0), (-1, -1), 0.5, self.COLORS['border']),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, self.COLORS['border']),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('BACKGROUND', (0, 0), (-1, -1), self.COLORS['background']),
+        ]))
+        story.append(sum_table)
+
+        # Discussion Starters
+        starters = insights_data.get('discussion_starters', [])
+        if starters:
+            story.append(Paragraph('Discussion Starters', self.styles['InsightSection']))
+            story.append(Paragraph(
+                'Top questions with the highest perception gaps across team members:',
+                self.styles['InsightBody'],
+            ))
+            story.append(Spacer(1, 4))
+            for idx, item in enumerate(starters, 1):
+                text = item.get('question_text', '')
+                mean_val = item.get('mean', 0)
+                sd = item.get('stddev', 0)
+                domain = item.get('domain_name', '')
+                story.append(Paragraph(
+                    f'<b>{idx}.</b> {text} '
+                    f'<font color="#6b7280">[{domain}] Mean: {mean_val:.1f}, SD: {sd:.2f}</font>',
+                    self.styles['InsightBody'],
+                ))
+                story.append(Spacer(1, 2))
+
+        # Perception Gaps Table
+        if gaps:
+            story.append(Paragraph('Perception Gaps (High Variance)', self.styles['InsightSection']))
+            table_data = [['Question', 'Domain', 'Mean', 'Std Dev', 'Range']]
+            for g in gaps[:15]:
+                q_text = g.get('question_text', '')
+                if len(q_text) > 60:
+                    q_text = q_text[:58] + '...'
+                table_data.append([
+                    q_text,
+                    g.get('domain_name', ''),
+                    f"{g.get('mean', 0):.1f}",
+                    f"{g.get('stddev', 0):.2f}",
+                    f"{g.get('min_score', 0)}-{g.get('max_score', 0)}",
+                ])
+            t = Table(table_data, colWidths=[2.8 * inch, 1.5 * inch, 0.6 * inch, 0.7 * inch, 0.9 * inch])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc2626')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, self.COLORS['border']),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#fef2f2')]),
+            ]))
+            story.append(t)
+
+        # Areas of Praise Table
+        if praise:
+            story.append(Paragraph('Areas of Praise (High Consensus)', self.styles['InsightSection']))
+            table_data = [['Question', 'Domain', 'Mean', 'Std Dev']]
+            for p in praise[:15]:
+                q_text = p.get('question_text', '')
+                if len(q_text) > 60:
+                    q_text = q_text[:58] + '...'
+                table_data.append([
+                    q_text,
+                    p.get('domain_name', ''),
+                    f"{p.get('mean', 0):.1f}",
+                    f"{p.get('stddev', 0):.2f}",
+                ])
+            t = Table(table_data, colWidths=[3.2 * inch, 1.8 * inch, 0.75 * inch, 0.75 * inch])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16a34a')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, self.COLORS['border']),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f0fdf4')]),
+            ]))
+            story.append(t)
+
+        # Universal Needs Table
+        if needs:
+            story.append(Paragraph('Universal Needs (Low Scores, High Consensus)', self.styles['InsightSection']))
+            table_data = [['Question', 'Domain', 'Mean', 'Std Dev']]
+            for n in needs[:10]:
+                q_text = n.get('question_text', '')
+                if len(q_text) > 60:
+                    q_text = q_text[:58] + '...'
+                table_data.append([
+                    q_text,
+                    n.get('domain_name', ''),
+                    f"{n.get('mean', 0):.1f}",
+                    f"{n.get('stddev', 0):.2f}",
+                ])
+            t = Table(table_data, colWidths=[3.2 * inch, 1.8 * inch, 0.75 * inch, 0.75 * inch])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ca8a04')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('GRID', (0, 0), (-1, -1), 0.5, self.COLORS['border']),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#fefce8')]),
+            ]))
+            story.append(t)
+
+        generated_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+
+        def _draw_footer(canvas, doc):
+            canvas.saveState()
+            canvas.setFont('Helvetica', 7)
+            canvas.setFillColor(self.COLORS['muted'])
+            canvas.setStrokeColor(self.COLORS['border'])
+            canvas.setLineWidth(0.5)
+            y = 0.45 * inch
+            canvas.line(0.75 * inch, y, letter[0] - 0.75 * inch, y)
+            canvas.drawCentredString(
+                letter[0] / 2, y - 10,
+                f'Generated {generated_at}  |  Team Insights - {project_name}'
+            )
+            canvas.drawRightString(
+                letter[0] - 0.75 * inch, y - 10,
+                f'Page {canvas.getPageNumber()}'
+            )
+            canvas.restoreState()
+
+        doc.build(story, onFirstPage=_draw_footer, onLaterPages=_draw_footer)
+        return buffer.getvalue()
 

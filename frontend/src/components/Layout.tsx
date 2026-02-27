@@ -29,6 +29,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/insights"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/insights')
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  Team Insights
+                </Link>
                 {user?.role === UserRole.ADMIN && (
                   <>
                     <Link

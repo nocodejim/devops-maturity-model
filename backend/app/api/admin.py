@@ -79,6 +79,7 @@ async def create_user(
         full_name=user_in.full_name,
         hashed_password=hashed_password,
         role=user_in.role,
+        functional_role=user_in.functional_role,
         organization_id=user_in.organization_id,
     )
     db.add(db_user)

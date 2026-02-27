@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminApi, organizationApi } from '@/services/api'
 import { Layout } from '@/components/Layout'
-import { UserRole } from '@/types'
+import { UserRole, FUNCTIONAL_ROLES } from '@/types'
 import type { User, UserCreate, UserAdminUpdate, Organization } from '@/types'
 
 export function AdminPage() {
@@ -22,6 +22,7 @@ export function AdminPage() {
     full_name: string
     password: string
     role: UserRole
+    functional_role: string
     organization_id: string
     is_active: boolean
   }>({
@@ -29,6 +30,7 @@ export function AdminPage() {
     full_name: '',
     password: '',
     role: UserRole.ASSESSOR,
+    functional_role: '',
     organization_id: '',
     is_active: true,
   })
@@ -105,6 +107,7 @@ export function AdminPage() {
       full_name: '',
       password: '',
       role: UserRole.ASSESSOR,
+      functional_role: '',
       organization_id: '',
       is_active: true,
     })
@@ -117,6 +120,7 @@ export function AdminPage() {
       full_name: user.full_name,
       password: '',
       role: user.role,
+      functional_role: user.functional_role || '',
       organization_id: user.organization_id || '',
       is_active: user.is_active,
     })
@@ -130,6 +134,7 @@ export function AdminPage() {
       full_name: formData.full_name,
       password: formData.password,
       role: formData.role,
+      functional_role: formData.functional_role || undefined,
       organization_id: formData.organization_id || undefined,
     })
   }
@@ -142,6 +147,7 @@ export function AdminPage() {
       full_name: formData.full_name,
       email: formData.email,
       role: formData.role,
+      functional_role: formData.functional_role || undefined,
       is_active: formData.is_active,
       organization_id: formData.organization_id || undefined,
     }
@@ -238,6 +244,11 @@ export function AdminPage() {
                       >
                         {u.role}
                       </span>
+                      {u.functional_role && (
+                        <span className="ml-1 px-2 py-1 rounded text-xs font-medium bg-sky-100 text-sky-800">
+                          {u.functional_role}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -355,6 +366,19 @@ export function AdminPage() {
                   <option value={UserRole.VIEWER}>Viewer</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Functional Role</label>
+                <select
+                  value={formData.functional_role}
+                  onChange={e => setFormData(d => ({ ...d, functional_role: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Not specified</option>
+                  {FUNCTIONAL_ROLES.map(role => (
+                    <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
               {organizations && organizations.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -435,6 +459,19 @@ export function AdminPage() {
                   <option value={UserRole.ASSESSOR}>Assessor</option>
                   <option value={UserRole.ADMIN}>Admin</option>
                   <option value={UserRole.VIEWER}>Viewer</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Functional Role</label>
+                <select
+                  value={formData.functional_role}
+                  onChange={e => setFormData(d => ({ ...d, functional_role: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Not specified</option>
+                  {FUNCTIONAL_ROLES.map(role => (
+                    <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex items-center gap-2">

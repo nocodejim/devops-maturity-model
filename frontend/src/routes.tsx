@@ -3,6 +3,7 @@ import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
+import { TeamInsightsPage } from './pages/TeamInsightsPage'
 import { AdminPage } from './pages/AdminPage'
 import { AdminFrameworksPage } from './pages/AdminFrameworksPage'
 import { AdminBackupsPage } from './pages/AdminBackupsPage'
@@ -36,6 +37,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <ResultsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/insights"
+          element={
+            <ProtectedRoute>
+              <TeamInsightsPage />
             </ProtectedRoute>
           }
         />

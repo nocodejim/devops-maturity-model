@@ -26,6 +26,11 @@ import type {
   FrameworkDomain,
   FrameworkGate,
   FrameworkQuestion,
+  Project,
+  ProjectCreate,
+  InsightsResponse,
+  RoleHeatmapResponse,
+  TrendComparisonResponse,
 } from '@/types'
 
 // Detect backend URL based on current host
@@ -138,11 +143,22 @@ export const assessmentApi = {
     return response.data
   },
 
-  create: async (teamName: string, frameworkId: string, organizationId?: string): Promise<Assessment> => {
+  create: async (
+    teamName: string,
+    frameworkId: string,
+    organizationId?: string,
+    projectId?: string,
+    tags?: string[],
+    campaignId?: string,
+  ): Promise<Assessment> => {
+    console.log('[API] Creating assessment:', { teamName, frameworkId, projectId, tags, campaignId })
     const response = await api.post<Assessment>('/assessments/', {
       team_name: teamName,
       framework_id: frameworkId,
       organization_id: organizationId,
+      project_id: projectId || undefined,
+      tags: tags?.length ? tags : undefined,
+      campaign_id: campaignId || undefined,
     })
     return response.data
   },
@@ -394,6 +410,93 @@ export const adminBackupApi = {
   delete: async (filename: string): Promise<void> => {
     console.log('[AdminBackupAPI] Deleting backup:', filename)
     await api.delete(`/admin/backups/${filename}`)
+  },
+}
+
+// Projects API
+export const projectApi = {
+  list: async (): Promise<Project[]> => {
+    console.log('[ProjectAPI] Listing projects')
+    const response = await api.get<Project[]>('/projects/')
+    return response.data
+  },
+
+  create: async (data: ProjectCreate): Promise<Project> => {
+    console.log('[ProjectAPI] Creating project:', data.name)
+    const response = await api.post<Project>('/projects/', data)
+    return response.data
+  },
+
+  get: async (id: string): Promise<Project> => {
+    const response = await api.get<Project>(`/projects/${id}`)
+    return response.data
+  },
+
+  update: async (id: string, data: Partial<ProjectCreate>): Promise<Project> => {
+    const response = await api.put<Project>(`/projects/${id}`, data)
+    return response.data
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/projects/${id}`)
+  },
+
+  listAssessments: async (id: string, tags?: string[], campaignId?: string): Promise<Assessment[]> => {
+    const params = new URLSearchParams()
+    if (tags) tags.forEach(t => params.append('tags', t))
+    if (campaignId) params.append('campaign_id', campaignId)
+    const response = await api.get<Assessment[]>(`/projects/${id}/assessments?${params}`)
+    return response.data
+  },
+}
+
+// Insights API
+export const insightsApi = {
+  getInsights: async (projectId: string, tags?: string[], campaignId?: string): Promise<InsightsResponse> => {
+    console.log('[InsightsAPI] Getting insights for project:', projectId)
+    const params = new URLSearchParams()
+    if (tags) tags.forEach(t => params.append('tags', t))
+    if (campaignId) params.append('campaign_id', campaignId)
+    const response = await api.get<InsightsResponse>(`/analytics/projects/${projectId}/insights?${params}`)
+    return response.data
+  },
+
+  getRoleHeatmap: async (projectId: string, tags?: string[], campaignId?: string): Promise<RoleHeatmapResponse> => {
+    console.log('[InsightsAPI] Getting role heatmap for project:', projectId)
+    const params = new URLSearchParams()
+    if (tags) tags.forEach(t => params.append('tags', t))
+    if (campaignId) params.append('campaign_id', campaignId)
+    const response = await api.get<RoleHeatmapResponse>(`/analytics/projects/${projectId}/heatmap?${params}`)
+    return response.data
+  },
+
+  getTrends: async (projectId: string, baseline: string, current: string): Promise<TrendComparisonResponse> => {
+    console.log('[InsightsAPI] Getting trends for project:', projectId)
+    const response = await api.get<TrendComparisonResponse>(
+      `/analytics/projects/${projectId}/trends?baseline=${encodeURIComponent(baseline)}&current=${encodeURIComponent(current)}`
+    )
+    return response.data
+  },
+
+  listCampaigns: async (projectId: string): Promise<string[]> => {
+    console.log('[InsightsAPI] Listing campaigns for project:', projectId)
+    const response = await api.get<string[]>(`/analytics/projects/${projectId}/campaigns`)
+    return response.data
+  },
+
+  downloadPdf: async (projectId: string, projectName: string): Promise<void> => {
+    console.log('[InsightsAPI] Downloading insights PDF for project:', projectId)
+    const response = await api.get(`/analytics/projects/${projectId}/insights/pdf`, { responseType: 'blob' })
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const safeName = projectName.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '-')
+    link.setAttribute('download', `insights-${safeName}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
   },
 }
 

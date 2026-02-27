@@ -23,9 +23,43 @@
 
 ## Complete Spec Development Status
 
-**Last Updated**: 2026-02-25
-**Current Phase**: Phase 8 - Platform Modernization Complete
+**Last Updated**: 2026-02-26
+**Current Phase**: Phase 9 - Team Insights & Perception Gap Analysis
 **Overall Progress**: 100%
+
+---
+
+## Phase 9: Team Insights & Perception Gap Analysis - ✅ 100% Complete
+
+### Database
+- [x] Project model (groups assessments for team analysis)
+- [x] functional_role field on User model
+- [x] project_id, tags, campaign_id fields on Assessment model
+- [x] Alembic migration (002_add_projects_and_insights)
+
+### Backend - Statistical Analysis Engine
+- [x] Project CRUD API (/api/projects/)
+- [x] Insights API with mean/variance/stddev per question (/api/analytics/projects/{id}/insights)
+- [x] Categorization: perception gaps (SD>1.5), areas of praise (mean>4, SD<0.8), universal needs (mean<2, SD<0.8)
+- [x] Role-based heatmap endpoint (/api/analytics/projects/{id}/heatmap)
+- [x] Longitudinal trend comparison endpoint (/api/analytics/projects/{id}/trends)
+- [x] Campaign listing endpoint (/api/analytics/projects/{id}/campaigns)
+- [x] Insights PDF export (/api/analytics/projects/{id}/insights/pdf)
+
+### Frontend - Team Insights Dashboard
+- [x] TeamInsightsPage with 4-tab layout (Overview, Perception Gaps, Role Heatmap, Trends)
+- [x] Project selector with inline project creation
+- [x] BoxWhiskerChart component (Recharts bar chart with gap highlighting)
+- [x] RoleHeatmap component (color-coded table of questions x roles)
+- [x] TrendChart component (baseline vs current comparison)
+- [x] DiscussionStarters component (top 3 high-variance alert box)
+- [x] Summary cards (assessments, respondents, gaps, praise)
+- [x] Navigation: "Team Insights" link added for all users
+
+### Assessment & Admin Updates
+- [x] Project/tags/campaign fields on assessment creation form (DashboardPage)
+- [x] Functional role dropdown on user create/edit (AdminPage)
+- [x] Functional role badge displayed in user table
 
 ---
 
