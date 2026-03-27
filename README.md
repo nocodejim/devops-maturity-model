@@ -26,6 +26,7 @@ A full-stack web application for comprehensive DevOps maturity assessments, idea
 - **User Management**: Role-based access (admin/assessor/viewer)
 - **Organization Tracking**: Group assessments by organization
 - **Detailed Analytics**: Domain breakdown, strengths/gaps analysis, recommendations
+- **PDF Report Generation**: Download professional PDF reports for stakeholders
 - **Assessment History**: Track progress over time
 - **API Access**: RESTful API with OpenAPI documentation
 
@@ -306,6 +307,7 @@ docker-compose logs -f frontend
 | `/api/assessments/{id}/responses` | POST | Save question responses |
 | `/api/assessments/{id}/submit` | POST | Submit for scoring |
 | `/api/assessments/{id}/report` | GET | Get assessment report |
+| `/api/assessments/{id}/report/pdf` | GET | Download PDF report |
 
 Full API documentation available at http://localhost:8680/docs when running.
 
