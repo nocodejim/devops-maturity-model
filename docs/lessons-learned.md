@@ -20,6 +20,22 @@
 
 ---
 
+## Session Date: 2026-02-25
+
+### Purpose
+Platform modernization session - adding structured logging, admin pages, radar charts, framework CRUD, and shared navigation.
+
+### [2026-02-25 12:50] - Poetry Lock File Must Be Updated After pyproject.toml Changes
+- **Issue**: Adding structlog dependency to pyproject.toml caused docker build to fail with "pyproject.toml changed significantly since poetry.lock was last generated"
+- **Impact**: Build blocked until lock file was regenerated
+- **Root Cause**: Docker build runs `poetry install` which requires lock file to be in sync
+- **Resolution**: Run `poetry lock` in a temporary container to regenerate the lock file before building
+- **Lesson**: Always regenerate poetry.lock after modifying pyproject.toml dependencies. Use: `docker run --rm -v $(pwd)/backend:/app -w /app python:3.11-slim bash -c "pip install poetry -q && poetry lock"`
+- **Category**: Dependencies & Packages
+- **Priority**: High
+
+---
+
 ## Session Date: 2025-10-06
 
 ### Purpose

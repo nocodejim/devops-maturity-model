@@ -56,6 +56,7 @@ class UserCreate(UserBase):
     password: str
     role: Optional[UserRole] = UserRole.ASSESSOR
     organization_id: Optional[UUID] = None
+    functional_role: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
@@ -64,6 +65,31 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     role: Optional[UserRole] = None
     organization_id: Optional[UUID] = None
+    functional_role: Optional[str] = None
+
+
+class UserAdminUpdate(BaseModel):
+    """Schema for admin updating a user (includes is_active and email)"""
+
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[UserRole] = None
+    organization_id: Optional[UUID] = None
+    is_active: Optional[bool] = None
+    functional_role: Optional[str] = None
+
+
+class PasswordReset(BaseModel):
+    """Schema for resetting a user password"""
+
+    new_password: str = Field(..., min_length=6)
+
+
+class UserListResponse(BaseModel):
+    """Paginated list of users"""
+
+    users: List["UserResponse"]
+    total: int
 
 
 class UserResponse(UserBase):
@@ -71,6 +97,7 @@ class UserResponse(UserBase):
 
     id: UUID
     role: UserRole
+    functional_role: Optional[str] = None
     organization_id: Optional[UUID] = None
     is_active: bool
     created_at: datetime
@@ -107,6 +134,18 @@ class FrameworkBase(BaseModel):
     description: Optional[str] = None
     version: str = "1.0"
 
+class FrameworkCreate(FrameworkBase):
+    """Schema for creating a framework"""
+    pass
+
+
+class FrameworkUpdate(BaseModel):
+    """Schema for updating a framework"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    version: Optional[str] = None
+
+
 class FrameworkResponse(FrameworkBase):
     id: UUID
     created_at: datetime
@@ -114,6 +153,55 @@ class FrameworkResponse(FrameworkBase):
 
     class Config:
         from_attributes = True
+
+
+class FrameworkAdminResponse(FrameworkResponse):
+    """Extended framework response with counts for admin views"""
+    domain_count: int = 0
+    question_count: int = 0
+    assessment_count: int = 0
+
+
+# Framework Domain create/update schemas
+class FrameworkDomainCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    weight: float = 1.0
+    order: int = 0
+
+
+class FrameworkDomainUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    weight: Optional[float] = None
+    order: Optional[int] = None
+
+
+# Framework Gate create/update schemas
+class FrameworkGateCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    order: int = 0
+
+
+class FrameworkGateUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    order: Optional[int] = None
+
+
+# Framework Question create/update schemas
+class FrameworkQuestionCreate(BaseModel):
+    text: str
+    guidance: Optional[str] = None
+    order: int = 0
+
+
+class FrameworkQuestionUpdate(BaseModel):
+    text: Optional[str] = None
+    guidance: Optional[str] = None
+    order: Optional[int] = None
+
 
 class FrameworkQuestionResponse(BaseModel):
     id: UUID
@@ -157,6 +245,9 @@ class AssessmentBase(BaseModel):
 
     team_name: str
     organization_id: Optional[UUID] = None
+    project_id: Optional[UUID] = None
+    tags: Optional[List[str]] = None
+    campaign_id: Optional[str] = None
 
 
 class AssessmentCreate(AssessmentBase):
@@ -169,6 +260,9 @@ class AssessmentUpdate(BaseModel):
 
     team_name: Optional[str] = None
     status: Optional[AssessmentStatus] = None
+    project_id: Optional[UUID] = None
+    tags: Optional[List[str]] = None
+    campaign_id: Optional[str] = None
 
 
 class AssessmentResponse(AssessmentBase):
@@ -314,3 +408,109 @@ class AssessmentTrends(BaseModel):
 
     overall_trends: List[TrendData]
     domain_trends: dict  # domain_name -> List[TrendData]
+
+
+# Project schemas
+class ProjectBase(BaseModel):
+    """Base project schema"""
+
+    name: str
+    description: Optional[str] = None
+    organization_id: Optional[UUID] = None
+
+
+class ProjectCreate(ProjectBase):
+    """Schema for creating a project"""
+    pass
+
+
+class ProjectUpdate(BaseModel):
+    """Schema for updating a project"""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class ProjectResponse(ProjectBase):
+    """Schema for project response"""
+
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+    assessment_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+# Team Insights schemas
+class QuestionInsight(BaseModel):
+    """Statistical insight for a single question across team assessments"""
+
+    question_id: UUID
+    question_text: str
+    gate_name: str
+    domain_name: str
+    mean: float
+    stddev: float
+    variance: float
+    min_score: int
+    max_score: int
+    response_count: int
+    scores: List[int]
+
+
+class InsightsResponse(BaseModel):
+    """Full insights response for a project"""
+
+    project_id: UUID
+    project_name: str
+    total_assessments: int
+    total_respondents: int
+    perception_gaps: List[QuestionInsight]
+    areas_of_praise: List[QuestionInsight]
+    universal_needs: List[QuestionInsight]
+    all_questions: List[QuestionInsight]
+    discussion_starters: List[QuestionInsight]
+
+
+class RoleHeatmapEntry(BaseModel):
+    """Heatmap entry: question scores broken down by role"""
+
+    question_id: UUID
+    question_text: str
+    gate_name: str
+    domain_name: str
+    role_scores: Dict[str, float]
+
+
+class RoleHeatmapResponse(BaseModel):
+    """Role-based heatmap response"""
+
+    project_id: UUID
+    entries: List[RoleHeatmapEntry]
+    roles: List[str]
+
+
+class TrendComparison(BaseModel):
+    """Longitudinal comparison for a single question between two campaigns"""
+
+    question_id: UUID
+    question_text: str
+    gate_name: str
+    domain_name: str
+    baseline_mean: float
+    baseline_stddev: float
+    current_mean: float
+    current_stddev: float
+    delta_mean: float
+    delta_variance: float
+
+
+class TrendComparisonResponse(BaseModel):
+    """Longitudinal trend comparison response"""
+
+    project_id: UUID
+    baseline_campaign: str
+    current_campaign: str
+    comparisons: List[TrendComparison]

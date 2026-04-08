@@ -2,16 +2,20 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { assessmentApi, analyticsApi, frameworkApi } from '@/services/api'
+import { assessmentApi, analyticsApi, frameworkApi, projectApi } from '@/services/api'
+import { Layout } from '@/components/Layout'
 import type { Assessment } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const queryClient = useQueryClient()
   const [showNewAssessment, setShowNewAssessment] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
   const [selectedFrameworkId, setSelectedFrameworkId] = useState<string>('')
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const [newTags, setNewTags] = useState('')
+  const [newCampaignId, setNewCampaignId] = useState('')
 
   // Fetch assessments
   const { data: assessments, isLoading: assessmentsLoading } = useQuery({
@@ -31,16 +35,26 @@ export function DashboardPage() {
     queryFn: analyticsApi.getSummary,
   })
 
+  // Fetch projects
+  const { data: projects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: projectApi.list,
+  })
+
   // Create assessment mutation
   const createMutation = useMutation({
-    mutationFn: (data: { teamName: string; frameworkId: string }) =>
-      assessmentApi.create(data.teamName, data.frameworkId, user?.organization_id),
+    mutationFn: (data: { teamName: string; frameworkId: string; projectId?: string; tags?: string[]; campaignId?: string }) =>
+      assessmentApi.create(data.teamName, data.frameworkId, user?.organization_id, data.projectId, data.tags, data.campaignId),
     onSuccess: assessment => {
       queryClient.invalidateQueries({ queryKey: ['assessments'] })
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
       setShowNewAssessment(false)
       setNewTeamName('')
       setSelectedFrameworkId('')
+      setSelectedProjectId('')
+      setNewTags('')
+      setNewCampaignId('')
       navigate(`/assessment/${assessment.id}`)
     },
   })
@@ -57,7 +71,16 @@ export function DashboardPage() {
   const handleCreateAssessment = (e: React.FormEvent) => {
     e.preventDefault()
     if (newTeamName.trim() && selectedFrameworkId) {
-      createMutation.mutate({ teamName: newTeamName.trim(), frameworkId: selectedFrameworkId })
+      const tags = newTags.trim()
+        ? newTags.split(',').map(t => t.trim()).filter(Boolean)
+        : undefined
+      createMutation.mutate({
+        teamName: newTeamName.trim(),
+        frameworkId: selectedFrameworkId,
+        projectId: selectedProjectId || undefined,
+        tags,
+        campaignId: newCampaignId.trim() || undefined,
+      })
     }
   }
 
@@ -94,26 +117,13 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">DevOps Maturity Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
-            </div>
-            <button
-              onClick={logout}
-              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
+        </div>
         {/* Analytics Cards */}
         {analytics && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -192,6 +202,46 @@ export function DashboardPage() {
                   )}
                 </div>
 
+                {/* Optional: Project, Tags, Campaign */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-1">Project (optional)</label>
+                    <select
+                      id="project"
+                      value={selectedProjectId}
+                      onChange={e => setSelectedProjectId(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">No project</option>
+                      {projects?.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
+                    <input
+                      id="tags"
+                      type="text"
+                      value={newTags}
+                      onChange={e => setNewTags(e.target.value)}
+                      placeholder="e.g., Q1-2026, frontend"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="campaign" className="block text-sm font-medium text-gray-700 mb-1">Campaign ID (optional)</label>
+                    <input
+                      id="campaign"
+                      type="text"
+                      value={newCampaignId}
+                      onChange={e => setNewCampaignId(e.target.value)}
+                      placeholder="e.g., baseline-2026"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
                 <div className="flex gap-2 pt-2">
                     <button
                     type="submit"
@@ -206,6 +256,9 @@ export function DashboardPage() {
                         setShowNewAssessment(false)
                         setNewTeamName('')
                         setSelectedFrameworkId('')
+                        setSelectedProjectId('')
+                        setNewTags('')
+                        setNewCampaignId('')
                     }}
                     className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
                     >
@@ -282,6 +335,6 @@ export function DashboardPage() {
           </div>
         </div>
       </main>
-    </div>
+    </Layout>
   )
 }

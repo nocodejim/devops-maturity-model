@@ -3,7 +3,12 @@ import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AssessmentPage } from './pages/AssessmentPage'
 import { ResultsPage } from './pages/ResultsPage'
+import { TeamInsightsPage } from './pages/TeamInsightsPage'
+import { AdminPage } from './pages/AdminPage'
+import { AdminFrameworksPage } from './pages/AdminFrameworksPage'
+import { AdminBackupsPage } from './pages/AdminBackupsPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { AdminRoute } from './components/AdminRoute'
 import { AuthProvider } from './contexts/AuthContext'
 
 export function AppRoutes() {
@@ -33,6 +38,38 @@ export function AppRoutes() {
             <ProtectedRoute>
               <ResultsPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/insights"
+          element={
+            <ProtectedRoute>
+              <TeamInsightsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/frameworks"
+          element={
+            <AdminRoute>
+              <AdminFrameworksPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/backups"
+          element={
+            <AdminRoute>
+              <AdminBackupsPage />
+            </AdminRoute>
           }
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
