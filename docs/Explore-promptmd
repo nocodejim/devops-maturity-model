@@ -1,0 +1,15 @@
+Explore this application in great detail
+this may be one of my consulting paths is building on this application and the concepts we're introducing (I think)
+I'd like you to take a deep dive into the codebase and architecture of this application
+Identify key components, design patterns, and technologies used
+Analyze how these elements work together to achieve the application's goals
+Provide insights into potential areas for improvement or optimization
+Additionally, consider how this application could be scaled or adapted for different use cases or environments
+including an exportable template so that potetnial clients can export one of my models (CALMS, DOMM, DORA) and have a template on how they might create their own questionaires or assessments based on those models
+
+It is important that you ignore anything to do with Spira, Spirapps or Spirateam - this is noise that is a potential SDLC application add on that will use the basis of what we are building here to create a "teaser" or mini app
+
+
+The final evaluation that i'd like you to do is take a deep dive into the 3 frameworks - CALMS and DORA are well known, what would you change update/expand upon for those asessments?
+The DevOpsMaturityModel is a homegrown assessment that uses a combination of data, mostly from a paper Topo Pal, who at the time was at capital one, where he described the 16 gates of software
+Do some websearching and determine if my assessments are valid and how you might improve them, change questions examples etc
