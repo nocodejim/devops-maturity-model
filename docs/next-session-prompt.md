@@ -4,40 +4,48 @@ Copy-paste starter for the next working session.
 
 ---
 
-**Context:** The branch `feature/hardening-toolkit` now contains two bodies of
-work: (1) `hardening-toolkit/` — the portable skills package built for the work
-fork, and (2) the **production hardening remediation** (2026-07-17) that worked
-every finding from both pilot reports. See `docs/progress-tracker.md`
-("Production Hardening") for the full checklist.
+## Context
 
-**State:** All 8 secrets findings and 15 vibe-audit findings remediated and
-verified: full API lifecycle test through the new same-origin `/api` proxy,
-headless-browser login + assessment flow (0 console errors, 0 token leaks),
-migration 002 applied against live data, production images build and run
-non-root, deploy compose refuses to boot without secrets. Config version bumped
-to 2.1.0.
+`feature/hardening-toolkit` (3 commits, 2026-07-17) delivered the hardening
+toolkit, full remediation of both pilot audit reports, and a small visible UX
+pass (results-page radar chart, dashboard framework badges). Production
+plumbing is done: secure-by-default config, real health checks, non-root
+images, same-origin `/api`, FK indexes, timezone-aware timestamps.
 
-**Not yet done / candidate next tasks:**
+**The next iteration is product work, not tech debt.** Remaining debt (PR to
+master, publish 2.1 Docker Hub images, pytest backfill, analytics stub) is
+tracked in `docs/progress-tracker.md` and can go to Opus.
 
-1. **Commit + PR.** The working tree mixes toolkit files and hardening changes;
-   consider two commits (toolkit, hardening) or two PRs off this branch.
-2. **Publish 2.1 images** to Docker Hub (`backend/`, `frontend/Dockerfile.prod`)
-   so `docker-compose.deploy.yml`'s default tags exist.
-3. **Test backfill** (`hardening-toolkit/skills/test-backfill`): backend has
-   zero pytest tests; scoring engine and auth deps are the highest-value targets.
-4. **Analytics domain breakdown** — `analytics.py` still returns an empty
-   `assessments_by_domain` (TODO in code).
-5. **UX polish pass** on Dashboard/Results (charts, framework descriptions on
-   the create modal).
-6. Rewrite the Spira/Jira offshoot apps (explicitly deferred by Jim).
+## Known product gaps (found 2026-07-17, unfixed by design)
 
-**Gotchas:**
-- docker-compose v1 on this host: `down` before `up -d` after image rebuilds
-  (KeyError: 'ContainerConfig' — see lessons-learned 2026-07-17).
-- Dev login (admin@example.com/admin123) only seeds when `DEBUG=True` AND
-  `CREATE_DEV_USERS=True` — both default on in the dev compose only.
-- Frontend dev server now proxies `/api` (vite.config.ts) — `VITE_API_URL` is
-  an override, not required.
+1. **Assessments belong to the assessor, not the organization.** `team_name`
+   is free text — no Team entity, so no way to track the same team across
+   assessments. Kills the assessment-over-time story, which is the core value
+   proposition of a maturity model. Fix this schema before real data
+   accumulates.
+2. **Roles are decorative.** Viewer/assessor/admin exist but there is no admin
+   UI at all (user creation is a raw API call), no org-scoped visibility, no
+   "consultant sees all their clients, client sees only their own."
+3. **Analytics is a stub** — it averages scores across unrelated teams and
+   frameworks. The real products: domain-level trends per team, benchmarking a
+   team against the org or against all assessments, and "what did teams that
+   improved actually change."
 
-**Environment:** dev stack via `docker-compose up`; ports and test login in
-`CLAUDE.md`.
+## The prompt
+
+> You're the product lead. This tool's job is to help a consultant walk an
+> organization from assessment to improvement over time. Propose the v3
+> product — data model (Team entity, org-owned assessments), roles and
+> administration experience, and the analytics/learnings story — as a short
+> spec I can argue with. Don't write code yet. After I've torn the spec apart,
+> we'll build it in vertical slices, each one something I can click.
+
+## Environment
+
+Dev stack via `docker-compose up`; ports and dev login in `CLAUDE.md`.
+A completed demo assessment ("Platform Team Demo", CALMS) is in the dev DB to
+showcase the results page.
+
+Gotchas: docker-compose v1 needs `down` before `up -d` after image rebuilds;
+dev admin only seeds when `DEBUG=True` and `CREATE_DEV_USERS=True` (dev
+compose defaults both on).
