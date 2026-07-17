@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { assessmentApi } from '@/services/api'
+import { logger } from '@/utils/logger'
 
 const MATURITY_LEVELS = {
   1: { name: 'Initial', description: 'Ad-hoc, manual processes', color: 'red' },
@@ -30,15 +31,15 @@ export function ResultsPage() {
   const handleDownloadPdf = async () => {
     if (!report || !id) return
 
-    console.log('[ResultsPage] Starting PDF download for:', id)
+    logger.debug('[ResultsPage] Starting PDF download for:', id)
     setIsDownloading(true)
     setDownloadError(null)
 
     try {
       await assessmentApi.downloadPdfReport(id, report.assessment.team_name)
-      console.log('[ResultsPage] PDF download completed successfully')
+      logger.debug('[ResultsPage] PDF download completed successfully')
     } catch (error) {
-      console.error('[ResultsPage] PDF download failed:', error)
+      logger.error('[ResultsPage] PDF download failed:', error)
       setDownloadError('Failed to download PDF report. Please try again.')
     } finally {
       setIsDownloading(false)

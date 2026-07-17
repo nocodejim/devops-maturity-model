@@ -490,4 +490,37 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 
 ---
 
+### [2026-07-12 13:30] - Untested Detection Recipes Miss Known Findings (Hardening-Toolkit Pilot)
+- **Issue**: While piloting the new `hardening-toolkit/` skills against this repo, the secrets-audit grep recipe returned zero hits on `backend/app/config.py` even though `SECRET_KEY` has a hardcoded default on line 14 — the pattern didn't account for pydantic's type-annotated field syntax (`NAME: str = "value"`)
+- **Impact**: An agent trusting the recipe would have reported the config file clean — a false "no findings" on the single most important secrets check
+- **Root Cause**: Detection recipes were written from memory of what secrets look like, not tested against a codebase with known findings
+- **Resolution**: Piloted both audit skills against this repo using PEER_REVIEW.md and prior analyses as an answer key; fixed the grep (optional type annotation + connection-string credential pattern), added a scope-setting rule to vibe-code-audit, and recorded both runs in `hardening-toolkit/pilot/`. Pilot also found one false positive in the prior human review (`core/gates.py` is imported by the seed script, not orphaned)
+- **Lesson**: Automated detection recipes (greps, lint invocations) must be validated against known-positive examples before their clean result is trusted — same principle as "curl 200 ≠ working app", applied to audits
+- **Category**: Process & Workflow
+- **Priority**: High
+
+---
+
+### [2026-07-17 14:00] - docker-compose v1 KeyError on container recreation
+- **Issue**: `docker-compose up -d` after rebuilding images crashed with `KeyError: 'ContainerConfig'` and left old containers Exited
+- **Impact**: Stack appeared started but backend/frontend were down
+- **Root Cause**: Known bug in docker-compose v1 (python) when recreating containers built from a replaced image
+- **Resolution**: `docker-compose down` (containers only — volume preserved) then `docker-compose up -d`
+- **Lesson**: With compose v1 on this host, always `down` before `up -d` after an image rebuild; check `docker-compose ps` State column, not just the up command's output
+- **Category**: Development Environment
+- **Priority**: Medium
+
+---
+
+### [2026-07-17 15:30] - Hardening remediation: fail-fast config requires compose fallbacks for dev usability
+- **Issue**: Removing the `SECRET_KEY`/`DATABASE_URL` defaults from `config.py` (pilot finding) would break `git clone && docker-compose up` if applied naively
+- **Impact**: Fresh-clone developer experience vs. secure-by-default tension
+- **Root Cause**: The same Settings class serves dev and prod
+- **Resolution**: App-level defaults removed (boot fails without env); the *dev* compose file supplies `${VAR:-dev-value}` fallbacks; the *deploy* compose uses `${VAR:?error}` so production refuses to start without real secrets
+- **Lesson**: "No defaults" belongs in the app config; "dev convenience" belongs in the dev compose file only. Verified both directions: bare `Settings()` import raises pydantic missing-field errors, and deploy compose without `.env` refuses to start
+- **Category**: Security
+- **Priority**: High
+
+---
+
 *This document will be updated throughout the development session.*

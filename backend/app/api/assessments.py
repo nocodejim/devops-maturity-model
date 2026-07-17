@@ -1,6 +1,6 @@
 """Assessment API endpoints"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
 
@@ -11,10 +11,19 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app import schemas
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, require_write_access
 from app.core import scoring
 from app.database import get_db
-from app.models import Assessment, GateResponse, DomainScore, User, AssessmentStatus
+from app.models import (
+    Assessment,
+    Framework,
+    GateResponse,
+    DomainScore,
+    Organization,
+    User,
+    UserRole,
+    AssessmentStatus,
+)
 
 router = APIRouter()
 
@@ -41,16 +50,44 @@ async def list_assessments(
 async def create_assessment(
     assessment_in: schemas.AssessmentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_write_access),
 ):
     """Create new assessment"""
+    # Validate client-supplied foreign keys before writing the row —
+    # otherwise a bad id surfaces as a raw IntegrityError 500, and a user
+    # could attach an assessment to an organization they don't belong to.
+    framework = db.query(Framework).filter(Framework.id == assessment_in.framework_id).first()
+    if not framework:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Framework not found"
+        )
+
+    if assessment_in.organization_id is not None:
+        organization = (
+            db.query(Organization)
+            .filter(Organization.id == assessment_in.organization_id)
+            .first()
+        )
+        if not organization:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Organization not found"
+            )
+        if (
+            current_user.role != UserRole.ADMIN
+            and current_user.organization_id != assessment_in.organization_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot create assessments for another organization",
+            )
+
     db_assessment = Assessment(
         team_name=assessment_in.team_name,
         organization_id=assessment_in.organization_id,
         assessor_id=current_user.id,
-        framework_id=assessment_in.framework_id, # Added framework_id
+        framework_id=assessment_in.framework_id,
         status=AssessmentStatus.DRAFT,
-        started_at=datetime.utcnow(),
+        started_at=datetime.now(timezone.utc),
     )
 
     db.add(db_assessment)
@@ -83,7 +120,7 @@ async def update_assessment(
     assessment_id: UUID,
     assessment_update: schemas.AssessmentUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_write_access),
 ):
     """Update assessment"""
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
@@ -100,7 +137,7 @@ async def update_assessment(
     if assessment_update.status is not None:
         assessment.status = assessment_update.status
 
-    assessment.updated_at = datetime.utcnow()
+    assessment.updated_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(assessment)
@@ -112,7 +149,7 @@ async def update_assessment(
 async def delete_assessment(
     assessment_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_write_access),
 ):
     """Delete assessment"""
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
@@ -134,7 +171,7 @@ async def save_responses(
     assessment_id: UUID,
     responses_in: schemas.GateResponseBulkCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_write_access),
 ):
     """Save or update gate responses"""
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
@@ -163,7 +200,7 @@ async def save_responses(
             existing_response.score = response_data.score
             existing_response.notes = response_data.notes
             existing_response.evidence = response_data.evidence
-            existing_response.updated_at = datetime.utcnow()
+            existing_response.updated_at = datetime.now(timezone.utc)
             saved_responses.append(existing_response)
         else:
             # Create new response
@@ -180,7 +217,7 @@ async def save_responses(
     # Update assessment status to in_progress if it was draft
     if assessment.status == AssessmentStatus.DRAFT:
         assessment.status = AssessmentStatus.IN_PROGRESS
-        assessment.updated_at = datetime.utcnow()
+        assessment.updated_at = datetime.now(timezone.utc)
 
     db.commit()
 
@@ -219,7 +256,7 @@ async def get_responses(
 async def submit_assessment(
     assessment_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_write_access),
 ):
     """Submit assessment for scoring"""
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
@@ -264,8 +301,8 @@ async def submit_assessment(
     assessment.overall_score = overall_score
     assessment.maturity_level = maturity_level
     assessment.status = AssessmentStatus.COMPLETED
-    assessment.completed_at = datetime.utcnow()
-    assessment.updated_at = datetime.utcnow()
+    assessment.completed_at = datetime.now(timezone.utc)
+    assessment.updated_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(assessment)

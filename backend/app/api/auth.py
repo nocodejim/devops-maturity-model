@@ -38,6 +38,15 @@ async def get_current_user(
     return user
 
 
+async def require_write_access(current_user: User = Depends(get_current_user)) -> User:
+    """Block read-only (viewer) accounts from mutating endpoints"""
+    if current_user.role == UserRole.VIEWER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Viewer accounts are read-only"
+        )
+    return current_user
+
+
 @router.post("/login", response_model=schemas.Token)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)

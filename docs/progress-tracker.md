@@ -401,4 +401,58 @@
 
 ---
 
+## Hardening Toolkit (2026-07-12)
+
+Portable skills + instructions package for enterprise-hardening the core app,
+built to be shared with the work fork (`hardening-toolkit/`).
+
+- [x] 7 skills in Claude Code SKILL.md format (vibe-code-audit, secrets-config-hygiene, test-backfill, migration-safety, observability-bootstrap, ci-bootstrap, verify-real-environment)
+- [x] Tool-agnostic prompt twins generated from skills (scripts/build-prompts.sh)
+- [x] instructions/CLAUDE-TEMPLATE.md — enterprise CLAUDE.md/AGENTS.md template
+- [x] instructions/HARDENING-PLAYBOOK.md — phased hardening path with exit criteria
+- [x] scripts/validate-toolkit.sh — structural lint + leakage checks (passing)
+- [x] Pilot A: vibe-code-audit run against this repo → pilot/vibe-code-audit-findings.md (15 findings)
+- [x] Pilot B: secrets-config-hygiene run against this repo → pilot/secrets-hygiene-findings.md (8 findings + rotation list)
+- [x] Remediate pilot findings (2026-07-17 — see Production Hardening below)
+
+---
+
+## Production Hardening (2026-07-17)
+
+Remediation of all 8 secrets-hygiene findings and 15 vibe-audit findings from
+the toolkit pilot reports. Verified end-to-end: full API lifecycle test through
+the new same-origin proxy, headless-browser login/assessment flow (0 console
+errors, 0 token leaks), production image build + non-root check.
+
+**Secrets & config:**
+- [x] `SECRET_KEY`/`DATABASE_URL` defaults removed — app fails at startup when unset
+- [x] `DEBUG` defaults to `False`; dev compose opts in explicitly
+- [x] Dev admin seed gated behind `CREATE_DEV_USERS=True` + `DEBUG=True`; password no longer printed
+- [x] Operator first-admin script: `python -m app.scripts.create_admin` (prompted password, min 12 chars)
+- [x] Dev compose interpolates from `.env` with dev-only fallbacks; `.env.example` added
+- [x] Deploy compose requires secrets via `${VAR:?}`; DB port no longer published
+- [x] CORS origins configurable via env (mostly unnecessary now — same-origin proxy)
+
+**Correctness & performance:**
+- [x] `/health` executes real `SELECT 1`, returns 503 when DB is down
+- [x] Global exception handler + logging (no raw tracebacks)
+- [x] `create_assessment` validates framework/organization FKs (422) and org membership (403)
+- [x] VIEWER role enforced — write endpoints return 403 for viewer accounts
+- [x] Migration 002: indexes on all 11 FK columns + all timestamps converted to TIMESTAMPTZ
+- [x] `datetime.utcnow` (deprecated, naive) eliminated across backend
+- [x] Scoring engine N+1 fixed (one pass per framework, dict lookups)
+- [x] "Unknown Domain/Gate" fallbacks now log integrity errors instead of hiding them
+- [x] Seed/init scripts fail loudly instead of continuing after errors
+
+**Frontend & deploy posture:**
+- [x] Same-origin `/api` everywhere: Vite dev proxy + nginx proxy in prod (no port guessing, no CORS)
+- [x] Credential/token console.logs removed; dev-gated logger utility added
+- [x] Demo-credentials hint on login page only renders in dev builds
+- [x] Production frontend image: static Vite build on unprivileged nginx (non-root, SPA fallback, asset caching)
+- [x] Backend image runs as non-root `appuser`
+- [x] Dead code removed: `api/gates.py`, `gatesApi` stub, `create_test_user.py`; seed data relocated to `scripts/mvp_gates_data.py`
+- [x] README + DEPLOYMENT.md rewritten for the new posture
+
+---
+
 *This document is updated before each commit as part of the documentation protocol (see CLAUDE_INSTRUCTIONS.md)*

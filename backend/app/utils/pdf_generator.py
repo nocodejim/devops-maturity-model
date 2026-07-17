@@ -1,6 +1,6 @@
 """PDF Report Generator for DevOps Maturity Assessments"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 from typing import Dict, List, Any
 
@@ -164,10 +164,10 @@ class PDFReportGenerator:
                 try:
                     completed_at = datetime.fromisoformat(completed_at.replace('Z', '+00:00'))
                 except (ValueError, AttributeError):
-                    completed_at = datetime.utcnow()
+                    completed_at = datetime.now(timezone.utc)
             date_str = completed_at.strftime('%B %d, %Y')
         else:
-            date_str = datetime.utcnow().strftime('%B %d, %Y')
+            date_str = datetime.now(timezone.utc).strftime('%B %d, %Y')
 
         # Title
         elements.append(Paragraph('DevOps Maturity Assessment Report', self.styles['ReportTitle']))
@@ -398,7 +398,7 @@ class PDFReportGenerator:
         elements.append(HRFlowable(width="100%", thickness=1, color=self.COLORS['border']))
         elements.append(Spacer(1, 8))
 
-        generated_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+        generated_at = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
         elements.append(Paragraph(
             f'Report generated on {generated_at} | DevOps Maturity Assessment Platform',
             self.styles['SmallText']

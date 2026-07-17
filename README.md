@@ -77,9 +77,16 @@ This starts:
 
 #### First-Time Setup
 
-The database initializes automatically on first startup. A default admin user is created:
-- **Email**: admin@example.com
-- **Password**: admin123
+The database initializes automatically on first startup (migrations + framework seeding).
+
+**Dev only:** when `DEBUG=True` *and* `CREATE_DEV_USERS=True` (both default to true in the
+dev compose file, and to false everywhere else), a well-known dev login is seeded:
+`admin@example.com` / `admin123`. Production deployments never seed this account —
+create the first admin as an operator action:
+
+```bash
+docker-compose exec backend python -m app.scripts.create_admin --email you@company.com
+```
 
 #### Stop Services
 
@@ -313,19 +320,24 @@ Full API documentation available at http://localhost:8680/docs when running.
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` and adjust. `docker-compose` reads it automatically.
+
 ### Backend
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | (see docker-compose) |
-| `SECRET_KEY` | JWT secret key | (generated) |
+| `DATABASE_URL` | PostgreSQL connection string | **required** — app refuses to start without it |
+| `SECRET_KEY` | JWT signing key (`openssl rand -hex 32`) | **required** — app refuses to start without it |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | 30 |
+| `DEBUG` | Debug behavior/logging | `False` (dev compose sets `True`) |
+| `CREATE_DEV_USERS` | Seed the dev admin login (needs `DEBUG=True` too) | `False` (dev compose sets `True`) |
+| `ALLOWED_ORIGINS` | CORS origins, comma-separated (only for cross-origin API access) | localhost dev origins |
 
 ### Frontend
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | http://localhost:8680 |
+| `VITE_API_URL` | Backend API URL override | same-origin `/api` (proxied by Vite dev server / nginx) |
 
 ---
 

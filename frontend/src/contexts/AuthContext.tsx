@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '@/services/api'
 import type { User } from '@/types'
+import { logger } from '@/utils/logger'
 
 interface AuthContextType {
   user: User | null
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = await authApi.getCurrentUser()
         setUser(currentUser)
       } catch (error) {
-        console.error('Failed to load user:', error)
+        logger.error('Failed to load user:', error)
         localStorage.removeItem('access_token')
       } finally {
         setLoading(false)

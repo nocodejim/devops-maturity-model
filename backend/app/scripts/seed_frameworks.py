@@ -6,7 +6,7 @@ import enum
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Framework, FrameworkDomain, FrameworkGate, FrameworkQuestion
-from app.core.gates import GATES_DEFINITION
+from app.scripts.mvp_gates_data import GATES_DEFINITION
 
 # Define local DomainType for mapping purposes (matching what is in gates.py)
 class DomainType(str, enum.Enum):
