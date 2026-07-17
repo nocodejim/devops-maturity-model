@@ -1,42 +1,10 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts'
 import { assessmentApi, frameworkApi } from '@/services/api'
 import { logger } from '@/utils/logger'
-
-// Wrap long domain names onto up to two lines so radar labels don't collide
-function RadarTick({ payload, x, y, textAnchor }: any) {
-  const words: string[] = String(payload.value).split(' ')
-  const lines: string[] = []
-  let current = ''
-  for (const w of words) {
-    if ((current + ' ' + w).trim().length > 16 && current) {
-      lines.push(current)
-      current = w
-    } else {
-      current = (current + ' ' + w).trim()
-    }
-  }
-  if (current) lines.push(current)
-  return (
-    <text x={x} y={y} textAnchor={textAnchor} fill="#4b5563" fontSize={11}>
-      {lines.slice(0, 2).map((line, i) => (
-        <tspan key={i} x={x} dy={i === 0 ? 0 : 13}>
-          {line}
-        </tspan>
-      ))}
-    </text>
-  )
-}
+import { RadarChart } from '@/components/RadarChart'
+import { Layout } from '@/components/Layout'
 
 const MATURITY_LEVELS = {
   1: { name: 'Initial', description: 'Ad-hoc, manual processes', color: 'red' },
@@ -53,7 +21,6 @@ const getMaturityInfo = (level: number) => {
 
 export function ResultsPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
@@ -104,55 +71,42 @@ export function ResultsPage() {
                      overallScore >= 40 ? 'yellow' : 'orange'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Assessment Results: {report.assessment.team_name}
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                {framework ? `${framework.name} · ` : ''}
-                Completed: {report.assessment.completed_at ? new Date(report.assessment.completed_at).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDownloadPdf}
-                disabled={isDownloading}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isDownloading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Download PDF
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Page Title */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Assessment Results: {report.assessment.team_name}
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {framework ? `${framework.name} · ` : ''}
+              Completed: {report.assessment.completed_at ? new Date(report.assessment.completed_at).toLocaleDateString() : 'N/A'}
+            </p>
+          </div>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloading}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isDownloading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </>
+            )}
+          </button>
+        </div>
         {/* Download Error Alert */}
         {downloadError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
@@ -195,36 +149,14 @@ export function ResultsPage() {
 
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-2 text-center">Maturity Profile</h2>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart
-                  data={report.domain_breakdown.map(d => ({ domain: d.domain, score: d.score }))}
-                  margin={{ top: 24, right: 48, bottom: 8, left: 48 }}
-                >
-                  <PolarGrid stroke="#e5e7eb" />
-                  <PolarAngleAxis dataKey="domain" tick={<RadarTick />} />
-                  <PolarRadiusAxis
-                    domain={[0, 100]}
-                    tickCount={5}
-                    tick={{ fill: '#9ca3af', fontSize: 10 }}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [`${value.toFixed(1)} / 100`, 'Score']}
-                    contentStyle={{ borderRadius: 8, borderColor: '#e5e7eb', fontSize: 13 }}
-                  />
-                  <Radar
-                    name="Domain score"
-                    dataKey="score"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    fill="#2563eb"
-                    fillOpacity={0.15}
-                    dot={{ r: 3, fill: '#2563eb' }}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
+            <RadarChart
+              data={report.domain_breakdown.map(d => ({
+                domain: d.domain,
+                score: d.score,
+                fullMark: 100,
+              }))}
+              height={320}
+            />
           </div>
         </div>
 
@@ -372,6 +304,6 @@ export function ResultsPage() {
           </div>
         )}
       </main>
-    </div>
+    </Layout>
   )
 }

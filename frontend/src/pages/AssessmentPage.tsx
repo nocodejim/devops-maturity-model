@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { assessmentApi, frameworkApi } from '@/services/api'
+import { Layout } from '@/components/Layout'
 import { GateResponseCreate, FrameworkDomain } from '@/types'
 
 export function AssessmentPage() {
@@ -161,9 +162,9 @@ export function AssessmentPage() {
   const currentDomain = getCurrentDomain()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+    <Layout>
+      {/* Assessment Header */}
+      <header className="bg-white shadow-sm sticky top-14 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
@@ -193,7 +194,7 @@ export function AssessmentPage() {
                 onClick={() => navigate('/dashboard')}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm"
               >
-                Back to Dashboard
+                Back
               </button>
             </div>
           </div>
@@ -325,6 +326,6 @@ export function AssessmentPage() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }

@@ -48,6 +48,10 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"  # "json" for production, "console" for dev
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
 

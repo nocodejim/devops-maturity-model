@@ -86,6 +86,9 @@ async def create_assessment(
         organization_id=assessment_in.organization_id,
         assessor_id=current_user.id,
         framework_id=assessment_in.framework_id,
+        project_id=assessment_in.project_id,
+        tags=assessment_in.tags,
+        campaign_id=assessment_in.campaign_id,
         status=AssessmentStatus.DRAFT,
         started_at=datetime.now(timezone.utc),
     )
@@ -136,6 +139,12 @@ async def update_assessment(
         assessment.team_name = assessment_update.team_name
     if assessment_update.status is not None:
         assessment.status = assessment_update.status
+    if assessment_update.project_id is not None:
+        assessment.project_id = assessment_update.project_id
+    if assessment_update.tags is not None:
+        assessment.tags = assessment_update.tags
+    if assessment_update.campaign_id is not None:
+        assessment.campaign_id = assessment_update.campaign_id
 
     assessment.updated_at = datetime.now(timezone.utc)
 

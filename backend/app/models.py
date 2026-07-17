@@ -52,6 +52,7 @@ class Organization(Base):
     # Relationships
     users = relationship("User", back_populates="organization")
     assessments = relationship("Assessment", back_populates="organization")
+    projects = relationship("Project", back_populates="organization")
 
 
 class User(Base):
@@ -64,6 +65,7 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     hashed_password = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), default=UserRole.ASSESSOR, nullable=False)
+    functional_role = Column(String(50), nullable=True)  # developer, qa, security, ops, etc.
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -158,6 +160,25 @@ class FrameworkQuestion(Base):
     responses = relationship("GateResponse", back_populates="question")
 
 
+class Project(Base):
+    """Project model - groups related assessments for team insights"""
+
+    __tablename__ = "projects"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    # Relationships
+    organization = relationship("Organization", back_populates="projects")
+    assessments = relationship("Assessment", back_populates="project")
+
+
 class Assessment(Base):
     """Assessment model"""
 
@@ -167,8 +188,11 @@ class Assessment(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True)
     assessor_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id"), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
     team_name = Column(String(255), nullable=False)
     status = Column(Enum(AssessmentStatus), default=AssessmentStatus.DRAFT, nullable=False)
+    tags = Column(ARRAY(String), nullable=True)
+    campaign_id = Column(String(255), nullable=True)
 
     # Overall Scores
     overall_score = Column(Float, nullable=True)
@@ -186,6 +210,7 @@ class Assessment(Base):
     organization = relationship("Organization", back_populates="assessments")
     assessor = relationship("User", back_populates="assessments")
     framework = relationship("Framework", back_populates="assessments")
+    project = relationship("Project", back_populates="assessments")
     domain_scores = relationship("DomainScore", back_populates="assessment", cascade="all, delete-orphan")
     gate_responses = relationship("GateResponse", back_populates="assessment", cascade="all, delete-orphan")
 

@@ -20,6 +20,22 @@
 
 ---
 
+## Session Date: 2026-02-25
+
+### Purpose
+Platform modernization session - adding structured logging, admin pages, radar charts, framework CRUD, and shared navigation.
+
+### [2026-02-25 12:50] - Poetry Lock File Must Be Updated After pyproject.toml Changes
+- **Issue**: Adding structlog dependency to pyproject.toml caused docker build to fail with "pyproject.toml changed significantly since poetry.lock was last generated"
+- **Impact**: Build blocked until lock file was regenerated
+- **Root Cause**: Docker build runs `poetry install` which requires lock file to be in sync
+- **Resolution**: Run `poetry lock` in a temporary container to regenerate the lock file before building
+- **Lesson**: Always regenerate poetry.lock after modifying pyproject.toml dependencies. Use: `docker run --rm -v $(pwd)/backend:/app -w /app python:3.11-slim bash -c "pip install poetry -q && poetry lock"`
+- **Category**: Dependencies & Packages
+- **Priority**: High
+
+---
+
 ## Session Date: 2025-10-06
 
 ### Purpose
@@ -520,6 +536,43 @@ This document tracks mistakes, defects, issues, and lessons learned during the d
 - **Lesson**: "No defaults" belongs in the app config; "dev convenience" belongs in the dev compose file only. Verified both directions: bare `Settings()` import raises pydantic missing-field errors, and deploy compose without `.env` refuses to start
 - **Category**: Security
 - **Priority**: High
+
+---
+
+### [2025-11-28 19:50] - Missing Upgrade Path Documentation for Existing Installations
+- **Issue**: Released v2.0 with breaking database schema changes but no upgrade documentation for users running v1.x
+- **Impact**: MEDIUM-HIGH
+  - Users upgrading from v1.x don't know how to migrate to v2.0
+  - Breaking changes (multi-framework architecture) destroy v1.x data
+  - No clear path to rebuild database with new schema
+  - Assumption that all users are doing fresh installs
+- **Root Cause**: Focused only on new installation/development workflow, didn't consider upgrade path for existing deployments
+- **Resolution**: Created comprehensive upgrade guide (docs/UPGRADE-TO-2.0.md) with:
+  1. Manual step-by-step upgrade instructions
+  2. Automated upgrade script
+  3. Troubleshooting section
+  4. Rollback instructions
+  5. Clear warnings about data loss
+- **Lesson**: **When releasing breaking changes, ALWAYS provide upgrade documentation**
+  - Don't assume all users are doing fresh installs
+  - Document what data will be lost/preserved
+  - Provide clear migration or upgrade path
+  - Include rollback instructions
+  - Consider existing production deployments
+  - Upgrade path is as important as installation instructions
+- **Category**: Process & Workflow, Documentation
+- **Priority**: HIGH
+- **Best Practice**:
+  - Create `docs/UPGRADE-FROM-vX-TO-vY.md` for each breaking release
+  - Include both manual and automated upgrade paths
+  - Test upgrade process on fresh v1.x install before releasing
+  - Document what features/data are incompatible
+  - Provide data export/backup instructions if applicable
+- **Prevention**:
+  - Add "Upgrade Path" to release checklist
+  - Test upgrade scenarios, not just fresh installs
+  - Consider backward compatibility when making schema changes
+- **Related Documentation**: docs/UPGRADE-TO-2.0.md
 
 ---
 
