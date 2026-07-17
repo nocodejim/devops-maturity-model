@@ -453,6 +453,12 @@ errors, 0 token leaks), production image build + non-root check.
 - [x] Dead code removed: `api/gates.py`, `gatesApi` stub, `create_test_user.py`; seed data relocated to `scripts/mvp_gates_data.py`
 - [x] README + DEPLOYMENT.md rewritten for the new posture
 
+### Visible UX pass (2026-07-17, follow-up)
+- [x] Results page: maturity-profile radar chart (recharts, already a dependency) beside the overall score; framework name in the header
+- [x] Dashboard: framework badge on every assessment card; framework description shown in the create form
+- [x] Assessment page: per-domain question-id sets memoized (pilot finding 14)
+- [x] Verified in headless browser (screenshots, 0 console errors) + TypeScript build
+
 ---
 
 *This document is updated before each commit as part of the documentation protocol (see CLAUDE_INSTRUCTIONS.md)*

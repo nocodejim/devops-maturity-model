@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
@@ -30,6 +30,12 @@ export function DashboardPage() {
     queryKey: ['analytics'],
     queryFn: analyticsApi.getSummary,
   })
+
+  const frameworkById = useMemo(
+    () => new Map((frameworks ?? []).map(f => [f.id, f])),
+    [frameworks]
+  )
+  const selectedFramework = frameworkById.get(selectedFrameworkId)
 
   // Create assessment mutation
   const createMutation = useMutation({
@@ -190,6 +196,9 @@ export function DashboardPage() {
                         ))}
                     </select>
                   )}
+                  {selectedFramework?.description && (
+                    <p className="mt-2 text-sm text-gray-600">{selectedFramework.description}</p>
+                  )}
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -234,11 +243,16 @@ export function DashboardPage() {
               <div key={assessment.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <h3 className="text-lg font-medium text-gray-900">{assessment.team_name}</h3>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(assessment.status)}`}>
                         {assessment.status.replace('_', ' ')}
                       </span>
+                      {frameworkById.get(assessment.framework_id) && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-indigo-50 text-indigo-700">
+                          {frameworkById.get(assessment.framework_id)!.name}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-2 flex items-center gap-6 text-sm text-gray-600">
                       <span>Created: {new Date(assessment.created_at).toLocaleDateString()}</span>

@@ -1,8 +1,42 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { assessmentApi } from '@/services/api'
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts'
+import { assessmentApi, frameworkApi } from '@/services/api'
 import { logger } from '@/utils/logger'
+
+// Wrap long domain names onto up to two lines so radar labels don't collide
+function RadarTick({ payload, x, y, textAnchor }: any) {
+  const words: string[] = String(payload.value).split(' ')
+  const lines: string[] = []
+  let current = ''
+  for (const w of words) {
+    if ((current + ' ' + w).trim().length > 16 && current) {
+      lines.push(current)
+      current = w
+    } else {
+      current = (current + ' ' + w).trim()
+    }
+  }
+  if (current) lines.push(current)
+  return (
+    <text x={x} y={y} textAnchor={textAnchor} fill="#4b5563" fontSize={11}>
+      {lines.slice(0, 2).map((line, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : 13}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  )
+}
 
 const MATURITY_LEVELS = {
   1: { name: 'Initial', description: 'Ad-hoc, manual processes', color: 'red' },
@@ -26,6 +60,12 @@ export function ResultsPage() {
   const { data: report, isLoading } = useQuery({
     queryKey: ['report', id],
     queryFn: () => assessmentApi.getReport(id!),
+  })
+
+  const { data: framework } = useQuery({
+    queryKey: ['framework', report?.assessment.framework_id],
+    queryFn: () => frameworkApi.get(report!.assessment.framework_id),
+    enabled: !!report?.assessment.framework_id,
   })
 
   const handleDownloadPdf = async () => {
@@ -74,6 +114,7 @@ export function ResultsPage() {
                 Assessment Results: {report.assessment.team_name}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
+                {framework ? `${framework.name} · ` : ''}
                 Completed: {report.assessment.completed_at ? new Date(report.assessment.completed_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
@@ -132,21 +173,57 @@ export function ResultsPage() {
           </div>
         )}
 
-        {/* Overall Score */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Overall Maturity Score</h2>
-            <div className={`text-6xl font-bold text-${scoreColor}-600 mb-2`}>
-              {overallScore.toFixed(1)}
-            </div>
-            <div className="text-2xl text-gray-600 mb-6">out of 100</div>
-
-            <div className={`inline-flex items-center px-6 py-3 rounded-full bg-${maturityInfo.color}-100 text-${maturityInfo.color}-800`}>
-              <div className="text-center">
-                <div className="text-2xl font-bold">Level {report.maturity_level.level}</div>
-                <div className="text-lg">{maturityInfo.name}</div>
-                <div className="text-sm mt-1">{maturityInfo.description}</div>
+        {/* Overall Score + Maturity Profile */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col justify-center">
+            <div className="text-center">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Overall Maturity Score</h2>
+              <div className={`text-6xl font-bold text-${scoreColor}-600 mb-2`}>
+                {overallScore.toFixed(1)}
               </div>
+              <div className="text-2xl text-gray-600 mb-6">out of 100</div>
+
+              <div className={`inline-flex items-center px-6 py-3 rounded-full bg-${maturityInfo.color}-100 text-${maturityInfo.color}-800`}>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">Level {report.maturity_level.level}</div>
+                  <div className="text-lg">{maturityInfo.name}</div>
+                  <div className="text-sm mt-1">{maturityInfo.description}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2 text-center">Maturity Profile</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart
+                  data={report.domain_breakdown.map(d => ({ domain: d.domain, score: d.score }))}
+                  margin={{ top: 24, right: 48, bottom: 8, left: 48 }}
+                >
+                  <PolarGrid stroke="#e5e7eb" />
+                  <PolarAngleAxis dataKey="domain" tick={<RadarTick />} />
+                  <PolarRadiusAxis
+                    domain={[0, 100]}
+                    tickCount={5}
+                    tick={{ fill: '#9ca3af', fontSize: 10 }}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [`${value.toFixed(1)} / 100`, 'Score']}
+                    contentStyle={{ borderRadius: 8, borderColor: '#e5e7eb', fontSize: 13 }}
+                  />
+                  <Radar
+                    name="Domain score"
+                    dataKey="score"
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    fill="#2563eb"
+                    fillOpacity={0.15}
+                    dot={{ r: 3, fill: '#2563eb' }}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
