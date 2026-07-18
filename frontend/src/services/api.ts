@@ -33,25 +33,13 @@ import type {
   TrendComparisonResponse,
 } from '@/types'
 
-// Detect backend URL based on current host
-const getApiUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
-  }
-  // Use same host as frontend
-  const protocol = window.location.protocol
-  const host = window.location.hostname
+import { logger } from '@/utils/logger'
 
-  // If running on non-standard frontend port (8673), use port 8680 (backend)
-  // Otherwise use port 8000 (development)
-  const port = window.location.port === '8673' ? '8680' : '8000'
-
-  const url = `${protocol}//${host}:${port}/api`
-  console.log('[API] Detected backend URL:', url)
-  return url
-}
-
-const API_URL = getApiUrl()
+// Same-origin /api by default: the Vite dev server (dev) and nginx (prod)
+// both proxy it to the backend, so the client never guesses ports.
+// VITE_API_URL overrides for deployments where the API lives elsewhere.
+const API_URL: string = import.meta.env.VITE_API_URL || '/api'
+logger.debug('[API] Backend URL:', API_URL)
 
 const api = axios.create({
   baseURL: API_URL,
@@ -194,7 +182,7 @@ export const assessmentApi = {
   },
 
   downloadPdfReport: async (id: string, teamName: string): Promise<void> => {
-    console.log('[API] Downloading PDF report for assessment:', id)
+    logger.debug('[API] Downloading PDF report for assessment:', id)
     try {
       const response = await api.get(`/assessments/${id}/report/pdf`, {
         responseType: 'blob',
@@ -215,9 +203,9 @@ export const assessmentApi = {
       link.remove()
       window.URL.revokeObjectURL(url)
 
-      console.log('[API] PDF download successful')
+      logger.debug('[API] PDF download successful')
     } catch (error) {
-      console.error('[API] PDF download failed:', error)
+      logger.error('[API] PDF download failed:', error)
       throw error
     }
   },
@@ -497,13 +485,6 @@ export const insightsApi = {
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
-  },
-}
-
-// DEPRECATED: Gates API (kept for compilation safety if needed, but should be unused)
-export const gatesApi = {
-  getAll: async (): Promise<any> => {
-    return Promise.resolve({ gates: [], total_gates: 0, total_questions: 0 })
   },
 }
 

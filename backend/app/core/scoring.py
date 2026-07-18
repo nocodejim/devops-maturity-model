@@ -1,5 +1,6 @@
 """Scoring engine for assessments - Dynamic Spec"""
 
+import logging
 from typing import Dict, List, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
@@ -7,48 +8,69 @@ from sqlalchemy.orm import Session, joinedload
 from app import schemas
 from app.models import Assessment, GateResponse, DomainScore, FrameworkDomain, FrameworkQuestion, FrameworkGate
 
+logger = logging.getLogger("app.scoring")
+
+
 def calculate_scores(db: Session, assessment: Assessment, gate_responses: List[GateResponse]) -> Dict[UUID, Dict]:
     """
     Calculate scores for each domain from gate responses based on Framework definitions.
     """
 
-    # 1. Fetch Framework Structure
+    # Fetch the whole framework structure in one pass: domains, then all
+    # gates and questions for those domains, and build dict lookups —
+    # instead of two queries per domain plus a linear gate scan per question.
     framework_id = assessment.framework_id
     domains = db.query(FrameworkDomain).filter(FrameworkDomain.framework_id == framework_id).all()
+    domain_ids = [d.id for d in domains]
+
+    gates = (
+        db.query(FrameworkGate).filter(FrameworkGate.domain_id.in_(domain_ids)).all()
+        if domain_ids
+        else []
+    )
+    gate_by_id = {g.id: g for g in gates}
+    gates_by_domain: Dict[UUID, List[FrameworkGate]] = {}
+    for g in gates:
+        gates_by_domain.setdefault(g.domain_id, []).append(g)
+
+    questions = (
+        db.query(FrameworkQuestion).filter(FrameworkQuestion.gate_id.in_(list(gate_by_id))).all()
+        if gate_by_id
+        else []
+    )
+    questions_by_domain: Dict[UUID, List[FrameworkQuestion]] = {}
+    for q in questions:
+        gate = gate_by_id.get(q.gate_id)
+        if gate is None:
+            # A question pointing at a missing gate is a seed/integrity bug —
+            # surface it instead of silently skewing the score.
+            logger.error(
+                "Question %s references missing gate %s (framework %s)",
+                q.id, q.gate_id, framework_id,
+            )
+            continue
+        questions_by_domain.setdefault(gate.domain_id, []).append(q)
+
+    response_map = {r.question_id: r for r in gate_responses}
 
     domain_scores = {}
 
-    # Pre-fetch questions to map question_id -> gate -> domain
-    # Or rely on joined loading in GateResponse if configured, but here we iterate domains
-
-    # Optimization: Load all responses into a map
-    response_map = {r.question_id: r for r in gate_responses}
-
     for domain in domains:
-        # Get all gates for this domain
-        gates = db.query(FrameworkGate).filter(FrameworkGate.domain_id == domain.id).all()
-        gate_ids = [g.id for g in gates]
-
-        # Get all questions for these gates
-        questions = db.query(FrameworkQuestion).filter(FrameworkQuestion.gate_id.in_(gate_ids)).all()
-        question_ids = [q.id for q in questions]
+        domain_questions = questions_by_domain.get(domain.id, [])
 
         # Calculate score
         total_score = 0
-        max_possible = len(questions) * 5
+        max_possible = len(domain_questions) * 5
 
         strengths = []
         gaps = []
 
-        for q in questions:
+        for q in domain_questions:
             resp = response_map.get(q.id)
             if resp:
                 total_score += resp.score
 
-                # Identify strengths/gaps
-                # Need gate name for context
-                gate = next((g for g in gates if g.id == q.gate_id), None)
-                gate_name = gate.name if gate else "Unknown Gate"
+                gate_name = gate_by_id[q.gate_id].name
 
                 if resp.score >= 4:
                     strengths.append(f"{gate_name} - {q.text[:50]}...: Score {resp.score}/5")
@@ -139,6 +161,11 @@ def generate_report(
     domain_name_map = {d.id: d.name for d in framework_domains}
 
     for ds in domain_scores:
+        if ds.domain_id not in domain_name_map:
+            logger.error(
+                "DomainScore %s references missing domain %s (assessment %s)",
+                ds.id, ds.domain_id, assessment.id,
+            )
         domain_breakdown.append(
             schemas.DomainBreakdown(
                 domain=domain_name_map.get(ds.domain_id, "Unknown Domain"),
@@ -162,6 +189,10 @@ def generate_report(
     for response in gate_responses:
         gate = question_gate_map.get(response.question_id)
         if not gate:
+            logger.error(
+                "GateResponse %s references missing question/gate %s (assessment %s)",
+                response.id, response.question_id, assessment.id,
+            )
             continue
 
         gate_id = str(gate.id)

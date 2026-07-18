@@ -1,50 +1,65 @@
 version: '3.8'
 
 # DevOps Maturity Assessment Platform - Deployment Configuration
-# This docker-compose file uses pre-built images from Docker Hub
-# For development setup, use docker-compose.yml instead
+# Uses pre-built images. For development, use docker-compose.yml instead.
+#
+# This file refuses to start without real secrets. Provide them via a .env
+# file next to this compose file (see .env.example) or exported variables:
+#
+#   POSTGRES_PASSWORD   database password
+#   SECRET_KEY          JWT signing key (openssl rand -hex 32)
+#
+# First admin user is an operator action (no default credential is seeded):
+#   docker-compose -f docker-compose.deploy.yml exec backend \
+#     python -m app.scripts.create_admin --email you@company.com
 
 services:
   postgres:
     image: postgres:15-alpine
     container_name: devops-maturity-db
     environment:
-      POSTGRES_USER: devops
-      POSTGRES_PASSWORD: devops123
-      POSTGRES_DB: devops_maturity
-    ports:
-      - "8682:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-devops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-devops_maturity}
+    # Not published to the host — only the backend needs it.
+    # Uncomment to expose for external DB tooling:
+    # ports:
+    #   - "8682:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devops"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devops}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
   backend:
-    image: buckeye90/devops-maturity-backend:2.0
+    image: ${BACKEND_IMAGE:-buckeye90/devops-maturity-backend:2.1}
     container_name: devops-maturity-backend
     ports:
       - "8680:8000"
     environment:
-      # IMPORTANT: Change these values for production!
-      DATABASE_URL: postgresql://devops:devops123@postgres:5432/devops_maturity
-      SECRET_KEY: change-this-to-a-secure-random-string-in-production
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      DATABASE_URL: postgresql://${POSTGRES_USER:-devops}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-devops_maturity}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env (openssl rand -hex 32)}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       DEBUG: "False"
+      CREATE_DEV_USERS: "False"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
   frontend:
-    image: buckeye90/devops-maturity-frontend:2.0
+    image: ${FRONTEND_IMAGE:-buckeye90/devops-maturity-frontend:2.1}
     container_name: devops-maturity-frontend
     ports:
-      - "8673:5173"
+      - "8673:8080"
     depends_on:
       - backend
     restart: unless-stopped
@@ -52,28 +67,7 @@ services:
 volumes:
   postgres_data:
 
-# After starting services with: docker-compose -f docker-compose.deploy.yml up -d
-# Initialize the database with:
-#   docker-compose -f docker-compose.deploy.yml exec backend alembic upgrade head
-#
-# Create admin user with:
-#   docker-compose -f docker-compose.deploy.yml exec backend python -c "
-#   from app.database import SessionLocal
-#   from app.models import User
-#   from app.core.security import get_password_hash
-#   db = SessionLocal()
-#   admin = User(
-#       email='admin@example.com',
-#       full_name='Admin User',
-#       hashed_password=get_password_hash('admin123'),
-#       is_admin=True
-#   )
-#   db.add(admin)
-#   db.commit()
-#   print('Admin user created')
-#   "
-#
-# Access the application at:
-#   Frontend: http://localhost:8673
-#   Backend:  http://localhost:8680
-#   API Docs: http://localhost:8680/docs
+# Start:    docker-compose -f docker-compose.deploy.yml up -d
+# Migrate:  runs automatically via the backend entrypoint
+# Access:   Frontend http://localhost:8673  (nginx proxies /api to the backend)
+#           API docs http://localhost:8680/docs

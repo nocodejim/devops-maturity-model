@@ -1,19 +1,22 @@
 version: '3.8'
 
+# Development stack. Values interpolate from .env (see .env.example);
+# the :- fallbacks keep a fresh clone bootable with dev-only credentials.
+
 services:
   postgres:
     image: postgres:15-alpine
     container_name: devops-maturity-db
     environment:
-      POSTGRES_USER: devops
-      POSTGRES_PASSWORD: devops123
-      POSTGRES_DB: devops_maturity
+      POSTGRES_USER: ${POSTGRES_USER:-devops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devops123}
+      POSTGRES_DB: ${POSTGRES_DB:-devops_maturity}
     ports:
       - "8682:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devops"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devops}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,11 +29,11 @@ services:
     ports:
       - "8680:8000"
     environment:
-      DATABASE_URL: postgresql://devops:devops123@postgres:5432/devops_maturity
-      SECRET_KEY: dev-secret-key-change-in-production
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      DEBUG: "True"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-devops}:${POSTGRES_PASSWORD:-devops123}@postgres:5432/${POSTGRES_DB:-devops_maturity}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      DEBUG: ${DEBUG:-True}
+      CREATE_DEV_USERS: ${CREATE_DEV_USERS:-True}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,7 +50,9 @@ services:
     container_name: devops-maturity-frontend
     ports:
       - "8673:5173"
-    # VITE_API_URL removed - frontend auto-detects backend URL based on hostname
+    environment:
+      # Vite dev server proxies /api to this address (see vite.config.ts)
+      API_PROXY_TARGET: http://backend:8000
     volumes:
       - ./frontend:/app
       - /app/node_modules

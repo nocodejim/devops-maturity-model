@@ -1,7 +1,7 @@
 """PDF Report Generator for DevOps Maturity Assessments and Team Insights"""
 
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 from typing import Dict, List, Any
 
@@ -166,7 +166,7 @@ class PDFReportGenerator:
         story.extend(self._build_strengths_and_gaps(report_data))
         story.extend(self._build_recommendations(report_data))
 
-        generated_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+        generated_at = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
         def _draw_footer(canvas, doc):
             canvas.saveState()
@@ -205,10 +205,10 @@ class PDFReportGenerator:
                 try:
                     completed_at = datetime.fromisoformat(completed_at.replace('Z', '+00:00'))
                 except (ValueError, AttributeError):
-                    completed_at = datetime.utcnow()
+                    completed_at = datetime.now(timezone.utc)
             date_str = completed_at.strftime('%B %d, %Y')
         else:
-            date_str = datetime.utcnow().strftime('%B %d, %Y')
+            date_str = datetime.now(timezone.utc).strftime('%B %d, %Y')
 
         elements.append(Paragraph('DevOps Maturity Assessment', self.styles['ReportTitle']))
         elements.append(Paragraph(team_name, self.styles['ReportSubtitle']))
@@ -743,7 +743,7 @@ class InsightsPDFGenerator:
         story.append(Paragraph('Team Insights Report', self.styles['InsightTitle']))
         story.append(Paragraph(project_name, self.styles['InsightSubtitle']))
         story.append(Paragraph(
-            datetime.utcnow().strftime('%B %d, %Y'),
+            datetime.now(timezone.utc).strftime('%B %d, %Y'),
             self.styles['InsightSmall'],
         ))
         story.append(Spacer(1, 8))
@@ -893,7 +893,7 @@ class InsightsPDFGenerator:
             ]))
             story.append(t)
 
-        generated_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+        generated_at = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
         def _draw_footer(canvas, doc):
             canvas.saveState()

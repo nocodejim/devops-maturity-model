@@ -20,6 +20,31 @@ interface RadarChartProps {
   height?: number
 }
 
+// Wrap long domain names onto up to two lines so radar labels don't collide
+function RadarTick({ payload, x, y, textAnchor }: any) {
+  const words: string[] = String(payload.value).split(' ')
+  const lines: string[] = []
+  let current = ''
+  for (const w of words) {
+    if ((current + ' ' + w).trim().length > 16 && current) {
+      lines.push(current)
+      current = w
+    } else {
+      current = (current + ' ' + w).trim()
+    }
+  }
+  if (current) lines.push(current)
+  return (
+    <text x={x} y={y} textAnchor={textAnchor} fill="#4b5563" fontSize={11}>
+      {lines.slice(0, 2).map((line, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : 13}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  )
+}
+
 export function RadarChart({ data, title, height = 400 }: RadarChartProps) {
   console.log('[RadarChart] Rendering with data:', data)
 
@@ -37,7 +62,7 @@ export function RadarChart({ data, title, height = 400 }: RadarChartProps) {
           <PolarGrid stroke="#e5e7eb" />
           <PolarAngleAxis
             dataKey="domain"
-            tick={{ fill: '#374151', fontSize: 12 }}
+            tick={<RadarTick />}
             tickLine={false}
           />
           <PolarRadiusAxis

@@ -18,5 +18,14 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    proxy: {
+      // Same-origin /api in dev, proxied server-side to the backend
+      // container. Works from any client (localhost or LAN IP) with no
+      // CORS and no port guessing in the client bundle.
+      '/api': {
+        target: process.env.API_PROXY_TARGET || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
 })

@@ -17,6 +17,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from sqlalchemy import text
+from app.config import settings
 from app.database import SessionLocal, engine
 from app.models import User, UserRole, Framework, Assessment, AssessmentStatus
 from app.core.security import get_password_hash
@@ -68,12 +69,25 @@ def check_database_state():
 
 
 def create_admin_user():
-    """Create the default admin user if not exists."""
+    """Create the well-known dev admin user, only in an opted-in dev environment.
+
+    Requires BOTH CREATE_DEV_USERS=True and DEBUG=True so a production
+    deployment can never boot with a publicly-documented credential.
+    Production first-admin is an operator action: app/scripts/create_admin.py
+    """
+    if not (settings.CREATE_DEV_USERS and settings.DEBUG):
+        print(
+            "[init_database] Dev user seeding disabled "
+            "(requires CREATE_DEV_USERS=True and DEBUG=True). "
+            "Create the first admin with: python -m app.scripts.create_admin"
+        )
+        return False
+
     db = SessionLocal()
     try:
         existing_user = db.query(User).filter(User.email == "admin@example.com").first()
         if existing_user:
-            print("[init_database] Admin user already exists, skipping...")
+            print("[init_database] Dev admin user already exists, skipping...")
             return False
 
         hashed_password = get_password_hash("admin123")
@@ -87,47 +101,46 @@ def create_admin_user():
 
         db.add(admin_user)
         db.commit()
-        print("[init_database] Created admin user (admin@example.com / admin123)")
+        print("[init_database] Created dev admin user (admin@example.com; password in docs)")
         return True
 
-    except Exception as e:
-        print(f"[init_database] Error creating admin user: {e}")
+    except Exception:
         db.rollback()
-        return False
+        raise
     finally:
         db.close()
 
 
 def seed_frameworks():
-    """Seed all 3 frameworks if none exist."""
+    """Seed all 3 frameworks if none exist.
+
+    Raises on failure — a half-seeded framework catalog is worse than a
+    startup error, and the entrypoint should stop the container.
+    """
     db = SessionLocal()
     try:
         existing_count = db.query(Framework).count()
         if existing_count > 0:
             print(f"[init_database] {existing_count} framework(s) already exist, skipping seeding...")
             return False
-
+    finally:
         db.close()
 
-        # Import and run each seeding script
-        print("[init_database] Seeding DevOps Maturity MVP framework...")
-        from app.scripts.seed_frameworks import seed_frameworks as seed_mvp
-        seed_mvp()
+    # Import and run each seeding script
+    print("[init_database] Seeding DevOps Maturity MVP framework...")
+    from app.scripts.seed_frameworks import seed_frameworks as seed_mvp
+    seed_mvp()
 
-        print("[init_database] Seeding DORA Metrics framework...")
-        from app.scripts.seed_dora_framework import seed_dora_framework
-        seed_dora_framework()
+    print("[init_database] Seeding DORA Metrics framework...")
+    from app.scripts.seed_dora_framework import seed_dora_framework
+    seed_dora_framework()
 
-        print("[init_database] Seeding CALMS DevOps framework...")
-        from app.scripts.seed_calms_framework import seed_calms_framework
-        seed_calms_framework()
+    print("[init_database] Seeding CALMS DevOps framework...")
+    from app.scripts.seed_calms_framework import seed_calms_framework
+    seed_calms_framework()
 
-        print("[init_database] All 3 frameworks seeded successfully!")
-        return True
-
-    except Exception as e:
-        print(f"[init_database] Error seeding frameworks: {e}")
-        return False
+    print("[init_database] All 3 frameworks seeded successfully!")
+    return True
 
 
 def init_database(force_seed=False):

@@ -1,9 +1,8 @@
 """SQLAlchemy database models"""
 
 import uuid
-from datetime import datetime
 import sqlalchemy as sa
-from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, String, Text, ARRAY
+from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, String, Text, ARRAY, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
@@ -45,8 +44,10 @@ class Organization(Base):
     name = Column(String(255), nullable=False)
     industry = Column(String(255), nullable=True)
     size = Column(Enum(OrganizationSize), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     users = relationship("User", back_populates="organization")
@@ -65,11 +66,13 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), default=UserRole.ASSESSOR, nullable=False)
     functional_role = Column(String(50), nullable=True)  # developer, qa, security, ops, etc.
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    last_login = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+    last_login = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     organization = relationship("Organization", back_populates="users")
@@ -85,8 +88,10 @@ class Framework(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     version = Column(String(50), nullable=False, default="1.0")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     domains = relationship("FrameworkDomain", back_populates="framework", cascade="all, delete-orphan")
@@ -99,13 +104,15 @@ class FrameworkDomain(Base):
     __tablename__ = "framework_domains"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id", ondelete="CASCADE"), nullable=False)
+    framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     weight = Column(Float, nullable=False, default=1.0)
     order = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     framework = relationship("Framework", back_populates="domains")
@@ -119,12 +126,14 @@ class FrameworkGate(Base):
     __tablename__ = "framework_gates"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    domain_id = Column(UUID(as_uuid=True), ForeignKey("framework_domains.id", ondelete="CASCADE"), nullable=False)
+    domain_id = Column(UUID(as_uuid=True), ForeignKey("framework_domains.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     order = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     domain = relationship("FrameworkDomain", back_populates="gates")
@@ -137,12 +146,14 @@ class FrameworkQuestion(Base):
     __tablename__ = "framework_questions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    gate_id = Column(UUID(as_uuid=True), ForeignKey("framework_gates.id", ondelete="CASCADE"), nullable=False)
+    gate_id = Column(UUID(as_uuid=True), ForeignKey("framework_gates.id", ondelete="CASCADE"), nullable=False, index=True)
     text = Column(Text, nullable=False)
     guidance = Column(Text, nullable=True)
     order = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     gate = relationship("FrameworkGate", back_populates="questions")
@@ -158,8 +169,10 @@ class Project(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     organization = relationship("Organization", back_populates="projects")
@@ -172,10 +185,10 @@ class Assessment(Base):
     __tablename__ = "assessments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
-    assessor_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True)
+    assessor_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    framework_id = Column(UUID(as_uuid=True), ForeignKey("frameworks.id"), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
     team_name = Column(String(255), nullable=False)
     status = Column(Enum(AssessmentStatus), default=AssessmentStatus.DRAFT, nullable=False)
     tags = Column(ARRAY(String), nullable=True)
@@ -186,10 +199,12 @@ class Assessment(Base):
     maturity_level = Column(Integer, nullable=True)
 
     # Metadata
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     organization = relationship("Organization", back_populates="assessments")
@@ -207,15 +222,17 @@ class DomainScore(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     assessment_id = Column(
-        UUID(as_uuid=True), ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True), ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    domain_id = Column(UUID(as_uuid=True), ForeignKey("framework_domains.id"), nullable=False)
+    domain_id = Column(UUID(as_uuid=True), ForeignKey("framework_domains.id"), nullable=False, index=True)
     score = Column(Float, nullable=False)  # 0-100
     maturity_level = Column(Integer, nullable=False)  # 1-5
     strengths = Column(ARRAY(String), nullable=True)  # Array of strength descriptions
     gaps = Column(ARRAY(String), nullable=True)  # Array of gap descriptions
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     assessment = relationship("Assessment", back_populates="domain_scores")
@@ -229,14 +246,16 @@ class GateResponse(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     assessment_id = Column(
-        UUID(as_uuid=True), ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True), ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    question_id = Column(UUID(as_uuid=True), ForeignKey("framework_questions.id"), nullable=False)
+    question_id = Column(UUID(as_uuid=True), ForeignKey("framework_questions.id"), nullable=False, index=True)
     score = Column(Integer, nullable=False)  # 0-5
     notes = Column(Text, nullable=True)
     evidence = Column(ARRAY(String), nullable=True)  # Array of URLs or evidence descriptions
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Relationships
     assessment = relationship("Assessment", back_populates="gate_responses")

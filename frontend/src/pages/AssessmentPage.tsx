@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { assessmentApi, frameworkApi } from '@/services/api'
@@ -25,6 +25,17 @@ export function AssessmentPage() {
     queryFn: () => frameworkApi.getStructure(assessment!.framework_id),
     enabled: !!assessment?.framework_id,
   })
+
+  // Question-id sets per domain, built once per framework instead of per render
+  const domainQuestionIdSets = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    frameworkStructure?.domains.forEach(d => {
+      const ids = new Set<string>()
+      d.gates.forEach(g => g.questions.forEach(q => ids.add(q.id)))
+      map.set(d.id, ids)
+    })
+    return map
+  }, [frameworkStructure])
 
   // Fetch existing responses
   const { data: existingResponses } = useQuery({
@@ -208,12 +219,7 @@ export function AssessmentPage() {
                 {frameworkStructure.domains.map(domain => {
                   const domainQuestions = domain.gates.reduce((sum, gate) => sum + gate.questions.length, 0)
 
-                  // Calculate responses for this domain
-                  // We need to check if response's question_id belongs to any gate in this domain
-                  // Optimization: Create a Set of question IDs for this domain
-                  const domainQuestionIds = new Set<string>()
-                  domain.gates.forEach(g => g.questions.forEach(q => domainQuestionIds.add(q.id)))
-
+                  const domainQuestionIds = domainQuestionIdSets.get(domain.id) ?? new Set<string>()
                   const domainResponseCount = Object.keys(responses).filter(qId => domainQuestionIds.has(qId)).length
                   const completed = domainQuestions > 0 ? domainResponseCount === domainQuestions : false
 

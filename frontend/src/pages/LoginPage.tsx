@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
+import { logger } from '@/utils/logger'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -18,37 +19,27 @@ export function LoginPage() {
     setLoading(true)
 
     try {
-      console.log('[Login] Starting login with email:', email)
+      // Never log the email, password, or auth response — screen shares
+      // and error-reporting breadcrumbs capture the console.
+      logger.debug('[Login] Starting login')
       const response = await authApi.login({ email, password })
-      console.log('[Login] Login response received:', response)
 
       if (!response.access_token) {
-        console.error('[Login] No access token in response!')
         throw new Error('No access token received')
       }
 
       localStorage.setItem('access_token', response.access_token)
-      console.log('[Login] Token stored in localStorage')
 
       // Fetch user info to verify token
-      console.log('[Login] Fetching current user...')
       const user = await authApi.getCurrentUser()
-      console.log('[Login] User verified successfully:', user)
+      logger.debug('[Login] Login verified, navigating to dashboard')
 
-      // Update auth context with user
-      console.log('[Login] Updating AuthContext with user...')
       login(user)
-
-      console.log('[Login] Navigating to dashboard...')
       navigate('/dashboard')
-      console.log('[Login] Navigate called')
     } catch (err: any) {
-      console.error('[Login] Error occurred:', err)
-      console.error('[Login] Error response:', err.response)
-      console.error('[Login] Error message:', err.message)
+      logger.error('[Login] Login failed:', err.response?.status ?? err.message)
       setError(err.response?.data?.detail || err.message || 'Invalid email or password')
     } finally {
-      console.log('[Login] Finally block - setting loading to false')
       setLoading(false)
     }
   }
@@ -130,10 +121,12 @@ export function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Demo credentials:</p>
-          <p className="font-mono text-xs mt-1">admin@example.com / admin123</p>
-        </div>
+        {import.meta.env.DEV && (
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>Dev credentials:</p>
+            <p className="font-mono text-xs mt-1">admin@example.com / admin123</p>
+          </div>
+        )}
       </div>
     </div>
   )

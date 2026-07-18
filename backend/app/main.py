@@ -1,7 +1,8 @@
 """FastAPI application entry point"""
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -13,7 +14,18 @@ from app.core.logging_config import (
     setup_logging,
 )
 from app.database import get_db
-from app.api import admin, admin_backups, admin_frameworks, auth, assessments, analytics, organizations, gates, frameworks, projects, insights
+from app.api import (
+    admin,
+    admin_backups,
+    admin_frameworks,
+    auth,
+    assessments,
+    analytics,
+    organizations,
+    frameworks,
+    projects,
+    insights,
+)
 
 # Initialize structured logging before anything else
 setup_logging(log_level=settings.LOG_LEVEL, log_format=settings.LOG_FORMAT)
@@ -21,14 +33,13 @@ logger = get_logger("app")
 
 app = FastAPI(
     title="DevOps Maturity Assessment API",
-    description="Internal tool for assessing team DevOps maturity and readiness",
+    description="Assess team DevOps maturity and readiness",
     version=settings.VERSION,
 )
 
 # Request logging middleware (added before CORS so it wraps all requests)
 app.add_middleware(RequestLoggingMiddleware)
 
-# CORS configuration for local development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -36,6 +47,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Last-resort handler: log with request context, return clean JSON.
+
+    Without this, unexpected errors surface as raw 500s (with tracebacks
+    when debug tooling is on). HTTPException is unaffected — Starlette
+    handles it before this runs.
+    """
+    logger.exception(
+        "unhandled_error", method=request.method, path=request.url.path
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
@@ -57,30 +86,35 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Liveness: the process is up and serving requests."""
     return {
         "status": "healthy",
-        "service": "DevOps Maturity Assessment API",
+        "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
     }
 
 
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
-    """Detailed health check with database connectivity."""
+    """Readiness: verifies dependencies. Returns 503 when the database is down."""
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
+        healthy = True
+    except Exception as exc:
+        logger.error("health_check_db_unreachable", error=str(exc))
+        db_status = "unreachable"
+        healthy = False
 
-    status = "healthy" if db_status == "connected" else "degraded"
-    return {
-        "status": status,
+    body = {
+        "status": "healthy" if healthy else "unhealthy",
         "database": db_status,
         "version": settings.VERSION,
         "uptime_seconds": get_uptime_seconds(),
     }
+    if not healthy:
+        return JSONResponse(status_code=503, content=body)
+    return body
 
 
 @app.get("/health/ready")

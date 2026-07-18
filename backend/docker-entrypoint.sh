@@ -11,7 +11,7 @@ max_retries=30
 retry_count=0
 
 while [ $retry_count -lt $max_retries ]; do
-    if pg_isready -h postgres -p 5432 -U devops > /dev/null 2>&1; then
+    if pg_isready -h "${POSTGRES_HOST:-postgres}" -p 5432 -U "${POSTGRES_USER:-devops}" > /dev/null 2>&1; then
         echo "[entrypoint] PostgreSQL is ready!"
         break
     fi
