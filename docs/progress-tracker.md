@@ -23,7 +23,7 @@
 
 ## Complete Spec Development Status
 
-**Last Updated**: 2026-02-26
+**Last Updated**: 2026-09-10
 **Current Phase**: Phase 9 - Team Insights & Perception Gap Analysis
 **Overall Progress**: 100%
 
@@ -345,6 +345,12 @@
 
 ## Notes
 
+### 2026-09-10 - Enterprise Hardening and De-Vibe Skills Runbooks
+- ✅ Added `docs/runbooks/enterprise-hardening-review-runbook.md`: master-agent + sub-agent prompts to audit a production fork against Scalable / Stable / Secure, with scorecard, phased plan, verification gates, and an inherited-weakness hint list for this ancestor repo
+- ✅ Added `docs/runbooks/vibe-to-enterprise-skills-runbook.md`: skill catalog, sample SKILL.md files, Copilot/Claude instruction templates, prompt and agent files, generator prompts, and a business-to-IT handoff checklist
+- ✅ Added `docs/runbooks/README.md` index
+- Documentation only; no application code changed
+
 ### 2025-11-29 - DORA Metrics Framework Complete
 - **Major Achievement**: Successfully implemented DORA (DevOps Research and Assessment) metrics framework
 - ✅ Created comprehensive 25-question assessment across 5 domains
@@ -455,6 +461,7 @@
 - [x] README.md - Setup and usage instructions
 - [x] docs/lessons-learned.md - 7 issues documented with resolutions
 - [x] docs/progress-tracker.md - This file
+- [x] docs/runbooks/ - Enterprise hardening review and de-vibe skills runbooks
 - [x] docs/testing-checklist.md - Comprehensive test cases
 - [x] docs/CLAUDE_INSTRUCTIONS.md - Documentation protocol for future sessions
 - [x] Inline code comments and docstrings
